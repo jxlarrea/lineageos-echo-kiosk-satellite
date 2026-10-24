@@ -28,6 +28,24 @@ PRODUCT_PACKAGES_DEBUG += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml
 
+# Buttons
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/keylayout/keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/keys.kl \
+    $(LOCAL_PATH)/keylayout/mtk-kpd.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-kpd.kl
+
+# LED ring: biscuit-ledd and its animations, biscuit-ledctl to drive it.
+PRODUCT_PACKAGES += \
+    biscuit-ledctl \
+    biscuit-ledd
+
+PRODUCT_COPY_FILES += \
+    $(call find-copy-subdir-files,*.animation,$(LOCAL_PATH)/leds/animations,$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ledd)
+
+# The device name as the DHCP hostname (rro/NetworkStack).
+PRODUCT_PACKAGES += \
+    BiscuitNetworkStackOverlay \
+    biscuit-hostname
+
 # Bluetooth
 # The profile overlay goes into the Bluetooth app itself: as a runtime
 # overlay the sink services resolve as disabled while the profile list

@@ -14,6 +14,12 @@ PRODUCT_PACKAGES += \
     BiscuitEmptyLauncher \
     init.kiosk-satellite.biscuit.rc
 
+# The service Kiosk Satellite drives the Dot's ring, buttons, volume,
+# microphone, Bluetooth and Wi-Fi through, and its command.
+PRODUCT_PACKAGES += \
+    BiscuitService \
+    biscuit_service
+
 # WebView is left out, but its loader and platform support libraries stay:
 # public.libraries.txt lists them, and no app can start without them.
 PRODUCT_PACKAGES += \
@@ -42,7 +48,8 @@ DEVICE_PACKAGE_OVERLAYS += \
 
 PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
     $(LOCAL_PATH)/overlay/frameworks/base/core \
-    $(LOCAL_PATH)/overlay/frameworks/base/packages/SettingsProvider
+    $(LOCAL_PATH)/overlay/frameworks/base/packages/SettingsProvider \
+    $(LOCAL_PATH)/overlay/lineage-sdk
 
 # Always on mains: mt8163-common then keeps all four cores online.
 PRODUCT_PROPERTY_OVERRIDES += \

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- Send the device name, echo-dot and the end of the serial, as the
+         DHCP hostname, so the router lists the Dot as on the CM14 image
+         instead of as localhost. -->
+    <bool name="config_dhcp_client_hostname">true</bool>
+</resources>

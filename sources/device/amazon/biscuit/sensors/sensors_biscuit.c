@@ -4,10 +4,12 @@
  */
 
 /*
- * The Echo Dot's ambient light sensor. The TSL2584TSV reports through IIO
- * (illuminance0_input). The HAL lists the sensor even before its driver has
- * probed and finds the IIO device when it first reads, so SensorService
- * always gets a HAL to talk to.
+ * The Echo Dot's ambient light sensor, a TSL2584TSV or a TSL2540 depending
+ * on the Dot. The TSL2584TSV reports through IIO (illuminance0_input). The
+ * TSL2540 publishes als_lux on its I2C device and only measures while
+ * als_power_state is 1, so the HAL powers it with the sensor's activation.
+ * The HAL lists the sensor even before its driver has probed and finds the
+ * chip when it first reads, so SensorService always gets a HAL to talk to.
  */
 
 #define LOG_TAG "BiscuitSensors"
@@ -30,6 +32,8 @@
 #define IIO_DIR "/sys/bus/iio/devices"
 #endif
 
+#define TSL2540_DIR "/sys/bus/i2c/devices/0-0039"
+
 #define LIGHT_HANDLE 1
 #define DEFAULT_DELAY_NS 500000000LL
 #define MIN_DELAY_US 200000
@@ -43,6 +47,8 @@ struct biscuit_poll_device {
     int flush_pending;
     int64_t delay_ns;
     char lux_path[PATH_MAX];
+    /* The TSL2540 found the lux, and its power follows activation. */
+    int tsl2540;
 };
 
 static const struct sensor_t sSensorList[] = {{
@@ -64,9 +70,18 @@ static const struct sensor_t sSensorList[] = {{
     .reserved = {0},
 }};
 
-static int find_lux_path(char *out, size_t out_len)
+static void tsl2540_power(int on)
+{
+    int fd = open(TSL2540_DIR "/als_power_state", O_WRONLY | O_CLOEXEC);
+    if (fd < 0) return;
+    if (write(fd, on ? "1" : "0", 1) != 1) ALOGW("could not power the TSL2540 %s", on ? "on" : "off");
+    close(fd);
+}
+
+static int find_lux_path(char *out, size_t out_len, int *tsl2540)
 {
     const char *fixed = IIO_DIR "/iio:device0/illuminance0_input";
+    *tsl2540 = 0;
     if (access(fixed, R_OK) == 0) {
         strlcpy(out, fixed, out_len);
         return 0;
@@ -87,14 +102,23 @@ static int find_lux_path(char *out, size_t out_len)
         }
         closedir(dir);
     }
+
+    if (access(TSL2540_DIR "/als_lux", R_OK) == 0) {
+        strlcpy(out, TSL2540_DIR "/als_lux", out_len);
+        *tsl2540 = 1;
+        return 0;
+    }
     return -ENOENT;
 }
 
 static int read_lux(struct biscuit_poll_device *dev, float *lux)
 {
-    if (!dev->lux_path[0] &&
-            find_lux_path(dev->lux_path, sizeof(dev->lux_path)) < 0)
-        return -ENOENT;
+    if (!dev->lux_path[0]) {
+        if (find_lux_path(dev->lux_path, sizeof(dev->lux_path), &dev->tsl2540) < 0)
+            return -ENOENT;
+        /* Found while active: it needs its power now. */
+        if (dev->tsl2540) tsl2540_power(dev->active);
+    }
 
     FILE *f = fopen(dev->lux_path, "r");
     if (!f) {
@@ -131,6 +155,7 @@ static int poll__activate(struct sensors_poll_device_t *d, int handle, int enabl
     struct biscuit_poll_device *dev = (struct biscuit_poll_device *)d;
     pthread_mutex_lock(&dev->lock);
     dev->active = enabled ? 1 : 0;
+    if (dev->tsl2540) tsl2540_power(dev->active);
     pthread_cond_signal(&dev->wake);
     pthread_mutex_unlock(&dev->lock);
     return 0;
@@ -243,7 +268,7 @@ static int open_sensors(const struct hw_module_t *module, const char *name,
     dev->delay_ns = DEFAULT_DELAY_NS;
     pthread_mutex_init(&dev->lock, NULL);
     pthread_cond_init(&dev->wake, NULL);
-    find_lux_path(dev->lux_path, sizeof(dev->lux_path));
+    find_lux_path(dev->lux_path, sizeof(dev->lux_path), &dev->tsl2540);
 
     *device = &dev->device.common;
     return 0;

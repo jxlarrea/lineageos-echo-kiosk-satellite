@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+# The Echo Dot's keypad: the microphone button, volume down and the Action
+# button. Generic.kl calls key 113 VOLUME_MUTE and leaves 138 out.
+
+key 113   MUTE
+key 114   VOLUME_DOWN
+key 138   HELP

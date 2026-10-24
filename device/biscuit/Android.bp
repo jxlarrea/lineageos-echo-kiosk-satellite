@@ -175,3 +175,27 @@ prebuilt_etc {
     src: "init/init.kiosk-satellite.biscuit.rc",
     sub_dir: "init",
 }
+
+// The Dot's service for Kiosk Satellite and its button handler
+// (biscuit-service/).
+android_app {
+    name: "BiscuitService",
+    srcs: [
+        "biscuit-service/src/**/*.java",
+        "biscuit-service/src/**/*.aidl",
+    ],
+    manifest: "biscuit-service/AndroidManifest.xml",
+    platform_apis: true,
+    certificate: "platform",
+    privileged: true,
+    // Nothing in the manifest names KeyHandler, which PhoneWindowManager
+    // loads by name, so shrinking would drop it.
+    optimize: {
+        enabled: false,
+    },
+}
+
+sh_binary {
+    name: "biscuit_service",
+    src: "biscuit-service/biscuit_service",
+}

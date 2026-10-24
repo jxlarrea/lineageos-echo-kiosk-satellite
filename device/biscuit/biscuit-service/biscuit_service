@@ -1,0 +1,133 @@
+#!/system/bin/sh
+#
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+# Sends BiscuitService a command, as Kiosk Satellite and adb use it.
+
+PKG=com.amazon.biscuit.service
+COMP=$PKG/.BiscuitService
+
+start() {
+    ACTION="$1"
+    shift
+    exec am startservice -a "$ACTION" "$@" "$COMP"
+}
+
+usage() {
+    cat <<EOF
+usage: biscuit_service <command>
+
+Audio:
+  volume up                  raise music volume
+  volume down                lower music volume
+  volume set <0..max>        set music volume
+  mute on|off|toggle         set/toggle real microphone mute
+  mic mute|unmute|toggle     same as mute
+
+Countdown:
+  countdown set <remaining-ms> <total-ms>  show a breathing countdown bar
+  countdown clear                          clear the countdown display
+
+Bluetooth:
+  bt pair                    enable Bluetooth and enter pairing mode
+  bt off                     disable Bluetooth / disconnect clients
+
+WiFi:
+  wifi on                    enable WiFi and reconnect saved network
+  wifi connect <ssid> [psk]  save/connect WPA-PSK or open network
+  wifi off                   disable WiFi
+
+Service:
+  status                     show the microphone and volume button state
+EOF
+}
+
+case "$1" in
+    volume|vol)
+        case "$2" in
+            up|raise|+)
+                start "$PKG.VOLUME_UP"
+                ;;
+            down|lower|-)
+                start "$PKG.VOLUME_DOWN"
+                ;;
+            set)
+                [ -n "$3" ] || { echo "missing volume" >&2; usage >&2; exit 2; }
+                exec am startservice -a "$PKG.VOLUME_SET" --ei volume "$3" "$COMP"
+                ;;
+        esac
+        ;;
+    mute)
+        case "$2" in
+            on|mute|1|true)
+                start "$PKG.MICROPHONE_MUTE_ON"
+                ;;
+            off|unmute|0|false)
+                start "$PKG.MICROPHONE_MUTE_OFF"
+                ;;
+            toggle|'')
+                start "$PKG.MICROPHONE_MUTE_TOGGLE"
+                ;;
+        esac
+        ;;
+    mic|microphone)
+        case "$2" in
+            mute|on|1|true)
+                start "$PKG.MICROPHONE_MUTE_ON"
+                ;;
+            unmute|off|0|false)
+                start "$PKG.MICROPHONE_MUTE_OFF"
+                ;;
+            toggle|'')
+                start "$PKG.MICROPHONE_MUTE_TOGGLE"
+                ;;
+        esac
+        ;;
+    countdown|timer)
+        case "$2" in
+            set|progress)
+                [ -n "$3" ] && [ -n "$4" ] || { echo "missing countdown values" >&2; usage >&2; exit 2; }
+                exec am startservice -a "$PKG.COUNTDOWN_PROGRESS" \
+                    --el com.amazon.biscuit.service.EXTRA_COUNTDOWN_REMAINING_MS "$3" \
+                    --el com.amazon.biscuit.service.EXTRA_COUNTDOWN_TOTAL_MS "$4" "$COMP"
+                ;;
+            clear|off|stop)
+                start "$PKG.COUNTDOWN_CLEAR"
+                ;;
+        esac
+        ;;
+    bt|bluetooth)
+        case "$2" in
+            pair|pairing|pairing-mode|on)
+                start "$PKG.BLUETOOTH_PAIRING_MODE"
+                ;;
+            off|disable|stop)
+                start "$PKG.BLUETOOTH_OFF"
+                ;;
+        esac
+        ;;
+    wifi)
+        case "$2" in
+            on)
+                start "$PKG.WIFI_ON"
+                ;;
+            connect)
+                [ -n "$3" ] || { echo "missing ssid" >&2; usage >&2; exit 2; }
+                if [ -n "${4:-}" ]; then
+                    exec am startservice -a "$PKG.WIFI_CONNECT" --es ssid "$3" --es psk "$4" "$COMP"
+                fi
+                exec am startservice -a "$PKG.WIFI_CONNECT" --es ssid "$3" "$COMP"
+                ;;
+            off|disable|stop)
+                start "$PKG.WIFI_OFF"
+                ;;
+        esac
+        ;;
+    status)
+        exec dumpsys activity service "$COMP"
+        ;;
+esac
+
+usage
+exit 2

@@ -28,6 +28,11 @@ on boot
     chown root audio /sys/devices/platform/soc/1000b000.pinctrl/mt_gpio
     chmod 0664 /sys/devices/platform/soc/1000b000.pinctrl/mt_gpio
 
+# The light sensor HAL, which runs as system, powers the TSL2540 while
+# something reads it. Dots with a TSL2584TSV have no such file.
+on boot
+    chown system system /sys/bus/i2c/devices/0-0039/als_power_state
+
 # Rooted adb on debuggable builds. LineageOS keeps the switch in
 # /data/adbroot/enabled, set from Settings, which nobody can reach on the Dot.
 on post-fs-data && property:ro.debuggable=1
@@ -67,3 +72,26 @@ service wmt_launcher /vendor/bin/wmt_launcher -p /vendor/firmware/
 # property name. The mt66xx libbt-vendor reads the vendor one.
 on property:persist.mtk.wcn.combo.chipid=*
     setprop persist.vendor.connsys.chipid ${persist.mtk.wcn.combo.chipid}
+
+# LED ring. biscuit-ledd stops the kernel's boot animation once Android is
+# up and takes commands on /dev/socket/biscuit-ledd.
+service biscuit-ledd /system/bin/biscuit-ledd
+    class main
+    user root
+    group system
+    socket biscuit-ledd stream 0660 system system
+    disabled
+
+on property:sys.boot_completed=1
+    start biscuit-ledd
+
+# The device name, which Android sends as the DHCP hostname.
+# settings put only works for root from a shell, not for system.
+service biscuit-hostname /system/bin/biscuit-hostname
+    user root
+    group system
+    oneshot
+    disabled
+
+on property:sys.boot_completed=1
+    start biscuit-hostname

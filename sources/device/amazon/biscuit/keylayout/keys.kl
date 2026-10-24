@@ -1,0 +1,7 @@
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+# The Echo Dot's volume buttons on gpio-keys.
+
+key 114   VOLUME_DOWN
+key 115   VOLUME_UP

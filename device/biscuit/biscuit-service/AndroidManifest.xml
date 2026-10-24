@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+    The Echo Dot's service for Kiosk Satellite: the LED ring, the buttons,
+    volume, microphone mute, Bluetooth pairing and Wi-Fi. It runs inside
+    system_server, as the empty launcher does, so it costs no process of its
+    own while it stays started.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.amazon.biscuit.service"
+    android:sharedUserId="android.uid.system">
+
+    <!-- Only the system sends these, Kiosk Satellite listens. -->
+    <protected-broadcast android:name="com.amazon.biscuit.service.ACTION_BUTTON" />
+    <protected-broadcast android:name="com.amazon.biscuit.service.MICROPHONE_MUTE_CHANGED" />
+    <protected-broadcast android:name="com.amazon.biscuit.service.VOLUME_BUTTON" />
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <application
+        android:label="Biscuit Service"
+        android:process="system">
+        <receiver android:name=".BiscuitService$BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".BiscuitService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.amazon.biscuit.service.IBiscuitService" />
+                <action android:name="com.amazon.biscuit.service.BLUETOOTH_PAIRING_MODE" />
+                <action android:name="com.amazon.biscuit.service.BLUETOOTH_OFF" />
+                <action android:name="com.amazon.biscuit.service.WIFI_ON" />
+                <action android:name="com.amazon.biscuit.service.WIFI_OFF" />
+                <action android:name="com.amazon.biscuit.service.WIFI_CONNECT" />
+                <action android:name="com.amazon.biscuit.service.VOLUME_UP" />
+                <action android:name="com.amazon.biscuit.service.VOLUME_DOWN" />
+                <action android:name="com.amazon.biscuit.service.VOLUME_SET" />
+                <action android:name="com.amazon.biscuit.service.COUNTDOWN_PROGRESS" />
+                <action android:name="com.amazon.biscuit.service.COUNTDOWN_CLEAR" />
+                <action android:name="com.amazon.biscuit.service.MICROPHONE_MUTE_ON" />
+                <action android:name="com.amazon.biscuit.service.MICROPHONE_MUTE_OFF" />
+                <action android:name="com.amazon.biscuit.service.MICROPHONE_MUTE_TOGGLE" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

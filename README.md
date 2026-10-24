@@ -6,7 +6,7 @@ One repository that builds Kiosk Satellite Edition images of LineageOS 18.1 for 
 | --- | --- | --- |
 | Echo Show 8 (1st gen) | `crown` | Being set up |
 | Echo Show 5 (1st gen) | `checkers` | Planned |
-| Echo Dot (2nd gen) | `biscuit` | Kernel boots. Android bring-up next, see [docs/biscuit-port.md](docs/biscuit-port.md) |
+| Echo Dot (2nd gen) | `biscuit` | Boots Android 11 with Wi-Fi, Bluetooth and Kiosk Satellite. Audio is next |
 
 The Echo Dot image for CM14.1 lives in [lineageos-biscuit-kiosk-satellite](https://github.com/jxlarrea/lineageos-biscuit-kiosk-satellite) until the Dot moves here.
 

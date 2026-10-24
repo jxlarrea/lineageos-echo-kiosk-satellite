@@ -6,4 +6,8 @@
 <resources>
     <!-- No SystemUI, so no wallpaper to bind and nothing to show it. -->
     <bool name="config_enableWallpaperService">false</bool>
+
+    <!-- No notification assistant. Nothing on the Dot shows notifications,
+         and binding the assistant kept ExtServices running all the time. -->
+    <string name="config_defaultAssistantAccessComponent" translatable="false"></string>
 </resources>

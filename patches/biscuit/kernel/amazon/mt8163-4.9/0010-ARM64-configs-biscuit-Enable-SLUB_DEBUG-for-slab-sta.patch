@@ -1,0 +1,29 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Sat, 24 Oct 2026 07:58:04 -0500
+Subject: [PATCH] ARM64: configs: biscuit: Enable SLUB_DEBUG for slab
+ statistics
+
+Unreclaimable slab is about 40 MB on the Echo Dot (2nd gen), well above
+CM14 on 3.18. Without SLUB_DEBUG, /sys/kernel/slab reports no object
+counts, so there is no way to tell which caches hold it. Debugging stays
+off unless slub_debug is on the command line.
+
+Drop this once the slab is understood.
+---
+ arch/arm64/configs/biscuit_defconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/arch/arm64/configs/biscuit_defconfig b/arch/arm64/configs/biscuit_defconfig
+index 46a91420..94786b53 100644
+--- a/arch/arm64/configs/biscuit_defconfig
++++ b/arch/arm64/configs/biscuit_defconfig
+@@ -4,7 +4,7 @@ CONFIG_CPUSETS=y
+ CONFIG_MEMCG=y
+ CONFIG_MEMCG_SWAP=y
+ CONFIG_SYSCTL_SYSCALL=y
+-# CONFIG_SLUB_DEBUG is not set
++CONFIG_SLUB_DEBUG=y
+ CONFIG_CC_STACKPROTECTOR_STRONG=y
+ CONFIG_MODULE_FORCE_LOAD=y
+ CONFIG_MODULE_FORCE_UNLOAD=y

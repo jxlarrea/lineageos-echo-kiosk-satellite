@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+    Features the Echo Dot (2nd gen) inherits from the tablet and Wi-Fi
+    configurations but never uses. system_server starts a service for each
+    of these, so removing them keeps those services out of its memory.
+    unavailable-feature removes a feature wherever another file declares it.
+-->
+<permissions>
+    <!-- Autofill also kept ExtServices running for its inline suggestions. -->
+    <unavailable-feature name="android.software.autofill" />
+    <unavailable-feature name="android.software.app_widgets" />
+    <unavailable-feature name="android.software.backup" />
+    <unavailable-feature name="android.software.companion_device_setup" />
+    <unavailable-feature name="android.software.picture_in_picture" />
+    <unavailable-feature name="android.software.print" />
+    <!-- The Dot ships no WebView, so there is no provider to manage. -->
+    <unavailable-feature name="android.software.webview" />
+    <!-- No Ethernet port. EthernetService also starts for USB host. -->
+    <unavailable-feature name="android.hardware.ethernet" />
+    <unavailable-feature name="android.hardware.usb.host" />
+    <!-- Station mode only, as on the CM14 image. -->
+    <unavailable-feature name="android.hardware.wifi.direct" />
+
+    <!-- Nothing on the Dot shows slices. -->
+    <feature name="android.software.slices_disabled" />
+</permissions>

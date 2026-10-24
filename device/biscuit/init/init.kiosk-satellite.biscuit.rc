@@ -13,8 +13,20 @@ service cameraserver /system/bin/true
     oneshot
     disabled
 
-# The legacy DRM framework: nothing on the Dot plays protected content.
-service drm /system/bin/true
+# drmserver stays even though nothing on the Dot plays protected content:
+# MediaProvider waits for it when it starts. Without it the media provider
+# never answered and Android killed and restarted it every 80 seconds.
+
+# GPU statistics: the Dot has no GPU, and clients only check whether the
+# service is there.
+service gpu /system/bin/true
+    override
+    oneshot
+    disabled
+
+# Media metrics: persist.media.metrics.enabled=0 tells every client to skip
+# it, so none of them waits for the service.
+service mediametrics /system/bin/true
     override
     oneshot
     disabled

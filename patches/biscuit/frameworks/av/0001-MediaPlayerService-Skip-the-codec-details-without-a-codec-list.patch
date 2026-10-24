@@ -1,0 +1,25 @@
+MediaPlayerService: Skip the codec details without a codec list
+
+The Echo Dot (2nd gen) leaves out the OMX service, so getCodecList()
+returns null and dumpsys media.player crashed mediaserver.
+
+diff --git a/media/libmediaplayerservice/MediaPlayerService.cpp b/media/libmediaplayerservice/MediaPlayerService.cpp
+index 2de24ef..167e612 100644
+--- a/media/libmediaplayerservice/MediaPlayerService.cpp
++++ b/media/libmediaplayerservice/MediaPlayerService.cpp
+@@ -692,9 +692,13 @@ status_t MediaPlayerService::dump(int fd, const Vector<String16>& args)
+ 
+         gLooperRoster.dump(fd, args);
+ 
++        // A device without the OMX service, like the Echo Dot (2nd gen), can
++        // have no codec list to show.
+         sp<IMediaCodecList> codecList = getCodecList();
+-        dumpCodecDetails(fd, codecList, true /* decoders */);
+-        dumpCodecDetails(fd, codecList, false /* !decoders */);
++        if (codecList != nullptr) {
++            dumpCodecDetails(fd, codecList, true /* decoders */);
++            dumpCodecDetails(fd, codecList, false /* !decoders */);
++        }
+ 
+         bool dumpMem = false;
+         bool unreachableMemory = false;

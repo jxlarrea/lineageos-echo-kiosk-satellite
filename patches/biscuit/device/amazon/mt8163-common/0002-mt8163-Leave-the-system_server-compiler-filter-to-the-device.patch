@@ -1,0 +1,20 @@
+mt8163: Leave the system_server compiler filter to the device
+
+The Echo Dot (2nd gen) compiles system_server with speed. Product
+variables from inherited makefiles add up, so this file's speed-profile
+turned the Dot's filter into "speed-profile speed".
+
+diff --git a/go_opt.mk b/go_opt.mk
+index e0091ec..e848f99 100644
+--- a/go_opt.mk
++++ b/go_opt.mk
+@@ -14,9 +14,6 @@
+ # limitations under the License.
+ #
+ 
+-# Speed profile services and wifi-service to reduce RAM and storage.
+-PRODUCT_SYSTEM_SERVER_COMPILER_FILTER := speed-profile
+-
+ # Always preopt extracted APKs to prevent extracting out of the APK for gms
+ # modules.
+ PRODUCT_ALWAYS_PREOPT_EXTRACTED_APK := true

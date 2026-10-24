@@ -58,6 +58,32 @@ PY
     vendor/lib/libacehal_log.so | vendor/lib/libcommon_time_client.so)
       "$PATCHELF" --add-needed libbiscuit_audio_shim.so "$file"
       ;;
+    vendor/lib/libshm.so)
+      # libshm asks for Fire OS's lab126.service.shm, which does not exist
+      # here. At boot the wait took 4 to 5 seconds, enough to time out
+      # audioserver's first calls into the audio HAL. Its callers already get
+      # on without it, so it is never looked up:
+      # - A constructor looked it up as soon as the library loaded. It now
+      #   takes the path SHMLIB_DISABLE_ONLOAD in the environment would, less
+      #   the log line: b to where it leaves the lookup for later.
+      # - getShmInterface(), which does that later lookup, returns no service
+      #   at once: movs r1, #0; str r1, [r0]; bx lr, a null sp<> through the
+      #   result pointer.
+      python3 - "$file" <<'PY'
+import sys
+path = sys.argv[1]
+data = bytearray(open(path, "rb").read())
+for offset, old, new, what in (
+    (0xb014, "50b1094a", "05e0094a", "the libshm constructor"),
+    (0xb068, "b0b504461748", "002101607047", "getShmInterface"),
+):
+    old, new = bytes.fromhex(old), bytes.fromhex(new)
+    if data[offset:offset + len(old)] != old:
+        sys.exit(f"ERROR: {what} is not where libshm.so had it")
+    data[offset:offset + len(new)] = new
+open(path, "wb").write(data)
+PY
+      ;;
     vendor/lib/libaudiocomponentengine.so)
       # CallStack moved out of libutils.
       "$PATCHELF" --add-needed libutilscallstack.so "$file"

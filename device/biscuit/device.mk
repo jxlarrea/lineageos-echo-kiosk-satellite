@@ -88,6 +88,11 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     ro.zygote.disable_gl_preload=true
 
+# No safe volume limit on the line out jack. Android held it at 10 of 15,
+# about 14 dB down, until someone accepted a warning the Dot cannot show.
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    audio.safemedia.bypass=true
+
 # Media metrics clients skip the service, which init/ leaves out.
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     persist.media.metrics.enabled=0

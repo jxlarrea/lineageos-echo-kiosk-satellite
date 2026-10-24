@@ -1,0 +1,57 @@
+TimeCheck: Let audio calls go on after a timeout
+
+With the abort on a timeout commented out, the expired request stayed
+first in line. Every pass of the loop timed out on it again, asked for
+HAL tombstones and slept a second, all while holding the lock every
+audio binder call takes to start and stop its own TimeCheck. One audio
+HAL call over 5 seconds, such as the Echo Dot's HAL starting at boot,
+froze audioserver until it restarted.
+
+Drop the request once it has timed out and wait for the tombstones
+outside the lock.
+
+diff --git a/media/utils/TimeCheck.cpp b/media/utils/TimeCheck.cpp
+index 46a4ec8..ca38284 100644
+--- a/media/utils/TimeCheck.cpp
++++ b/media/utils/TimeCheck.cpp
+@@ -99,6 +99,7 @@ void TimeCheck::TimeCheckThread::stopMonitoring(nsecs_t endTimeNs) {
+ bool TimeCheck::TimeCheckThread::threadLoop()
+ {
+     status_t status = TIMED_OUT;
++    bool waitForTombstones = false;
+     {
+         AutoMutex _l(mMutex);
+ 
+@@ -119,6 +120,14 @@ bool TimeCheck::TimeCheckThread::threadLoop()
+             status = mCond.waitRelative(mMutex, waitTimeNs);
+         }
+         if (status != NO_ERROR) {
++            // Without the abort below, the expired request has to go: left in
++            // place it timed out again on every pass, and the loop held the
++            // lock every audio binder call takes, so one slow call froze
++            // audioserver for good. The call's own TimeCheck finds nothing to
++            // remove when it ends.
++            if (mMonitorRequests.size() != 0 && mMonitorRequests.keyAt(0) == endTimeNs) {
++                mMonitorRequests.removeItemsAt(0);
++            }
+             // Generate audio HAL processes tombstones and allow time to complete
+             // before forcing restart
+             std::vector<pid_t> pids = getAudioHalPids();
+@@ -127,7 +136,7 @@ bool TimeCheck::TimeCheckThread::threadLoop()
+                     ALOGI("requesting tombstone for pid: %d", pid);
+                     sigqueue(pid, DEBUGGER_SIGNAL, {.sival_int = 0});
+                 }
+-                sleep(1);
++                waitForTombstones = true;
+             } else {
+                 ALOGI("No HAL process pid available, skipping tombstones");
+             }
+@@ -135,6 +144,8 @@ bool TimeCheck::TimeCheckThread::threadLoop()
+             // LOG_ALWAYS_FATAL("TimeCheck timeout for %s", tag);
+         }
+     }
++    // Outside the lock, so the audio calls go on meanwhile.
++    if (waitForTombstones) sleep(1);
+     return true;
+ }
+ 

@@ -20,6 +20,7 @@
 #define LOG_TAG "audio.biscuit"
 
 #include <errno.h>
+#include <pthread.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -28,6 +29,7 @@
 #include <time.h>
 
 #include <cutils/properties.h>
+#include <cutils/str_parms.h>
 #include <hardware/audio.h>
 #include <hardware/hardware.h>
 #include <log/log.h>
@@ -40,9 +42,14 @@
 _Static_assert(offsetof(struct fireos_port_config, ext) == offsetof(struct audio_port_config, flags),
                "fireos_port_config must match audio_port_config up to flags");
 
+struct biscuit_stream_out;
+
 struct biscuit_device {
     struct audio_hw_device device;
     struct fireos_device* fireos;
+    /* The open output streams, for the audio patches that route them. */
+    pthread_mutex_t outputs_lock;
+    struct biscuit_stream_out* outputs;
     bool mic_muted;
     struct mic_beam_model* beam_model;
     /* The Fire OS HAL has opened the microphones once, see in_read(). */
@@ -234,8 +241,15 @@ struct speaker_tuning {
 struct biscuit_stream_out {
     struct audio_stream_out stream;
     struct fireos_stream_out* fireos;
+    struct biscuit_device* adev;
+    struct biscuit_stream_out* next;
+    audio_io_handle_t handle;
+    /* Where the stream plays. The Fire OS stream has no get_device, so this
+     * follows the open, routing= and the audio patches. */
+    volatile audio_devices_t device;
     bool active;
     bool amp_on;
+    bool was_on_jack;
     uint32_t rate;
     int channels;
     bool pcm16;
@@ -396,15 +410,26 @@ static int out_dump(const struct audio_stream* stream, int fd) {
 }
 
 static audio_devices_t out_get_device(const struct audio_stream* stream) {
-    struct audio_stream* c = &OUT_C(stream)->fireos->common;
-    return c->get_device(c);
+    return OUT_C(stream)->device;
 }
 
 static int out_set_device(struct audio_stream* stream, audio_devices_t device) {
-    return FIREOS_OUT_COMMON(stream)->set_device(FIREOS_OUT_COMMON(stream), device);
+    struct audio_stream* c = FIREOS_OUT_COMMON(stream);
+
+    if (device) OUT(stream)->device = device;
+    return c->set_device ? c->set_device(c, device) : 0;
 }
 
 static int out_set_parameters(struct audio_stream* stream, const char* kv_pairs) {
+    struct str_parms* parms = str_parms_create_str(kv_pairs);
+    int routing;
+
+    if (parms) {
+        if (str_parms_get_int(parms, AUDIO_PARAMETER_STREAM_ROUTING, &routing) == 0 && routing) {
+            OUT(stream)->device = (audio_devices_t)routing;
+        }
+        str_parms_destroy(parms);
+    }
     return FIREOS_OUT_COMMON(stream)->set_parameters(FIREOS_OUT_COMMON(stream), kv_pairs);
 }
 
@@ -431,12 +456,19 @@ static int out_set_volume(struct audio_stream_out* stream, float left, float rig
     return OUT(stream)->fireos->set_volume(OUT(stream)->fireos, left, right);
 }
 
+/* The line out jack has its own path in the Fire OS HAL, without the
+ * amplifier. The speaker plays only while the stream routes to it. */
+static bool out_on_speaker(const struct biscuit_stream_out* out) {
+    return (out->device & AUDIO_DEVICE_OUT_SPEAKER) != 0;
+}
+
 static ssize_t out_write(struct audio_stream_out* stream, const void* buffer, size_t bytes) {
     struct biscuit_stream_out* out = OUT(stream);
+    bool speaker = out_on_speaker(out);
     ssize_t ret;
 
     if (!out->active) {
-        apply_speaker_route();
+        if (speaker) apply_speaker_route();
         speaker_tuning_load(out);
         out->log_levels = property_get_bool("persist.biscuit.audio_levels", false);
         out->active = true;
@@ -459,7 +491,16 @@ static ssize_t out_write(struct audio_stream_out* stream, const void* buffer, si
      * powers up the codec. The amplifier only comes on once that write is
      * done: a codec powering up into a live amplifier crackles. */
     ret = out->fireos->write(out->fireos, speaker_tuning_process(out, buffer, bytes), bytes);
-    if (!out->amp_on) {
+    if (!speaker) {
+        /* Routed to the jack, also when it was plugged in mid-stream. */
+        if (out->amp_on) {
+            set_speaker_amp(false);
+            out->amp_on = false;
+        }
+    } else if (!out->amp_on) {
+        /* Back on the speaker after the jack: the HAL's jack path changed the
+         * route. */
+        if (out->was_on_jack) apply_speaker_route();
         out->gain_db = speaker_gain_db();
         apply_speaker_gain(out->gain_db);
         set_speaker_amp(true);
@@ -478,6 +519,7 @@ static ssize_t out_write(struct audio_stream_out* stream, const void* buffer, si
             }
         }
     }
+    out->was_on_jack = !speaker;
     return ret;
 }
 
@@ -540,6 +582,9 @@ static int adev_open_output_stream(struct audio_hw_device* dev, audio_io_handle_
         return -ENOMEM;
     }
     out->fireos = f;
+    out->adev = (struct biscuit_device*)dev;
+    out->handle = handle;
+    out->device = devices;
     out->rate = f->common.get_sample_rate(&f->common);
     out->channels = audio_channel_count_from_out_mask(f->common.get_channels(&f->common));
     out->pcm16 = f->common.get_format(&f->common) == AUDIO_FORMAT_PCM_16_BIT;
@@ -574,12 +619,26 @@ static int adev_open_output_stream(struct audio_hw_device* dev, audio_io_handle_
     s->get_presentation_position =
             f->get_presentation_position ? out_get_presentation_position : NULL;
 
+    pthread_mutex_lock(&out->adev->outputs_lock);
+    out->next = out->adev->outputs;
+    out->adev->outputs = out;
+    pthread_mutex_unlock(&out->adev->outputs_lock);
     *stream_out = s;
     return 0;
 }
 
 static void adev_close_output_stream(struct audio_hw_device* dev, struct audio_stream_out* stream) {
     struct biscuit_stream_out* out = OUT(stream);
+    struct biscuit_stream_out** link;
+
+    pthread_mutex_lock(&out->adev->outputs_lock);
+    for (link = &out->adev->outputs; *link; link = &(*link)->next) {
+        if (*link == out) {
+            *link = out->next;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&out->adev->outputs_lock);
 
     out_standby(&out->stream.common);
     fireos_dev(dev)->close_output_stream(fireos_dev(dev), out->fireos);
@@ -662,11 +721,12 @@ static int in_dump(const struct audio_stream* stream, int fd) {
 
 static audio_devices_t in_get_device(const struct audio_stream* stream) {
     struct audio_stream* c = &IN_C(stream)->fireos->common;
-    return c->get_device(c);
+    return c->get_device ? c->get_device(c) : AUDIO_DEVICE_IN_BUILTIN_MIC;
 }
 
 static int in_set_device(struct audio_stream* stream, audio_devices_t device) {
-    return FIREOS_IN_COMMON(stream)->set_device(FIREOS_IN_COMMON(stream), device);
+    struct audio_stream* c = FIREOS_IN_COMMON(stream);
+    return c->set_device ? c->set_device(c, device) : 0;
 }
 
 static int in_set_parameters(struct audio_stream* stream, const char* kv_pairs) {
@@ -899,6 +959,20 @@ static int adev_create_audio_patch(struct audio_hw_device* dev, unsigned int num
     unsigned int i;
 
     if (num_sources > AUDIO_PATCH_PORTS_MAX || num_sinks > AUDIO_PATCH_PORTS_MAX) return -EINVAL;
+    if (num_sources == 1 && sources[0].type == AUDIO_PORT_TYPE_MIX) {
+        struct biscuit_device* adev = (struct biscuit_device*)dev;
+        struct biscuit_stream_out* out;
+        audio_devices_t devices = AUDIO_DEVICE_NONE;
+
+        for (i = 0; i < num_sinks; i++) {
+            if (sinks[i].type == AUDIO_PORT_TYPE_DEVICE) devices |= sinks[i].ext.device.type;
+        }
+        pthread_mutex_lock(&adev->outputs_lock);
+        for (out = adev->outputs; out; out = out->next) {
+            if (out->handle == sources[0].ext.mix.handle && devices) out->device = devices;
+        }
+        pthread_mutex_unlock(&adev->outputs_lock);
+    }
     for (i = 0; i < num_sources; i++) to_fireos_port_config(&sources[i], &fsources[i]);
     for (i = 0; i < num_sinks; i++) to_fireos_port_config(&sinks[i], &fsinks[i]);
     return fireos_dev(dev)->create_audio_patch(fireos_dev(dev), num_sources, fsources, num_sinks,
@@ -951,6 +1025,7 @@ static int adev_open(const struct hw_module_t* module, const char* name,
 
     adev = calloc(1, sizeof(*adev));
     if (!adev) return -ENOMEM;
+    pthread_mutex_init(&adev->outputs_lock, NULL);
     ret = fireos_module->methods->open(fireos_module, name, (struct hw_device_t**)&adev->fireos);
     if (ret != 0 || !adev->fireos) {
         ALOGE("cannot open the Fire OS audio HAL: %d", ret);

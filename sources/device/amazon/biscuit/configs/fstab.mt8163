@@ -1,0 +1,17 @@
+# Android fstab file for the Echo Dot (2nd gen) on amonet v2: boot_a/b and
+# system_a/b, with one userdata and cache.
+# The filesystem that contains the filesystem checker binary (typically /system) cannot
+# specify MF_CHECK, and must come before any filesystems that do specify MF_CHECK
+
+#<src>                                                  <mnt_point> <type> <mnt_flags and options>                                <fs_mgr_flags>
+/dev/block/platform/soc/11230000.mmc/by-name/system     /system     ext4   ro                                                     wait,slotselect,first_stage_mount
+/dev/block/platform/soc/11230000.mmc/by-name/userdata   /data       ext4   noatime,nosuid,nodev,noauto_da_alloc,errors=remount-ro latemount,wait,check,formattable,reservedsize=128m
+/dev/block/platform/soc/11230000.mmc/by-name/cache      /cache      ext4   noatime,nosuid,nodev,noauto_da_alloc                   wait,check,formattable
+
+/dev/block/platform/soc/11230000.mmc/by-name/boot       /boot       emmc   defaults                                               slotselect
+/dev/block/platform/soc/11230000.mmc/by-name/recovery   /recovery   emmc   defaults                                               defaults
+/dev/block/platform/soc/11230000.mmc/by-name/misc       /misc       emmc   defaults                                               defaults
+
+/devices/platform/mt_usb*                               auto        vfat   defaults                                               voldmanaged=usbotg:auto
+
+/dev/block/zram0                                        /swap_zram0 swap   defaults                                               wait,zramsize=50%,max_comp_streams=4

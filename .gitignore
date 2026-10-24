@@ -1,0 +1,11 @@
+# The LineageOS tree, ccache and build output, or a symlink to them
+workspace
+
+# Local notes and tools
+issues/
+.internal
+.claude/
+.remember/
+AGENTS.md
+__pycache__/
+handoff*

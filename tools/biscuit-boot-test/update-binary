@@ -1,0 +1,32 @@
+#!/sbin/sh
+# Write boot.img from this zip into slot A's boot partition from amonet v2
+# TWRP, after saving the old one to /tmp/boot-backup.img.
+OUTFD="/proc/self/fd/$2"
+ZIP="$3"
+
+ui_print() { echo "ui_print $1" > "$OUTFD"; echo "ui_print" > "$OUTFD"; }
+abort() { ui_print "Error: $1"; exit 1; }
+
+target=$(readlink -f /dev/block/current-boot)
+slot_a=$(readlink -f /dev/block/platform/bootdevice/by-name/boot_a)
+[ -n "$target" ] && [ "$target" = "$slot_a" ] || abort "current-boot ($target) is not boot_a ($slot_a)"
+
+cd /tmp || abort "no /tmp"
+rm -f boot.img boot.img.sha256
+unzip -o "$ZIP" boot.img boot.img.sha256 >/dev/null || abort "zip has no boot.img"
+[ "$(sha256sum boot.img | cut -d' ' -f1)" = "$(cut -d' ' -f1 boot.img.sha256)" ] || abort "boot.img checksum mismatch"
+
+part_size=$(blockdev --getsize64 "$target")
+img_size=$(stat -c %s boot.img)
+[ "$img_size" -le "$part_size" ] || abort "boot.img ($img_size) is larger than $target ($part_size)"
+
+dd if="$target" of=/tmp/boot-backup.img 2>/dev/null || abort "could not save the old boot image"
+sha256sum /tmp/boot-backup.img > /tmp/boot-backup.img.sha256
+ui_print "Saved the old boot image to /tmp/boot-backup.img"
+
+dd if=boot.img of="$target" bs=2048 2>/dev/null || abort "write failed"
+sync
+written=$(dd if="$target" bs=2048 count=$((img_size / 2048)) 2>/dev/null | sha256sum | cut -d' ' -f1)
+[ "$written" = "$(sha256sum boot.img | cut -d' ' -f1)" ] || abort "read back does not match"
+ui_print "Wrote boot.img to $target"
+exit 0

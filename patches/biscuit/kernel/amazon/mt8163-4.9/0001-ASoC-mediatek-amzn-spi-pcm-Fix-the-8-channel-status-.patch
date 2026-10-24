@@ -1,0 +1,27 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Sat, 24 Oct 2026 01:06:33 -0500
+Subject: [PATCH 1/9] ASoC: mediatek: amzn-spi-pcm: Fix the 8-channel status
+ frame
+
+With CONFIG_SND_SOC_8_MICS, eight ADC channels, dough_status_frame
+declared rsvd0 twice, once with the 8-channel size and once with the
+4-channel one, so no such build compiled. With eight ADC channels the
+FPGA sends 15 reserved bytes, as in the Fire OS 6.5.7.1 Echo Dot kernel.
+The Echo Dot (2nd gen) uses seven of them for its microphones.
+---
+ sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/dough.h | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/dough.h b/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/dough.h
+index c9287e03..b10bc4c7 100644
+--- a/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/dough.h
++++ b/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/dough.h
+@@ -33,7 +33,6 @@ struct dough_audio_frame {
+ struct __attribute__((__packed__)) dough_status_frame {
+ #if defined CONFIG_SND_SOC_8_MICS
+ 	uint8_t rsvd0[15];          /* bytes 12-26 */
+-	uint8_t rsvd0[6];           /* bytes 12-17 */
+ #elif defined CONFIG_SND_SOC_4_MICS
+ 	uint8_t rsvd0[6];           /* bytes 12-17 */
+ #endif

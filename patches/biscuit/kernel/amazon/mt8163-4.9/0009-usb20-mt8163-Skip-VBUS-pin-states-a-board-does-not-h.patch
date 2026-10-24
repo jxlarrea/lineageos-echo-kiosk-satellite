@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Sat, 24 Oct 2026 01:32:43 -0500
+Subject: [PATCH 9/9] usb20: mt8163: Skip VBUS pin states a board does not have
+
+mt_usb_init_drvvbus() and mt_usb_set_vbus() select the drvvbus pin
+states even when the lookup failed, and selecting an error pointer
+oopses. The Echo Dot (2nd gen) names no VBUS pin states, since its VBUS
+pin, GPIO35, enables its mic ADCs.
+---
+ drivers/misc/mediatek/usb20/mt8163/usb20_host.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/misc/mediatek/usb20/mt8163/usb20_host.c b/drivers/misc/mediatek/usb20/mt8163/usb20_host.c
+index 4cc2eb3e..b583a6f5 100644
+--- a/drivers/misc/mediatek/usb20/mt8163/usb20_host.c
++++ b/drivers/misc/mediatek/usb20/mt8163/usb20_host.c
+@@ -188,7 +188,8 @@ void mt_usb_set_vbus(struct musb *musb, int is_on)
+ 		mt_set_gpio_out(drvvbus_pin, GPIO_OUT_ONE);
+ #else
+ 		DBG(0, "****%s:%d Drive VBUS ON!!!!!\n", __func__, __LINE__);
+-		pinctrl_select_state(pinctrl, pinctrl_drvvbus_high);
++		if (!IS_ERR(pinctrl_drvvbus_high))
++			pinctrl_select_state(pinctrl, pinctrl_drvvbus_high);
+ #endif
+ #else
+ 		mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN,
+@@ -208,7 +209,8 @@ void mt_usb_set_vbus(struct musb *musb, int is_on)
+ 		mt_set_gpio_out(drvvbus_pin, GPIO_OUT_ZERO);
+ #else
+ 		DBG(0, "****%s:%d Drive VBUS OFF!!!!!\n", __func__, __LINE__);
+-		pinctrl_select_state(pinctrl, pinctrl_drvvbus_low);
++		if (!IS_ERR(pinctrl_drvvbus_low))
++			pinctrl_select_state(pinctrl, pinctrl_drvvbus_low);
+ #endif
+ #else
+ 		mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN,
+@@ -279,7 +281,8 @@ void mt_usb_init_drvvbus(void)
+ 			"Cannot find usb pinctrl drvvbus_high\n");
+ 	}
+ 
+-	pinctrl_select_state(pinctrl, pinctrl_drvvbus);
++	if (!IS_ERR(pinctrl_drvvbus))
++		pinctrl_select_state(pinctrl, pinctrl_drvvbus);
+ 	DBG(0, "****%s:%d end Init Drive VBUS KS!!!!!\n", __func__, __LINE__);
+ #endif
+ #else

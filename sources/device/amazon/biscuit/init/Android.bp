@@ -1,0 +1,12 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+prebuilt_etc {
+    name: "init.target.biscuit.rc",
+    filename: "init.target.rc",
+    src: "init.target.biscuit.rc",
+    sub_dir: "init/hw",
+    vendor: true,
+}

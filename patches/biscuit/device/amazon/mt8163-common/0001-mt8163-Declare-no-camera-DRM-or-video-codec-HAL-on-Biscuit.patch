@@ -1,0 +1,54 @@
+mt8163: Declare no camera, DRM or video codec HAL on Biscuit
+
+The Echo Dot (2nd gen) has no camera, plays no protected content and
+decodes its audio in software, so its build leaves these HALs out. A HAL
+the manifest declares but that never starts blocks every client that
+asks for it, so the declarations go too.
+
+diff --git a/manifest.xml b/manifest.xml
+index 64c7717..f0e842d 100644
+--- a/manifest.xml
++++ b/manifest.xml
+@@ -8,19 +8,6 @@
+         <transport>hwbinder</transport>
+         <fqname>@2.0::IBluetoothAudioProvidersFactory/default</fqname>
+     </hal>
+-    <hal format="hidl">
+-        <name>android.hardware.camera.provider</name>
+-        <transport>hwbinder</transport>
+-        <fqname>@2.4::ICameraProvider/internal/0</fqname>
+-    </hal>
+-    <hal format="hidl">
+-        <name>android.hardware.drm</name>
+-        <transport>hwbinder</transport>
+-        <fqname>@1.3::ICryptoFactory/clearkey</fqname>
+-        <fqname>@1.3::IDrmFactory/clearkey</fqname>
+-        <fqname>@1.1::ICryptoFactory/widevine</fqname>
+-        <fqname>@1.1::IDrmFactory/widevine</fqname>
+-    </hal>
+     <hal format="hidl">
+         <name>android.hardware.graphics.allocator</name>
+         <transport>hwbinder</transport>
+@@ -46,12 +33,6 @@
+         <transport>hwbinder</transport>
+         <fqname>@1.0::IMemtrack/default</fqname>
+     </hal>
+-    <hal format="hidl">
+-        <name>android.hardware.media.omx</name>
+-        <transport>hwbinder</transport>
+-        <fqname>@1.0::IOmx/default</fqname>
+-        <fqname>@1.0::IOmxStore/default</fqname>
+-    </hal>
+     <hal format="hidl">
+         <name>android.hardware.sensors</name>
+         <transport>hwbinder</transport>
+@@ -62,9 +43,4 @@
+         <transport>hwbinder</transport>
+         <fqname>@1.1::IAmazonThermal/default</fqname>
+     </hal>
+-    <hal format="hidl">
+-        <name>vendor.mediatek.hardware.camera.ccap</name>
+-        <transport>hwbinder</transport>
+-        <fqname>@1.0::ICCAPControl/internal/0</fqname>
+-    </hal>
+ </manifest>

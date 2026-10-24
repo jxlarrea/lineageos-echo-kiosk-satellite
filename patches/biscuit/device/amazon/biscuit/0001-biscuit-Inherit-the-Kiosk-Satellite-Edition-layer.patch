@@ -1,0 +1,18 @@
+biscuit: Inherit the Kiosk Satellite Edition layer
+
+lineage_biscuit inherits the layer every device shares and the Biscuit
+additions, which stage-tree.sh copies into the tree.
+
+--- a/lineage_biscuit.mk
++++ b/lineage_biscuit.mk
+@@ -15,6 +15,10 @@
+ # Inherit some common LineageOS stuff.
+ $(call inherit-product, vendor/lineage/config/common_mini_tablet_wifionly.mk)
+ 
++# Inherit the Kiosk Satellite Edition layer.
++$(call inherit-product, vendor/kiosk-satellite/config/common.mk)
++$(call inherit-product, device/kiosk-satellite/biscuit/device.mk)
++
+ PRODUCT_NAME := lineage_biscuit
+ PRODUCT_DEVICE := biscuit
+ PRODUCT_MANUFACTURER := Amzn

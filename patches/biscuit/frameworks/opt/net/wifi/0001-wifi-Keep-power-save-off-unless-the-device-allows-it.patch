@@ -1,0 +1,35 @@
+wifi: Keep power save off unless the device allows it
+
+persist.biscuit.wifi_powersave 0 keeps Wi-Fi power save off on the Echo
+Dot (2nd gen), which is always on mains. In power save the access point
+holds broadcasts until the next DTIM beacon, and about one in five never
+arrived. Every change goes through WifiNative.setPowerSave(), including
+the one Android makes after each DHCP renewal, so it is applied there.
+
+diff --git a/service/java/com/android/server/wifi/WifiNative.java b/service/java/com/android/server/wifi/WifiNative.java
+index cf362d6..fc26006 100644
+--- a/service/java/com/android/server/wifi/WifiNative.java
++++ b/service/java/com/android/server/wifi/WifiNative.java
+@@ -35,6 +35,7 @@ import android.net.wifi.nl80211.RadioChainInfo;
+ import android.net.wifi.nl80211.WifiNl80211Manager;
+ import android.os.Handler;
+ import android.os.SystemClock;
++import android.os.SystemProperties;
+ import android.text.TextUtils;
+ import android.util.ArraySet;
+ import android.util.Log;
+@@ -2271,6 +2272,14 @@ public class WifiNative {
+      * @param enabled true to enable, false to disable.
+      */
+     public void setPowerSave(@NonNull String ifaceName, boolean enabled) {
++        // A mains powered device can keep the radio awake. In power save the
++        // access point holds broadcasts until the next DTIM beacon, which
++        // delays or loses the messages kiosks exchange to pick one to answer.
++        // Android also turns power save back on after every DHCP renewal, so
++        // the device's choice is applied here, where every change passes.
++        if (enabled && !SystemProperties.getBoolean("persist.biscuit.wifi_powersave", true)) {
++            enabled = false;
++        }
+         mSupplicantStaIfaceHal.setPowerSave(ifaceName, enabled);
+     }
+ 

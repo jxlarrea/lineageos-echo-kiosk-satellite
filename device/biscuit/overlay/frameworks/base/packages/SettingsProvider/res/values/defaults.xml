@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- The setup wizard is left out, and nobody could go through it. -->
+    <bool name="def_device_provisioned">true</bool>
+    <bool name="def_user_setup_complete">true</bool>
+
+    <!-- Stay awake on power: a sleeping Dot hears nothing, and it is
+         always plugged in. -->
+    <bool name="def_stay_on_while_plugged_in">true</bool>
+</resources>

@@ -1,0 +1,61 @@
+#
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# The recovery partition holds amonet v2's TWRP. Never let
+# install-recovery.sh replace it with the LineageOS recovery, whatever
+# persist.vendor.recovery_update says.
+service vendor_flash_recovery /system/bin/true
+    override
+    class main
+    oneshot
+    disabled
+
+# KSM: bionic marks every private anonymous mapping mergeable, so the same
+# pages in different processes, the zygote's children above all, are kept
+# once. 100 pages every 500 ms.
+on boot
+    write /sys/kernel/mm/ksm/pages_to_scan 100
+    write /sys/kernel/mm/ksm/sleep_millisecs 500
+    write /sys/kernel/mm/ksm/run 1
+
+# Rooted adb on debuggable builds. LineageOS keeps the switch in
+# /data/adbroot/enabled, set from Settings, which nobody can reach on the Dot.
+on post-fs-data && property:ro.debuggable=1
+    mkdir /data/adbroot 0700 root root encryption=Require
+    write /data/adbroot/enabled 1
+
+# adb over USB from boot. mt8163-common's init.mt8163.usb.rc sets
+# sys.usb.config to none on boot and leaves the rest to system_server's USB
+# manager. The Dot has no screen, so adb has to work even if system_server
+# never gets that far. This file is imported after it.
+on boot
+    setprop sys.usb.config ${persist.sys.usb.config}
+
+# MT8163 connsys. init.insmod.sh loads the mt66xx modules and then sets
+# sys.all.modules.ready. Fire OS 6's wmt_loader initializes WMT, then
+# wmt_launcher downloads the connsys ROM patch and keeps the link up.
+on property:sys.all.modules.ready=1
+    start wmt_loader
+
+on property:init.svc.wmt_loader=stopped
+    start wmt_launcher
+
+service wmt_loader /vendor/bin/wmt_loader
+    class core
+    user root
+    group root system
+    oneshot
+    disabled
+
+service wmt_launcher /vendor/bin/wmt_launcher -p /vendor/firmware/
+    class core
+    user system
+    group system
+    disabled
+
+# Fire OS 6's wmt_loader publishes the connsys chip under its Android 7
+# property name. The mt66xx libbt-vendor reads the vendor one.
+on property:persist.mtk.wcn.combo.chipid=*
+    setprop persist.vendor.connsys.chipid ${persist.mtk.wcn.combo.chipid}

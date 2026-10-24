@@ -1,0 +1,8 @@
+# source:destination:sha256:size
+# The MT8163 connsys loader, launcher and firmware from Fire OS 6.5.7.4.
+system/vendor/bin/wmt_loader:vendor/bin/wmt_loader:de9ee285a09a7db5b079233f7c9129c5484ecb6701b54da45e2a29f310e74ff9:17992
+system/vendor/bin/wmt_launcher:vendor/bin/wmt_launcher:1f34425d727ea64524c9edaeac5e6b295df7a6054703dcc79b164021560252e5:31448
+system/vendor/firmware/ROMv2_lm_patch_1_0_hdr.bin:vendor/firmware/ROMv2_lm_patch_1_0_hdr.bin:6642cfd4fd67accf27b0f9615e4cd0941417ddbc3b5bef1004fe1eb59235146f:128744
+system/vendor/firmware/ROMv2_lm_patch_1_1_hdr.bin:vendor/firmware/ROMv2_lm_patch_1_1_hdr.bin:c4aa6dfc54b82f496d97be8eb3979232730f51a3fdfad34192b91d0b87b06a56:52160
+system/vendor/firmware/WIFI_RAM_CODE_8163:vendor/firmware/WIFI_RAM_CODE_8163:9669cc9b03cfdc5e8fd4fd6e14c4c4050e8c196738ca4707eea12f14a6a8e64c:373840
+system/vendor/firmware/WMT_SOC.cfg:vendor/firmware/WMT_SOC.cfg:302bd4462de99c028c04092e561c1500d65582ce42a93c4c72ccae6e2c99013d:119

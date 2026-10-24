@@ -1,0 +1,2 @@
+# Headless: no setup wizard to finish.
+ro.setupwizard.mode=DISABLED

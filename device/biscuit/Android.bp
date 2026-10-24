@@ -1,0 +1,177 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// The Echo Dot's HOME. It also keeps out of the image what a speaker without
+// a screen never uses, as the CM14 image did: Android removes every module a
+// module it installs overrides.
+android_app {
+    name: "BiscuitEmptyLauncher",
+    srcs: ["empty-launcher/src/**/*.java"],
+    resource_dirs: ["empty-launcher/res"],
+    manifest: "empty-launcher/AndroidManifest.xml",
+    sdk_version: "current",
+    certificate: "platform",
+    overrides: [
+        // Nothing to draw: no status bar, navigation, lock screen, volume
+        // dialog, keyboard, launcher, wallpaper or theme. Android treats a
+        // missing keyguard as a device without one.
+        "Backgrounds",
+        "LatinIME",
+        "Launcher3QuickStep",
+        "SystemUI",
+        "ThemePicker",
+        "TrebuchetQuickStep",
+        "WallpaperCropper",
+        "WallpaperPicker2",
+
+        // The Android System WebView: nothing on the Dot draws a web page.
+        // The Echo Shows keep it.
+        "webview",
+
+        // Setup, updates and backup. The setup wizard's work is two
+        // SettingsProvider defaults (overlay/), and system updates come from
+        // BiscuitService.
+        "LineageSetupWizard",
+        "Seedvault",
+        "SharedStorageBackup",
+        "Updater",
+        "WallpaperBackup",
+
+        // Telephony: the Dot has no modem, and the phone process and its
+        // providers only cost memory.
+        "BlockedNumberProvider",
+        "ContactsProvider",
+        "MmsService",
+        "SimAppDialog",
+        "Telecom",
+        "TeleService",
+        "TelephonyProvider",
+
+        // Apps and providers a speaker does not use.
+        "AudioFX",
+        "BookmarkProvider",
+        "BuiltInPrintService",
+        "CalendarProvider",
+        "Camera2",
+        "Contacts",
+        "DeskClock",
+        "DocumentsUI",
+        "DownloadProviderUi",
+        "DynamicSystemInstallationService",
+        "EasterEgg",
+        "Eleven",
+        "Etar",
+        "ExactCalculator",
+        "Gallery2",
+        "HTMLViewer",
+        "Jelly",
+        "LocalContactsBackup",
+        "MtpDocumentsProvider",
+        "OneTimeInitializer",
+        "PrintRecommendationService",
+        "PrintSpooler",
+        "Profiles",
+        "QuickAccessWallet",
+        "Recorder",
+        "SecureElement",
+        "SettingsIntelligence",
+        "SoundPicker",
+        "Traceur",
+
+        // Started at boot and never used: the local backup transport (the
+        // Dot backs nothing up), LineageOS's settings screens and the
+        // permissions hub flags only SystemUI reads.
+        "LineageParts",
+        "LocalTransport",
+        "SimpleDeviceConfig",
+
+        // Themes: accent colors, fonts, icon packs and shapes, navigation bar
+        // modes and display cutouts restyle a screen the Dot does not have,
+        // and PackageManager scans each of them on every boot. AOSP's come
+        // in only as the required modules of these two phony ones, so the
+        // phony ones are what has to go.
+        "frameworks-base-overlays",
+        "frameworks-base-overlays-debug",
+        "LineageBlackAccent",
+        "LineageBlackTheme",
+        "LineageBlueAccent",
+        "LineageBrownAccent",
+        "LineageCyanAccent",
+        "LineageGreenAccent",
+        "LineageNavigationBarNoHint",
+        "LineageOrangeAccent",
+        "LineagePinkAccent",
+        "LineagePurpleAccent",
+        "LineageRedAccent",
+        "LineageThemesStub",
+        "LineageYellowAccent",
+        "NavigationBarMode2ButtonOverlay",
+        "NavigationBarMode3ButtonOverlay",
+        "NavigationBarModeGesturalOverlay",
+        "NavigationBarModeGesturalOverlayExtraWideBack",
+        "NavigationBarModeGesturalOverlayNarrowBack",
+        "NavigationBarModeGesturalOverlayWideBack",
+
+        // System parts that need a screen or hardware the Dot does not have:
+        // captive portal sign-in, certificate and VPN dialogs, proxy
+        // auto-config, the keyboard dictionary, companion pairing, MIDI over
+        // Bluetooth, WAP push, managed provisioning (Kiosk Satellite becomes
+        // the device owner through dpm), MTP, dreams, live wallpapers and
+        // the CTS shims.
+        "BackupRestoreConfirmation",
+        "BasicDreams",
+        "BluetoothMidiService",
+        "CaptivePortalLogin",
+        "CertInstaller",
+        "CompanionDeviceManager",
+        "CtsShimPrebuilt",
+        "CtsShimPrivPrebuilt",
+        "LiveWallpapersPicker",
+        "ManagedProvisioning",
+        "MtpService",
+        "PacProcessor",
+        "PhotoTable",
+        "PlatformCaptivePortalLogin",
+        "ProxyHandler",
+        "UserDictionaryProvider",
+        "VpnDialogs",
+        "WAPPushManager",
+
+        // Chinese, Japanese and Korean fonts, 44 MB. Nothing on the Dot draws
+        // text, and Android's font loader skips files that are missing.
+        "NotoSansCJK-Regular.ttc",
+        "NotoSerifCJK-Regular.ttc",
+
+        // LiveDisplay tunes a screen. Its HAL only registers when MediaTek's
+        // display driver exists, but the VINTF fragment that comes with it
+        // declares it anyway, and LiveDisplayService then blocks waiting for
+        // it until the watchdog restarts system_server. Leaving the module
+        // out takes the fragment with it.
+        "vendor.lineage.livedisplay@2.0-service-mt8163",
+
+        // Conditional access, ClearKey DRM and the OMX video codec service,
+        // and Perfetto tracing. Audio decodes in software through Codec2.
+        // patches/biscuit drops the DRM and OMX declarations from
+        // mt8163-common's manifest along with them.
+        "android.hardware.cas@1.2-service",
+        "android.hardware.drm@1.3-service.clearkey",
+        "android.hardware.media.omx@1.0-service",
+        "traced",
+        "traced_probes",
+
+        // The camera HAL's libraries: BoardConfig.mk leaves the camera blobs
+        // out, and nothing else uses these.
+        "camera.device@1.0-impl",
+        "camera.device@3.2-impl",
+        "libcamsensormeta_shim",
+        "libsensorndkbridge",
+    ],
+}
+
+prebuilt_etc {
+    name: "init.kiosk-satellite.biscuit.rc",
+    src: "init/init.kiosk-satellite.biscuit.rc",
+    sub_dir: "init",
+}

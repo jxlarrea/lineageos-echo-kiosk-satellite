@@ -1,0 +1,84 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Sat, 24 Oct 2026 01:12:02 -0500
+Subject: [PATCH 5/9] of: fdt: Keep the device's identity under CMDLINE_FORCE
+
+A forced command line drops every bootloader argument, including the
+serial number and the boot reason. Keep those two from the bootargs the
+bootloader passes and nothing else: the Echo Dot's Fire OS 6 LK also
+passes root=, dm= and a slot suffix that do not fit the system it boots.
+---
+ drivers/of/fdt.c | 53 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/drivers/of/fdt.c b/drivers/of/fdt.c
+index 67bfef9d..62810d2a 100644
+--- a/drivers/of/fdt.c
++++ b/drivers/of/fdt.c
+@@ -1087,6 +1087,53 @@ static const char *config_cmdline = CONFIG_CMDLINE;
+ static const char *config_cmdline = "";
+ #endif
+ 
++#ifdef CONFIG_CMDLINE_FORCE
++/*
++ * Bootloader arguments that are safe to keep when the kernel forces its own
++ * command line: the ones that identify the device and say why it started.
++ * A bootloader like the Echo Dot's Fire OS 6 LK also passes root=, dm= and a
++ * slot suffix that do not fit the system the kernel boots.
++ */
++static const char * const kept_bootloader_args[] __initconst = {
++	"androidboot.serialno=",
++	"androidboot.bootreason=",
++	"boot_reason=",
++};
++
++static void __init keep_bootloader_args(char *cmdline, const char *bootargs,
++					int len)
++{
++	const char *arg = bootargs, *end = bootargs + strnlen(bootargs, len);
++	size_t arg_len;
++	int i;
++
++	while (arg < end) {
++		while (arg < end && *arg == ' ')
++			arg++;
++		arg_len = strchrnul(arg, ' ') - arg;
++		if (arg + arg_len > end)
++			arg_len = end - arg;
++
++		for (i = 0; i < ARRAY_SIZE(kept_bootloader_args); i++) {
++			size_t prefix_len = strlen(kept_bootloader_args[i]);
++
++			if (arg_len <= prefix_len ||
++			    strncmp(arg, kept_bootloader_args[i], prefix_len))
++				continue;
++			if (strlen(cmdline) + 1 + arg_len >= COMMAND_LINE_SIZE) {
++				pr_warn("No room to keep %.*s\n",
++					(int)prefix_len, arg);
++				break;
++			}
++			strlcat(cmdline, " ", COMMAND_LINE_SIZE);
++			strncat(cmdline, arg, arg_len);
++			break;
++		}
++		arg += arg_len;
++	}
++}
++#endif
++
+ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
+ 				     int depth, void *data)
+ {
+@@ -1126,6 +1173,12 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
+ 		}
+ 	}
+ 
++#ifdef CONFIG_CMDLINE_FORCE
++	p = of_get_flat_dt_prop(node, "bootargs", &l);
++	if (p != NULL && l > 0)
++		keep_bootloader_args(cmdline, p, l);
++#endif
++
+ 	pr_debug("Command line is: %s\n", (char*)data);
+ 
+ 	rng_seed = of_get_flat_dt_prop(node, "rng-seed", &l);

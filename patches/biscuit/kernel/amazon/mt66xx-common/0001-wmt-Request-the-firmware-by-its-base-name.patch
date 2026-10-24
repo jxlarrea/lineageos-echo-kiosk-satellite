@@ -1,0 +1,34 @@
+wmt: Request the firmware by its base name
+
+The firmware loader looks a name up below each directory of its search
+path, firmware_class.path included, so a full path is never found. Fire
+OS 6's wmt_launcher passes the connsys ROM patch as
+/vendor/firmware/ROMv2_lm_patch_1_1_hdr.bin, and the driver kept retrying
+it, so connsys never started on the Echo Dot (2nd gen).
+
+diff --git a/module/common_main/linux/wmt_dev.c b/module/common_main/linux/wmt_dev.c
+index 3ded273..d098fd7 100644
+--- a/module/common_main/linux/wmt_dev.c
++++ b/module/common_main/linux/wmt_dev.c
+@@ -41,6 +41,7 @@
+ #include <linux/compat.h>
+ #endif
+ #include <linux/ctype.h>
++#include <linux/string.h>
+ #if WMT_CREATE_NODE_DYNAMIC
+ #include <linux/device.h>
+ #endif
+@@ -478,7 +479,12 @@ INT32 wmt_dev_patch_get(PUINT8 pPatchName, osal_firmware **ppPatch)
+ 	}
+ 	*ppPatch = NULL;
+ 	do {
+-		iRet = request_firmware((const struct firmware **)&fw, pPatchName, NULL);
++		/*
++		 * The firmware loader looks names up below its own search path, so
++		 * a launcher that passes an absolute path, like Fire OS 6's
++		 * wmt_launcher, is only found by its base name.
++		 */
++		iRet = request_firmware((const struct firmware **)&fw, kbasename(pPatchName), NULL);
+ 		if (iRet == -EAGAIN) {
+ 			WMT_ERR_FUNC("failed to open or read!(%s), retry again!\n", pPatchName);
+ 			osal_sleep_ms(100);

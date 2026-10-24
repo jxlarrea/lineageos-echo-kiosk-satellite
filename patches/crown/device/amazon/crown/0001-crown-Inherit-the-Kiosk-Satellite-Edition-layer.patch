@@ -1,0 +1,18 @@
+crown: Inherit the Kiosk Satellite Edition layer
+
+lineage_crown inherits the layer every device shares and the crown
+additions, which stage-tree.sh copies into the tree.
+
+--- a/lineage_crown.mk
++++ b/lineage_crown.mk
+@@ -12,6 +12,10 @@
+ # Inherit some common LineageOS stuff.
+ $(call inherit-product, vendor/lineage/config/common_full_tablet_wifionly.mk)
+ 
++# Inherit the Kiosk Satellite Edition layer.
++$(call inherit-product, vendor/kiosk-satellite/config/common.mk)
++$(call inherit-product, device/kiosk-satellite/crown/device.mk)
++
+ PRODUCT_NAME := lineage_crown
+ PRODUCT_DEVICE := crown
+ PRODUCT_MANUFACTURER := Amzn

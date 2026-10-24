@@ -1,0 +1,50 @@
+#
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Services the Echo Dot never uses, replaced by definitions that do nothing.
+# init keeps the first definition of a service unless a later one says
+# override, so these win wherever init reads them from.
+
+# Camera: the Dot has none.
+service cameraserver /system/bin/true
+    override
+    oneshot
+    disabled
+
+# The legacy DRM framework: nothing on the Dot plays protected content.
+service drm /system/bin/true
+    override
+    oneshot
+    disabled
+
+# Metrics, incident reports, storage statistics, identity credentials and
+# heap tracing: nothing on a Dot uses them, and each daemon costs memory.
+# Stopping these and others on LineageOS 18.1 freed about 10 MB with Kiosk
+# Satellite running. HALs the VINTF manifest declares are left alone: a
+# declared HAL that never starts blocks every client that asks for it.
+service statsd /system/bin/true
+    override
+    oneshot
+    disabled
+
+service incidentd /system/bin/true
+    override
+    oneshot
+    disabled
+
+service storaged /system/bin/true
+    override
+    oneshot
+    disabled
+
+service credstore /system/bin/true
+    override
+    oneshot
+    disabled
+
+service traced_perf /system/bin/true
+    override
+    oneshot
+    disabled

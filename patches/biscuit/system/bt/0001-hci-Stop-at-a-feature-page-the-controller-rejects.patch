@@ -1,0 +1,28 @@
+hci: Stop at a feature page the controller rejects
+
+The MT8163 connsys controller in the Echo Dot (2nd gen) rejects one of
+the extended feature pages it reports. Android 11 aborts on the error
+status, so Bluetooth crashed at every start. Like Android 7, treat the
+pages before it as all there is. A rejected page 0 still aborts.
+
+diff --git a/hci/src/hci_packet_parser.cc b/hci/src/hci_packet_parser.cc
+index b1efd44..d02aa87 100644
+--- a/hci/src/hci_packet_parser.cc
++++ b/hci/src/hci_packet_parser.cc
+@@ -114,6 +114,16 @@ static void parse_read_local_extended_features_response(
+   uint8_t* stream = read_command_complete_header(
+       response, HCI_READ_LOCAL_EXT_FEATURES,
+       2 + sizeof(bt_device_features_t) /* bytes after */);
++  // Some controllers, like the MT8163's, reject a feature page they report.
++  // Treat the pages before it as all there is, as Android 7 did, and leave
++  // the rest empty. *page_number_ptr holds the page that was asked for.
++  if (stream == NULL && *page_number_ptr > 0) {
++    LOG(WARNING) << __func__ << ": the controller rejected feature page "
++                 << +*page_number_ptr << ", using the pages before it";
++    *max_page_number_ptr = *page_number_ptr - 1;
++    buffer_allocator->free(response);
++    return;
++  }
+   CHECK(stream != NULL);
+ 
+   STREAM_TO_UINT8(*page_number_ptr, stream);

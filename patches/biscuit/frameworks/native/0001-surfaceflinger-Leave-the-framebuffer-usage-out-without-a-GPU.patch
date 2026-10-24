@@ -1,0 +1,36 @@
+surfaceflinger: Leave the framebuffer usage out without a GPU
+
+On a device with ro.config.no_gpu, like the Echo Dot (2nd gen), there
+is no framebuffer device. gralloc.default allocates buffers with the
+framebuffer usage from /dev/graphics/fb0, so every frame failed.
+
+diff --git a/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp b/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp
+index 4c3b3e5..ce20eda 100644
+--- a/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp
++++ b/services/surfaceflinger/DisplayHardware/FramebufferSurface.cpp
+@@ -28,6 +28,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ 
++#include <cutils/properties.h>
+ #include <utils/String8.h>
+ #include <log/log.h>
+ 
+@@ -74,9 +75,14 @@ FramebufferSurface::FramebufferSurface(HWComposer& hwc, DisplayId displayId,
+ 
+     mName = "FramebufferSurface";
+     mConsumer->setConsumerName(mName);
+-    mConsumer->setConsumerUsageBits(GRALLOC_USAGE_HW_FB |
+-                                       GRALLOC_USAGE_HW_RENDER |
+-                                       GRALLOC_USAGE_HW_COMPOSER);
++    // A device without a GPU or a screen, ro.config.no_gpu, has no
++    // framebuffer device to allocate from. Asking gralloc for one would fail
++    // every frame.
++    uint32_t usage = GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_COMPOSER;
++    if (!property_get_bool("ro.config.no_gpu", false)) {
++        usage |= GRALLOC_USAGE_HW_FB;
++    }
++    mConsumer->setConsumerUsageBits(usage);
+     const auto& activeConfig = mHwc.getActiveConfig(displayId);
+     ui::Size limitedSize =
+             limitFramebufferSize(activeConfig->getWidth(), activeConfig->getHeight());

@@ -1,0 +1,26 @@
+PhoneWindowManager: Follow the torch only with a camera flash
+
+LineageOS registers a torch callback at boot to follow the flash for the
+power button torch. On a device without a camera, like the Echo Dot
+(2nd gen), CameraManager then retried the camera service every second
+and logged that it was unavailable. Register the callback only when the
+device declares a camera flash.
+
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 28724e2e..aacc6474 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -2062,7 +2062,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         // Lineage additions
+         mAlarmManager = mContext.getSystemService(AlarmManager.class);
+         mCameraManager = (CameraManager) mContext.getSystemService(Context.CAMERA_SERVICE);
+-        mCameraManager.registerTorchCallback(new TorchModeCallback(), mHandler);
++        // Without a flash there is no torch to follow, and the callback keeps
++        // CameraManager retrying a camera service that never comes.
++        if (mContext.getPackageManager().hasSystemFeature(
++                PackageManager.FEATURE_CAMERA_FLASH)) {
++            mCameraManager.registerTorchCallback(new TorchModeCallback(), mHandler);
++        }
+ 
+         mShortcutManager = new ShortcutManager(context);
+         mUiMode = context.getResources().getInteger(

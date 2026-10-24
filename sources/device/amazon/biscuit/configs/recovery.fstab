@@ -1,0 +1,9 @@
+# The partitions the OTA tools write, from amonet v2 TWRP. TWRP links
+# current-system and current-boot to the slot it booted on, which an
+# updater script's add_slot_suffix() cannot be trusted to match.
+
+#<src>                        <mnt_point> <type> <mnt_flags and options> <fs_mgr_flags>
+/dev/block/current-system     /system     ext4   ro                      wait
+/dev/block/current-boot       /boot       emmc   defaults                defaults
+/dev/block/platform/soc/11230000.mmc/by-name/userdata /data ext4 noatime,nosuid,nodev wait
+/dev/block/platform/soc/11230000.mmc/by-name/cache    /cache ext4 noatime,nosuid,nodev wait

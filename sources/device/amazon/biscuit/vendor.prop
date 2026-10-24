@@ -1,0 +1,17 @@
+# Display
+# The Dot has no screen and its kernel no GPU driver: one display nobody
+# sees from hwcomposer.biscuit, SwiftShader GLES on AOSP's gralloc.
+ro.hardware.egl=swiftshader
+ro.hardware.gralloc=default
+ro.hardware.hwcomposer=biscuit
+# SurfaceFlinger asks gralloc for buffers without the framebuffer usage,
+# since there is no framebuffer device to allocate them from.
+ro.config.no_gpu=true
+# Nothing would see the boot animation.
+debug.sf.nobootanimation=1
+
+# Sensors
+ro.hardware.sensors=biscuit
+
+# Wi-Fi
+wifi.interface=wlan0

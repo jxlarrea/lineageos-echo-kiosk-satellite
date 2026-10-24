@@ -1,0 +1,86 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Sat, 24 Oct 2026 01:07:31 -0500
+Subject: [PATCH 2/9] staging: amazon: Add the Biscuit platform project
+
+Biscuit is the Echo Dot (2nd gen). Like rook it plays through the TI
+TLV320AIC3204 DAC with its MCLK from the camera MCLK and reads the
+headset jack GPIO as is, and it waits 100 ms for its mic array FPGA.
+All three follow the Fire OS 6.5.7.1 Echo Dot kernel.
+---
+ drivers/misc/mediatek/accdet/mt8163/accdet_amzn.c           | 2 +-
+ drivers/staging/amazon/Kconfig                              | 5 +++++
+ .../mt_soc_audio_8163_amzn/amzn-spi-pcm/amzn-mt-spi-pcm.h   | 6 ++++++
+ sound/soc/mediatek/mt_soc_audio_8163_amzn/mt_soc_machine.c  | 4 ++--
+ 4 files changed, 14 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/misc/mediatek/accdet/mt8163/accdet_amzn.c b/drivers/misc/mediatek/accdet/mt8163/accdet_amzn.c
+index 67f96bb5..ca714395 100644
+--- a/drivers/misc/mediatek/accdet/mt8163/accdet_amzn.c
++++ b/drivers/misc/mediatek/accdet/mt8163/accdet_amzn.c
+@@ -104,7 +104,7 @@ static bool accdet_check_status(void)
+ 		return false;
+ 	}
+ 
+-#ifdef CONFIG_ROOK
++#if defined(CONFIG_ROOK) || defined(CONFIG_BISCUIT)
+ 	current_status = gpio_get_value(gpiopin);
+ #else
+ 	current_status = !gpio_get_value(gpiopin);
+diff --git a/drivers/staging/amazon/Kconfig b/drivers/staging/amazon/Kconfig
+index 51e95805..52784040 100644
+--- a/drivers/staging/amazon/Kconfig
++++ b/drivers/staging/amazon/Kconfig
+@@ -5,6 +5,11 @@ config ROOK
+ 	help
+ 	isolate amazon Rook changes for MTK Platform
+ 
++config BISCUIT
++	bool "Biscuit MTK platform project"
++	help
++	isolate amazon Biscuit (Echo Dot 2nd gen) changes for MTK Platform
++
+ config CHECKERS
+ 	bool "Checkers MTK platform project"
+ 	help
+diff --git a/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/amzn-mt-spi-pcm.h b/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/amzn-mt-spi-pcm.h
+index f6eb6615..1b354f0f 100644
+--- a/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/amzn-mt-spi-pcm.h
++++ b/sound/soc/mediatek/mt_soc_audio_8163_amzn/amzn-spi-pcm/amzn-mt-spi-pcm.h
+@@ -19,8 +19,14 @@
+ #define SPI_SPEED_HZ            50000000 /* Maximum speed 50 MHz */
+ #define SPI_READ_WAIT_MIN_USEC  6000
+ #define SPI_READ_WAIT_MAX_USEC  7000
++#ifdef CONFIG_BISCUIT
++/* The Fire OS 6 Echo Dot kernel waits this long for its FPGA. */
++#define FPGA_DELAY_MS           100
++#define PINCTRL_DELAY_MS        100
++#else
+ #define FPGA_DELAY_MS           2
+ #define PINCTRL_DELAY_MS        2
++#endif
+ #define MARGIN_USEC             500
+ 
+ #define MIN_SAMPLING_RATE       16000
+diff --git a/sound/soc/mediatek/mt_soc_audio_8163_amzn/mt_soc_machine.c b/sound/soc/mediatek/mt_soc_audio_8163_amzn/mt_soc_machine.c
+index a06faad6..c6f21b05 100644
+--- a/sound/soc/mediatek/mt_soc_audio_8163_amzn/mt_soc_machine.c
++++ b/sound/soc/mediatek/mt_soc_audio_8163_amzn/mt_soc_machine.c
+@@ -601,7 +601,7 @@ static int mt_soc_audio_init(struct snd_soc_pcm_runtime *rtd)
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_ROOK
++#if defined(CONFIG_ROOK) || defined(CONFIG_BISCUIT)
+ static int mt_soc_audio_init_tlv(struct snd_soc_pcm_runtime *rtd)
+ {
+ 	int ret = 0;
+@@ -1687,7 +1687,7 @@ static struct snd_soc_dai_link mt_soc_dai_common[] = {
+ 	 .ops = &tlv3101_machine_ops,
+ 	 .ignore_pmdown_time = 1,
+ 	},
+-#ifdef CONFIG_ROOK
++#if defined(CONFIG_ROOK) || defined(CONFIG_BISCUIT)
+ 	{
+ 	 .name = "TI_DAC_Playback",
+ 	 .stream_name = MT_SOC_TI_PLAY_STREAM_NAME,

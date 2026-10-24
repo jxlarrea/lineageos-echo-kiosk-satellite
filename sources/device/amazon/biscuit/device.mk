@@ -10,15 +10,23 @@ PRODUCT_AAPT_CONFIG := normal
 PRODUCT_AAPT_PREF_CONFIG := mdpi
 
 # Audio
-# AOSP's stub primary HAL for now, which plays into nothing, with AOSP's
-# generic policy. Without a primary HAL audioserver keeps restarting.
+# audio.primary.biscuit runs the Fire OS 6 HAL from the blobs. The shims
+# carry what its libraries need from Android 7.1 (extract-biscuit-blobs.sh).
 PRODUCT_PACKAGES += \
     android.hardware.audio@2.0-impl \
     android.hardware.audio.effect@2.0-impl \
-    audio.primary.default
+    audio.primary.biscuit \
+    libbiscuit_audio_shim \
+    liblipc \
+    libtinyalsa_shim \
+    libutilscallstack
+
+PRODUCT_PACKAGES_DEBUG += \
+    biscuit_audio_test \
+    biscuit_mic_test
 
 PRODUCT_COPY_FILES += \
-    frameworks/av/services/audiopolicy/config/audio_policy_configuration_generic.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml
+    $(LOCAL_PATH)/configs/audio/audio_policy_configuration.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_configuration.xml
 
 # Bluetooth
 # The profile overlay goes into the Bluetooth app itself: as a runtime

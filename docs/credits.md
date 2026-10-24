@@ -2,7 +2,7 @@
 
 ## meiser79's Echo Dot port
 
-meiser79 brought the Echo Dot (2nd gen) up on LineageOS 18.1 first, in [android_device_amazon_biscuit](https://github.com/meiser79/android_device_amazon_biscuit), [android_kernel_amazon_biscuit](https://github.com/meiser79/android_kernel_amazon_biscuit) and [android_vendor_amazon_biscuit](https://github.com/meiser79/android_vendor_amazon_biscuit). The Dot code in this repository is our own, but his README, TODO and port study told us what the Dot needs and what to avoid. This table records which component his work guided and how, so each one can credit him.
+meiser79 brought the Echo Dot (2nd gen) up on LineageOS 18.1 first, in [android_device_amazon_biscuit](https://github.com/meiser79/android_device_amazon_biscuit), [android_kernel_amazon_biscuit](https://github.com/meiser79/android_kernel_amazon_biscuit) and [android_vendor_amazon_biscuit](https://github.com/meiser79/android_vendor_amazon_biscuit). This repository does not include meiser79's code, but his README, TODO and port study provided guidance on what the Dot needs and what to avoid. This table records which component his work guided and how.
 
 | Component | What his port showed us |
 | --- | --- |
@@ -15,6 +15,8 @@ meiser79 brought the Echo Dot (2nd gen) up on LineageOS 18.1 first, in [android_
 | Debloat (`device/biscuit/Android.bp`, `init/`, `BoardConfig.mk`) | The names of the theme, icon, accent, navigation bar and display cutout overlays and of the small system packages a headless Dot can drop. That the font loader skips missing files, so the CJK fonts can go. That LiveDisplay's HAL never registers on the Dot while its VINTF fragment declares it, which blocks LiveDisplayService until the watchdog restarts system_server, and that a declared HAL that never starts blocks its clients in general. That inherited `PRODUCT_COPY_FILES` can be filtered in the board config. That Fire OS 6's TEE has nothing for `securetime` and `rpmb_svc`, and that a Dot has to stay awake on power |
 | Radio (`patches/biscuit/kernel/amazon/mt66xx-common`, `patches/biscuit/system/bt`, `init.target.biscuit.rc`) | That Fire OS 6's `wmt_launcher` passes the connsys ROM patch as a full path, which the firmware loader never finds, and that its `wmt_loader` publishes the chip ID under the Android 7 property name while the mt66xx `libbt-vendor` reads the vendor one. That the MT8163 controller rejects a feature page it reports, which Android 11's Bluetooth stack aborts on (`patches/biscuit/system/bt`) |
 | Kernel: memory map (`patches/biscuit/kernel/amazon/mt8163-4.9/0011`) | His commit list carries a smaller arm64 sparsemem section size. We backported the upstream Linux commit it matches, which halves the Dot's 16 MB `struct page` map |
+| Kernel: audio clocks (`patches/biscuit/kernel/amazon/mt8163-4.9/0012`) | That the Dot's audio node carried the clock names of a `CONFIG_SND_I2S_MCLK` build, so the driver prepared no clock, the AFE never ran and every speaker write timed out |
+| Audio: speaker amplifier (`sources/device/amazon/biscuit/audio`) | That the amplifier has to come on only after the first write has powered up the codec, or the first playback after boot crackles |
 | Kernel: mic array FPGA | The 4.9 FPGA reset and programming delays are 2 ms against 100 ms on the Dot's 3.18 kernel |
 
 ## R0rt1z2 and amazon-oss

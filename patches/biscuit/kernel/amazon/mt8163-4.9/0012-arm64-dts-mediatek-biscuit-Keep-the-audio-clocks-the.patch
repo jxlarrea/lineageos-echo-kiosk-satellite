@@ -1,0 +1,66 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Sat, 24 Oct 2026 11:51:28 -0500
+Subject: [PATCH] arm64: dts: mediatek: biscuit: Keep the audio clocks the
+ driver asks for
+
+The audio node listed the clocks of a CONFIG_SND_I2S_MCLK build, with
+the APLLs named apll1_clk and apll2_clk and the audiosys gates added.
+The Echo Dot (2nd gen) takes its codec MCLK from the camera MCLK and
+builds without that option, so Auddrv_Clk_Init() asked for
+top_apll1_clk, did not find it and stopped before preparing any clock.
+The AFE then never ran: DL1's hardware pointer stayed at 0, every write
+to the TLV320AIC3204 timed out and the speaker stayed silent.
+
+mt8163.dtsi's list is the one the driver expects without the option.
+---
+ arch/arm64/boot/dts/mediatek/biscuit.dtsi | 36 -----------------------
+ 1 file changed, 36 deletions(-)
+
+diff --git a/arch/arm64/boot/dts/mediatek/biscuit.dtsi b/arch/arm64/boot/dts/mediatek/biscuit.dtsi
+index 965fb398..9bb682a6 100644
+--- a/arch/arm64/boot/dts/mediatek/biscuit.dtsi
++++ b/arch/arm64/boot/dts/mediatek/biscuit.dtsi
+@@ -131,42 +131,6 @@
+ 	pinctrl-8 = <&aud_pins_extamp_dacmux_high>;
+ 	pinctrl-9 = <&aud_pins_extamp_dacmux_low>;
+ 
+-	clocks = <&infracfg CLK_INFRA_AUDIO>,
+-		 <&topckgen CLK_TOP_AUDIO_SEL>,
+-		 <&topckgen CLK_TOP_AUD_INTBUS_SEL>,
+-		 <&topckgen CLK_TOP_AUD_1_SEL>,
+-		 <&topckgen CLK_TOP_AUD_2_SEL>,
+-		 <&topckgen CLK_TOP_APLL1>,
+-		 <&topckgen CLK_TOP_APLL2>,
+-		 <&audiosys CLK_AUDIO_AFE>,
+-		 <&audiosys CLK_AUDIO_DAC>,
+-		 <&audiosys CLK_AUDIO_DAC_PREDIS>,
+-		 <&audiosys CLK_AUDIO_ADC>,
+-		 <&audiosys CLK_AUDIO_22M>,
+-		 <&audiosys CLK_AUDIO_24M>,
+-		 <&audiosys CLK_AUDIO_I2S>,
+-		 <&audiosys CLK_AUDIO_APLL_TUNER>,
+-		 <&audiosys CLK_AUDIO_APLL2_TUNER>,
+-		 <&clk26m>;
+-
+-	clock-names = "aud_infra_clk",
+-		      "top_mux_audio",
+-		      "top_mux_audio_intbus",
+-		      "aud_mux1_clk",
+-		      "aud_mux2_clk",
+-		      "apll1_clk",
+-		      "apll2_clk",
+-		      "aud_afe",
+-		      "aud_dac",
+-		      "aud_dac_predis",
+-		      "aud_adc",
+-		      "aud_22m",
+-		      "aud_24m",
+-		      "aud_i2s",
+-		      "aud_apll_tnr",
+-		      "aud_apll2_tnr",
+-		      "top_clk26m_clk";
+-
+ 	status = "okay";
+ };
+ 

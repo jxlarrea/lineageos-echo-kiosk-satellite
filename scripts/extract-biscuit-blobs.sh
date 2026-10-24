@@ -31,6 +31,51 @@ if [[ ! -f "$SYSTEM_IMG" ]] || ! printf '%s  %s\n' "$SYSTEM_SHA256" "$SYSTEM_IMG
 fi
 printf '%s  %s\n' "$SYSTEM_SHA256" "$SYSTEM_IMG" | sha256sum -c --quiet -
 
+PATCHELF="$TREE/prebuilts/extract-tools/linux-x86/bin/patchelf-0_9"
+[[ -x "$PATCHELF" ]] || { echo "ERROR: $PATCHELF is missing, sync the tree first" >&2; exit 1; }
+
+# What Android 11 needs changed in a blob after it passed its checksum.
+blob_fixup() {
+  local destination="$1" file="$2"
+  case "$destination" in
+    vendor/lib/hw/audio.primary_amazon.mt8163.so)
+      # TinyALSA and libutils symbols that Android 11 lost.
+      "$PATCHELF" --add-needed libtinyalsa_shim.so "$file"
+      "$PATCHELF" --add-needed libbiscuit_audio_shim.so "$file"
+      # The microphone mute GPIO moved to /sys/devices/platform/soc on 4.9,
+      # a longer path. init links /dev/mt_gpio to it.
+      python3 - "$file" <<'PY'
+import sys
+path = sys.argv[1]
+data = open(path, "rb").read()
+old = b"/sys/devices/soc/1000b000.pinctrl/mt_gpio\0"
+new = b"/dev/mt_gpio".ljust(len(old), b"\0")
+if data.count(old) != 1:
+    sys.exit("ERROR: the mt_gpio path is not in the audio HAL exactly once")
+open(path, "wb").write(data.replace(old, new))
+PY
+      ;;
+    vendor/lib/libacehal_log.so | vendor/lib/libcommon_time_client.so)
+      "$PATCHELF" --add-needed libbiscuit_audio_shim.so "$file"
+      ;;
+    vendor/lib/libaudiocomponentengine.so)
+      # CallStack moved out of libutils.
+      "$PATCHELF" --add-needed libutilscallstack.so "$file"
+      ;;
+    etc/audio_device.xml)
+      # Fire OS sets the four TI microphone ADCs to a 20 dB analog preamp and
+      # relies on Amazon's audio processor for the rest of the gain. That
+      # processor never runs here, so the preamp goes to 36 dB, as on CM14:
+      # speech then reaches apps at a normal level and the loudest speech
+      # measured still peaks about 4 dB below full scale.
+      sed -i -E 's/(name="ADC_[A-D] MICPGA Volume Ctrl" value=)"40"/\1"72"/' "$file"
+      [[ "$(grep -c 'MICPGA Volume Ctrl" value="72"' "$file")" == 4 ]] || {
+        echo "ERROR: could not raise the microphone preamp in $destination" >&2; exit 1;
+      }
+      ;;
+  esac
+}
+
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/proprietary"
@@ -50,6 +95,7 @@ while IFS=: read -r source destination expected_sha expected_size; do
     echo "ERROR: sha256 mismatch: $source" >&2; exit 1;
   }
   install -D -m 0644 "$file" "$TMP/proprietary/$destination"
+  blob_fixup "$destination" "$TMP/proprietary/$destination"
   copy_files+=("    vendor/amazon/biscuit/proprietary/$destination:\$(TARGET_COPY_OUT_SYSTEM)/$destination")
 done < <(cat "$REPO_ROOT"/blobs/biscuit/*.txt)
 

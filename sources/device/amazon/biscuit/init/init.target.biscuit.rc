@@ -20,6 +20,14 @@ on boot
     write /sys/kernel/mm/ksm/sleep_millisecs 500
     write /sys/kernel/mm/ksm/run 1
 
+# Microphone mute. The Fire OS audio HAL drives GPIO 87 through mt_gpio,
+# which 4.9 moved under /sys/devices/platform. Its path in the HAL is
+# changed to this link (scripts/extract-biscuit-blobs.sh).
+on boot
+    symlink /sys/devices/platform/soc/1000b000.pinctrl/mt_gpio /dev/mt_gpio
+    chown root audio /sys/devices/platform/soc/1000b000.pinctrl/mt_gpio
+    chmod 0664 /sys/devices/platform/soc/1000b000.pinctrl/mt_gpio
+
 # Rooted adb on debuggable builds. LineageOS keeps the switch in
 # /data/adbroot/enabled, set from Settings, which nobody can reach on the Dot.
 on post-fs-data && property:ro.debuggable=1

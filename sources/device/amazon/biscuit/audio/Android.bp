@@ -1,0 +1,72 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+cc_library_static {
+    name: "libbiscuit_pcm",
+    vendor_available: true,
+    srcs: ["biscuit_pcm.c"],
+    export_include_dirs: ["."],
+    cflags: ["-Wall", "-Werror"],
+}
+
+// The microphone array processing. ARM code and fast math measured 56% less
+// CPU on the Dot than the default Thumb build on CM14, with the same output.
+cc_library_static {
+    name: "libbiscuit_mic_beam",
+    vendor: true,
+    srcs: ["mic_beam.c"],
+    static_libs: ["libbiscuit_pcm"],
+    shared_libs: ["libcutils", "liblog", "libtinyalsa"],
+    arch: {
+        arm: {
+            instruction_set: "arm",
+        },
+    },
+    cflags: ["-Wall", "-Werror", "-O3", "-ffast-math"],
+}
+
+cc_library_shared {
+    name: "audio.primary.biscuit",
+    relative_install_path: "hw",
+    vendor: true,
+    srcs: ["audio_hw.c"],
+    static_libs: ["libbiscuit_mic_beam", "libbiscuit_pcm"],
+    header_libs: ["libhardware_headers"],
+    shared_libs: ["libcutils", "libhardware", "liblog", "libtinyalsa"],
+    cflags: ["-Wall", "-Werror"],
+}
+
+cc_library_shared {
+    name: "libbiscuit_audio_shim",
+    vendor: true,
+    srcs: ["shim/audio_shim.cpp"],
+    shared_libs: ["libtinyalsa"],
+    cflags: ["-Wall", "-Werror"],
+}
+
+cc_binary {
+    name: "biscuit_audio_test",
+    srcs: ["tools/biscuit_audio_test.cpp"],
+    header_libs: ["libmedia_headers", "libmediametrics_headers"],
+    shared_libs: ["libaudioclient", "libbinder", "libutils"],
+    cflags: ["-Wall", "-Werror"],
+}
+
+cc_binary {
+    name: "biscuit_mic_test",
+    srcs: ["tools/biscuit_mic_test.c"],
+    static_libs: ["libbiscuit_pcm"],
+    shared_libs: ["libtinyalsa"],
+    cflags: ["-Wall", "-Werror"],
+}
+
+// Stands in for Amazon's liblipc (lipc/lipc.c).
+cc_library_shared {
+    name: "liblipc",
+    vendor: true,
+    srcs: ["lipc/lipc.c"],
+    shared_libs: ["liblog"],
+    cflags: ["-Wall", "-Werror"],
+}

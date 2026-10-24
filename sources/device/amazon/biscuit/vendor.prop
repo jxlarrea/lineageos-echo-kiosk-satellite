@@ -1,3 +1,16 @@
+# Audio
+ro.hardware.audio.primary=biscuit
+
+# Without Amazon's audio processor the Fire OS HAL logs an error for every
+# buffer it plays, about 50 a second.
+log.tag.AudioALSAPlaybackHandlerNormal=F
+
+# Media
+# Codec2 linear buffers from ION. mt8163-common adds the BLOB pool, which
+# allocates them through gralloc, and gralloc.default has no BLOB format,
+# so every decoder failed to start.
+debug.stagefright.c2-poolmask=327680
+
 # Display
 # The Dot has no screen and its kernel no GPU driver: one display nobody
 # sees from hwcomposer.biscuit, SwiftShader GLES on AOSP's gralloc.

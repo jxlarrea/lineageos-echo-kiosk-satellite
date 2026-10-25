@@ -41,6 +41,11 @@ WiFi:
   wifi connect <ssid> [psk]  save/connect WPA-PSK or open network
   wifi off                   disable WiFi
 
+adb:
+  adb root                   whether adb root is allowed
+  adb root on|off            allow adb root (LineageOS's Rooted debugging),
+                             then run adb root from the computer
+
 System update:
   update status              show the installed and newest release
   update check               ask GitHub for a newer release
@@ -137,6 +142,22 @@ case "$1" in
                 start "$PKG.WIFI_OFF"
                 ;;
         esac
+        ;;
+    adb)
+        case "$2 $3" in
+            "root on"|"root off")
+                [ "$3" = on ] && enabled=true || enabled=false
+                out=$(am broadcast -a "$PKG.ADB_ROOT" -n "$PKG/.AdbRootReceiver" --ez enabled "$enabled")
+                ;;
+            "root ")
+                out=$(am broadcast -a "$PKG.ADB_ROOT" -n "$PKG/.AdbRootReceiver")
+                ;;
+            *)
+                usage >&2
+                exit 2
+                ;;
+        esac
+        printf '%s\n' "$out" | sed -n 's/^Broadcast completed: .*data="\(.*\)"$/\1/p'
         ;;
     update)
         case "$2" in

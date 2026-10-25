@@ -15,6 +15,14 @@ BUILD_TARGET="${BUILD_TARGET:-bacon}"
 # what a device stopped installing, such as an app taken out of the image,
 # and the zip packs the whole folder, so release builds use it.
 CLEAN="${CLEAN:-0}"
+
+# A release build is the commit its notes name, so nothing uncommitted may
+# go in: the tree is staged from the working copy as it is.
+if [[ "$CLEAN" == 1 && -n "$(git -C "$REPO_ROOT" status --porcelain)" ]]; then
+  echo "ERROR: a clean (release) build needs everything committed first:" >&2
+  git -C "$REPO_ROOT" status --short >&2
+  exit 1
+fi
 BUILD_JOBS="${BUILD_JOBS:-$(nproc)}"
 CCACHE_DIR="${CCACHE_DIR:-$WORKSPACE_DIR/ccache}"
 CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-50G}"

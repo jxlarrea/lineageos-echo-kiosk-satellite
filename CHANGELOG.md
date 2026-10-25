@@ -7,6 +7,9 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Fixed
 - **Kiosk Satellite installed twice on a fresh Dot** ([#3](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/3)). Since 2026.10.7 the Dot also got the Echo Shows' layer: their ks-install, which ran next to the Dot's own at every boot, and EchoService, a second service and updater the Dot does not use. In 2026.10.9 the Shows' 8 MB kernel reserve also replaced the Dot's 4 MB one, which left about 20 MB less memory available. The Dot now only gets what every Echo shares, the Wi-Fi overlay.
 
+### Changed
+- **Release images are checked before they go out.** `make check DEVICE=<device>` fails if an image misses one of its own device's parts, carries another device's or reports a release other than the one in this file, and `make test` fails if the Dot's layer ever inherits the Echo Shows'. A clean release build refuses to start with uncommitted changes.
+
 ## Echo Dot (2nd gen) 2026.10.9 - 2026-10-25
 
 ### Added

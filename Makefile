@@ -1,6 +1,6 @@
 DEVICES := crown cronos biscuit
 
-.PHONY: sync docker stage test $(DEVICES)
+.PHONY: sync docker stage test check $(DEVICES)
 
 sync:
 	./scripts/sync.sh
@@ -14,6 +14,10 @@ stage:
 $(DEVICES):
 	DEVICE=$@ ./scripts/build.sh
 
+check:
+	DEVICE=$(DEVICE) ./scripts/check-image.sh
+
 test:
 	bash tests/test-stage-tree.sh
 	bash tests/test-biscuit-system-update.sh
+	bash tests/test-device-layers.sh

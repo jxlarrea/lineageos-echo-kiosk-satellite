@@ -56,8 +56,9 @@ The release a build is comes from `CHANGELOG.md`: the newest heading that names 
 To make a release of the Echo Dot:
 
 1. Rename `## Unreleased` in `CHANGELOG.md` to the release, for example `## Echo Dot (2nd gen) 2026.10.7 - 2026-11-02`. Then commit.
-2. Build it from a clean output folder with `CLEAN=1 make biscuit`. Without it, files from earlier builds that the image no longer installs, such as an app taken out, stay in the output folder and end up in the zip. Commit everything first: the build stages the working tree as it is, uncommitted changes included.
-3. Copy the zip to a name with the release and the codename in it, such as `lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip`, then sign it. The Dot checks the signature before it installs an update:
+2. Build it from a clean output folder with `CLEAN=1 make biscuit`. Without it, files from earlier builds that the image no longer installs, such as an app taken out, stay in the output folder and end up in the zip. Commit everything first: the build stages the working tree as it is, so a clean build refuses to start with uncommitted changes.
+3. Check the image with `make check DEVICE=biscuit`. It fails if the image misses one of its own device's parts, carries another device's, such as EchoService on the Dot or BiscuitService on a Show, or reports a release other than the one in `CHANGELOG.md`. Do not release an image that fails it.
+4. Copy the zip to a name with the release and the codename in it, such as `lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip`, then sign it. The Dot checks the signature before it installs an update:
 
    ```sh
    scripts/sign-release.sh lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip
@@ -66,6 +67,6 @@ To make a release of the Echo Dot:
 
    The private key stays outside the repository, in `~/.config/biscuit-ota/release-key.pem` unless `BISCUIT_OTA_KEY` says otherwise. The image ships the public half from `device/biscuit/ota/release-key.pem`.
 
-4. Publish a GitHub release tagged `biscuit-2026.10.7` and titled `Echo Dot (2nd gen) 2026.10.7`. Attach the zip, its `.sig` and its `.sha256`.
+5. Publish a GitHub release tagged `biscuit-2026.10.7` and titled `Echo Dot (2nd gen) 2026.10.7`. Attach the zip, its `.sig` and its `.sha256`.
 
 A release without a signed zip can only be installed by hand.

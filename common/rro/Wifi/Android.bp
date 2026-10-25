@@ -1,0 +1,11 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// Wi-Fi settings every Echo shares, the Dot included.
+runtime_resource_overlay {
+    name: "EchoWifiOverlay",
+    resource_dirs: ["res"],
+    vendor: true,
+}

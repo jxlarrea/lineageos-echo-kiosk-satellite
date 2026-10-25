@@ -34,6 +34,10 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.echo.release=$(BISCUIT_RELEASE)
 endif
 
+# WPA2/WPA3 transition mode networks join with WPA2 (rro/Wifi).
+PRODUCT_PACKAGES += \
+    EchoWifiOverlay
+
 # The device name as the DHCP hostname (rro/NetworkStack). EchoService names
 # the Show after ro.echo.hostname, which each device sets.
 PRODUCT_PACKAGES += \

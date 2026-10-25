@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- No upgrade of a saved WPA2 network to WPA3 (SAE). On an access
+         point in WPA2/WPA3 transition mode Android 11 connects with SAE,
+         which the Echos' Wi-Fi drivers cannot do, so wpa_supplicant failed
+         to pick a key management type and the Echo never joined (issue #1).
+         It now connects with WPA2, as the CM14 image did. -->
+    <bool name="config_wifiSaeUpgradeEnabled">false</bool>
+</resources>

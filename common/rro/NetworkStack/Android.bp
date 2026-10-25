@@ -1,0 +1,10 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// The device name as the DHCP hostname.
+runtime_resource_overlay {
+    name: "EchoNetworkStackOverlay",
+    product_specific: true,
+}

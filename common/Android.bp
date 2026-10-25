@@ -1,0 +1,39 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// The Echo Shows' service for setting them up from adb and for system
+// updates (echo-service/), and its command.
+android_app {
+    name: "EchoService",
+    srcs: [
+        "echo-service/src/**/*.java",
+        "echo-service/src/**/*.aidl",
+    ],
+    manifest: "echo-service/AndroidManifest.xml",
+    platform_apis: true,
+    certificate: "platform",
+    privileged: true,
+    // echo_service sets up what the setup wizard would ask for, so a Show
+    // boots straight to Kiosk Satellite.
+    overrides: ["LineageSetupWizard"],
+}
+
+sh_binary {
+    name: "echo_service",
+    src: "echo-service/echo_service",
+}
+
+// Installs Kiosk Satellite on first boot and keeps its grants (init/).
+sh_binary {
+    name: "echo-ks-install",
+    src: "init/ks-install.sh",
+}
+
+prebuilt_etc {
+    name: "init.kiosk-satellite.rc",
+    src: "init/init.kiosk-satellite.rc",
+    sub_dir: "init",
+}
+

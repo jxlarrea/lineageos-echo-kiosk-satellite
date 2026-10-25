@@ -1,0 +1,25 @@
+cronos: Inherit the Kiosk Satellite Edition layer
+
+lineage_cronos inherits the layer every Echo Show shares and the cronos
+additions, which stage-tree.sh copies into the tree. The model gets (KS),
+so Home Assistant and the router show that the Show runs this image.
+
+--- a/lineage_cronos.mk
++++ b/lineage_cronos.mk
+@@ -12,9 +12,15 @@ $(call inherit-product, device/amazon/cronos/device.mk)
+ # Inherit some common LineageOS stuff.
+ $(call inherit-product, vendor/lineage/config/common_full_tablet_wifionly.mk)
+ 
++# Inherit the Kiosk Satellite Edition layer.
++$(call inherit-product, vendor/kiosk-satellite/config/common.mk)
++$(call inherit-product, device/kiosk-satellite/cronos/device.mk)
++
+ PRODUCT_NAME := lineage_cronos
+ PRODUCT_DEVICE := cronos
+ PRODUCT_MANUFACTURER := Amzn
+ PRODUCT_BRAND := google
+-PRODUCT_MODEL := Echo Show 5 (2nd Generation)
++# Kiosk Satellite Edition: (KS) shows in Home Assistant and on the router
++# that the Show runs this image.
++PRODUCT_MODEL := Echo Show 5 2nd Gen (KS)
+ PRODUCT_CHARACTERISTICS := tablet,nosdcard

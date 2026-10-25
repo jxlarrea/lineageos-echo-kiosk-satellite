@@ -1,4 +1,4 @@
-DEVICES := crown biscuit
+DEVICES := crown cronos biscuit
 
 .PHONY: sync docker stage test $(DEVICES)
 

@@ -1,0 +1,169 @@
+#!/system/bin/sh
+#
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+# Sets an Echo Show up from adb. Most commands go to EchoService, which runs
+# in system_server. Kiosk Satellite's and the log commands run here.
+
+PKG=me.jxl.echo.service
+ACTION=$PKG.COMMAND
+KS=me.jxl.kiosk_satellite
+
+usage() {
+    cat <<EOF
+usage: echo_service <command>
+
+  status                         everything below at once
+
+Wi-Fi:
+  wifi [status]                  the network, signal and IP address
+  wifi connect <ssid> [password] join a network, open if no password
+  wifi on|off
+
+Bluetooth:
+  bt [status]                    on or off and the paired devices
+  bt pair                        discoverable for 5 minutes
+  bt on|off
+
+Time:
+  time [status]                  the time, zone and network time
+  time sync <seconds> [zone]     set the time and zone, see below
+  time zone <zone>               America/New_York or "Eastern Standard Time"
+  time auto on|off               network time
+
+  To use your computer's time and zone, run from it:
+    Linux:   adb shell echo_service time sync \$(date +%s) \$(timedatectl show -p Timezone --value)
+    macOS:   adb shell echo_service time sync \$(date +%s) \$(readlink /etc/localtime | sed 's#.*zoneinfo/##')
+    Windows: adb shell echo_service time sync ([DateTimeOffset]::UtcNow.ToUnixTimeSeconds()) "'\$((Get-TimeZone).Id)'"
+
+adb:
+  adb [status]                   USB, Wi-Fi and key expiry
+  adb wifi on|off                adb over Wi-Fi on port 5555, restarts adb
+  adb root on|off                allow adb root (LineageOS's Rooted debugging)
+  adb keys expire on|off         whether allowed computers expire after 7 days
+
+Lock screen, language and screen:
+  lockscreen [status]|on|off     the swipe lock screen
+  locale [<tag>]                 the language, such as en-US or es-MX
+  screen [status]|on|off         wake the screen or turn it off
+  screen brightness <0-255|auto>
+  screen timeout <seconds|never>
+  screen stay-awake on|off       keep the screen on while plugged in
+
+Volume:
+  volume                         every volume
+  volume <stream> <level>        music, alarm, notification, ring or system
+
+Name:
+  hostname [<name>]              the name the router sees
+
+Kiosk Satellite:
+  ks [status]                    its version and whether it runs
+  ks install                     install it if missing and grant its permissions
+  ks update                      install the latest release over it
+  ks restart                     stop it and start it again
+
+System update:
+  update [status]                the installed and newest release
+  update check                   ask GitHub for a newer release
+  update install                 download, verify and install the newest release
+
+Logs:
+  logs                           pack the logs into a file to attach to an issue
+EOF
+}
+
+# The words go as extras arg0, arg1 and so on, so spaces and commas in them
+# arrive as they are. The reply comes back as the broadcast's result.
+send() {
+    count=$#
+    i=0
+    while [ $i -lt $count ]; do
+        arg=$1
+        shift
+        set -- "$@" --es "arg$i" "$arg"
+        i=$((i + 1))
+    done
+    out=$(am broadcast -a "$ACTION" -n "$PKG/.Commands" --ei argc "$count" "$@" 2>&1)
+    code=$(printf '%s\n' "$out" | sed -n 's/^Broadcast completed: result=\(-\{0,1\}[0-9]*\).*/\1/p')
+    case "$out" in
+        *'Broadcast completed: result='*', data="'*)
+            printf '%s\n' "$out" | sed -n '/^Broadcast completed: /,$p' | sed '1s/^[^"]*data="//; $s/"$//'
+            ;;
+        *'Broadcast completed: result='*)
+            ;;
+        *)
+            echo "EchoService did not answer:" >&2
+            printf '%s\n' "$out" >&2
+            exit 1
+            ;;
+    esac
+    [ "$code" = 0 ] || exit "${code:-1}"
+}
+
+ks() {
+    case "$1" in
+        ''|status)
+            version=$(dumpsys package "$KS" 2>/dev/null | sed -n 's/^ *versionName=//p' | head -n 1)
+            if [ -z "$version" ]; then
+                echo "not installed"
+                return
+            fi
+            if pidof "$KS" >/dev/null; then
+                echo "$version, running"
+            else
+                echo "$version, not running"
+            fi
+            ;;
+        install)
+            exec echo-ks-install
+            ;;
+        update)
+            exec echo-ks-install --update
+            ;;
+        restart)
+            am force-stop "$KS"
+            activity=$(cmd package resolve-activity --brief -c android.intent.category.LAUNCHER "$KS" | tail -n 1)
+            am start -n "$activity" >/dev/null && echo "restarted"
+            ;;
+        *)
+            usage
+            exit 2
+            ;;
+    esac
+}
+
+# Kernel messages need root (adb root). Wi-Fi passwords are in none of these.
+logs() {
+    name=echo-logs-$(date +%Y%m%d-%H%M%S)
+    dir=/data/local/tmp/$name
+    mkdir -p "$dir" || exit 1
+    send status >"$dir/status.txt" 2>&1
+    logcat -d >"$dir/logcat.txt" 2>&1
+    logcat -b crash -d >"$dir/crash.txt" 2>&1
+    getprop >"$dir/properties.txt"
+    dumpsys meminfo >"$dir/meminfo.txt" 2>&1
+    dumpsys activity service "$PKG/.EchoService" >"$dir/echo-service.txt" 2>&1
+    dmesg >"$dir/kernel.txt" 2>/dev/null || echo "run adb root first to include kernel messages" >"$dir/kernel.txt"
+    cat /data/system/echo-ota/twrp.log >"$dir/twrp-update.txt" 2>/dev/null
+    tar -czf "$dir.tar.gz" -C /data/local/tmp "$name" && rm -rf "$dir"
+    echo "Saved. Copy it to your computer with:"
+    echo "  adb pull $dir.tar.gz"
+}
+
+case "$1" in
+    ''|help|-h|--help)
+        usage
+        ;;
+    ks)
+        shift
+        ks "$@"
+        ;;
+    logs)
+        logs
+        ;;
+    *)
+        send "$@"
+        ;;
+esac

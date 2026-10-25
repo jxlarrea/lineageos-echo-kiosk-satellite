@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- The setup wizard is left out: echo_service sets up Wi-Fi, the time
+         and the language from adb, and ks-install grants Kiosk Satellite
+         what it needs. -->
+    <bool name="def_device_provisioned">true</bool>
+    <bool name="def_user_setup_complete">true</bool>
+
+    <!-- No lock screen, so the screen goes straight back to Kiosk
+         Satellite. echo_service lockscreen on brings it back. -->
+    <bool name="def_lockscreen_disabled">true</bool>
+</resources>

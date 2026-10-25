@@ -1,0 +1,27 @@
+#
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# Kiosk Satellite Edition: installs Kiosk Satellite on first boot and keeps
+# its grants in place (ks-install.sh). setprop persist.echo.ks_install 0
+# turns it off.
+service echo_ks_install /system/bin/echo-ks-install
+    user root
+    group root
+    disabled
+    oneshot
+
+on property:sys.boot_completed=1
+    start echo_ks_install
+
+# adb over Wi-Fi, which echo_service adb wifi on|off switches. mt8163-common
+# turns it on at every boot, so this runs once Android has booted and again
+# whenever the setting changes. Port 0 leaves adb on USB only.
+on property:sys.boot_completed=1 && property:persist.echo.adb_wifi=0
+    setprop service.adb.tcp.port 0
+    restart adbd
+
+on property:sys.boot_completed=1 && property:persist.echo.adb_wifi=1
+    setprop service.adb.tcp.port 5555
+    restart adbd

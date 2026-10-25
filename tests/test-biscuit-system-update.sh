@@ -108,6 +108,12 @@ DEVICE=crown
 DEVICE=biscuit
 printf '# Changelog\n\n## Unreleased\n\n### Added\n- x\n' >"$TMPDIR/CHANGELOG.md"
 [[ "$(release_version)" == 0.0.0-dev ]]
+# Another device's Unreleased heading leaves the Dot's release alone.
+printf '# Changelog\n\n## Echo Show 5 (2nd gen) Unreleased\n\n### Added\n- x\n\n## Echo Dot (2nd gen) 2026.10.7 - 2026-10-25\n' >"$TMPDIR/CHANGELOG.md"
+[[ "$(release_version)" == 2026.10.7 ]]
+DEVICE=cronos
+[[ "$(release_version)" == 0.0.0-dev ]]
+DEVICE=biscuit
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 # The service side.

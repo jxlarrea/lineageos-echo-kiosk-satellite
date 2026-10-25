@@ -2,6 +2,17 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Echo Show 5 (2nd gen) Unreleased
+
+### Added
+- **Echo Show 5 (2nd gen) on LineageOS 18.1.** The repository builds R0rt1z2's amazon-oss `cronos` tree with the Kiosk Satellite Edition layer on top. The screen, camera and Bluetooth work as they do in amazon-oss. The model reads Echo Show 5 2nd Gen (KS), and the Show names itself `echo-show-5-ks` and the end of its serial on the network.
+- **EchoService on the Echo Shows.** `echo_service` sets a Show up from adb: Wi-Fi, Bluetooth, the time and time zone from the computer it runs on, adb over Wi-Fi, adb root, the lock screen, the language, the screen, the volumes, the network name, Kiosk Satellite, system updates and a log bundle to attach to an issue. It takes the place of BiscuitService, which stays on the Echo Dot. Kiosk Satellite reaches its system updates through the same calls.
+- **Nothing to tap through on a fresh Show.** There is no setup wizard and no lock screen. adb works over USB from the first boot, so a computer only has to be allowed on the screen once, and allowed computers do not expire. Android's full screen tip is marked as seen. Once the Show is online, Kiosk Satellite installs itself as on the Dot, with device owner and every permission it needs.
+- **System updates on the Echo Shows.** EchoService installs a release through TWRP as BiscuitService does on the Dot, in the Show's one slot. A Show's zip is larger than its cache partition, so it downloads to `/data`. If an install fails while it writes system, the Show stays in TWRP instead of starting a system that may not boot.
+
+### Changed
+- **An Unreleased heading for one device.** A `## <device> Unreleased` heading marks only that device's builds as `-dev`, so work on one Echo no longer changes another Echo's release version.
+
 ## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25
 
 ### Changed

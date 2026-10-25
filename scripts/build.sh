@@ -26,15 +26,17 @@ device_name() {
   esac
 }
 
-# The release this build is, for ro.biscuit.release: the newest CHANGELOG.md
-# heading for this device, such as "## Echo Dot (2nd gen) 2026.10.6". While
-# an Unreleased heading is above it, it is that release with -dev after it,
-# or 0.0.0-dev before the device's first release. System updates compare it
-# with the device's GitHub releases.
+# The release this build is, for ro.biscuit.release and ro.echo.release: the
+# newest CHANGELOG.md heading for this device, such as "## Echo Dot (2nd gen)
+# 2026.10.6". While an Unreleased heading is above it, either a bare one for
+# every device or one for this device such as "## Echo Show 5 (2nd gen)
+# Unreleased", it is that release with -dev after it, or 0.0.0-dev before
+# the device's first release. System updates compare it with the device's
+# GitHub releases.
 release_version() {
   awk -v name="$(device_name "$DEVICE")" '/^## / {
     heading = substr($0, 4)
-    if (heading == "Unreleased") { dev = 1; next }
+    if (heading == "Unreleased" || heading == name " Unreleased") { dev = 1; next }
     if (name != "" && index(heading, name " ") == 1) {
       split(substr(heading, length(name) + 2), words, " ")
       print words[1] (dev ? "-dev" : ""); found = 1; exit

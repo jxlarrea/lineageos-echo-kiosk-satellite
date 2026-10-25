@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- Send the device name, such as echo-show-5-ks-bqf, as the DHCP
+         hostname, so the router lists the Echo by it instead of as
+         localhost. -->
+    <bool name="config_dhcp_client_hostname">true</bool>
+</resources>

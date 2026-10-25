@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+    The Echo Shows' service: setting the device up from adb (echo_service)
+    and system updates for Kiosk Satellite. It runs inside system_server, so
+    it costs no process of its own and has the rights to change the time,
+    Wi-Fi, Bluetooth and system settings.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="me.jxl.echo.service"
+    android:sharedUserId="android.uid.system">
+
+    <!-- Only the system sends this, Kiosk Satellite listens. -->
+    <protected-broadcast android:name="me.jxl.echo.service.SYSTEM_UPDATE_CHANGED" />
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- REBOOT, SET_TIME and the other privileged permissions are not asked
+         for: the system uid holds them, and a privileged app that asks for
+         them would need a privapp-permissions entry, or system_server
+         refuses to start. -->
+
+    <application
+        android:label="Echo Service"
+        android:process="system">
+        <receiver android:name=".EchoService$BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- echo_service. Only senders holding WRITE_SECURE_SETTINGS get
+             through: adb, root and the system, not other apps. -->
+        <receiver
+            android:name=".Commands"
+            android:exported="true"
+            android:permission="android.permission.WRITE_SECURE_SETTINGS">
+            <intent-filter>
+                <action android:name="me.jxl.echo.service.COMMAND" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".EchoService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="me.jxl.echo.service.IEchoService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

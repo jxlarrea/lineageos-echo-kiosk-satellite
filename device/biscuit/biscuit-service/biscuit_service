@@ -158,6 +158,9 @@ case "$1" in
                 ;;
         esac
         printf '%s\n' "$out" | sed -n 's/^Broadcast completed: .*data="\(.*\)"$/\1/p'
+        # Every other command ends in exec. This one returns, and anything
+        # that reaches the end of the script is a usage error.
+        exit 0
         ;;
     update)
         case "$2" in

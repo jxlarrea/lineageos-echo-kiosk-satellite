@@ -114,6 +114,16 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 
    Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Dot.
 
+   If the name or password has a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Dot instead. There, only the single quotes around each value matter:
+
+   ```sh
+   adb shell
+   biscuit_service wifi connect '<ssid>' '<password>'
+   exit
+   ```
+
+   If the password itself has a single quote, end the quoted part, add `\'` and start it again: `'it'\''s a password'`. If the Dot still does not connect, `adb logcat -d -s BiscuitService wpa_supplicant` shows why.
+
 2. **Wait for Kiosk Satellite.** Once the Dot is on Wi-Fi, Kiosk Satellite is downloaded and installed automatically. Follow the progress with:
 
    ```sh
@@ -219,6 +229,7 @@ Switching between the two restarts Bluetooth, which drops what was connected. `a
 - **5 GHz.** The Dot joins networks on every 5 GHz channel the US allows, the DFS channels 52 to 144 included, since a Dot has no SIM to learn its country from. It connects on the 20 MHz primary channel of a wider network.
 - **WPA2/WPA3.** The Dot joins a network in WPA2/WPA3 transition mode with WPA2. Its Wi-Fi cannot do WPA3, so it cannot join a network that only offers WPA3. Use WPA2 or WPA2/WPA3 for the Dot's network.
 - **adb works over Wi-Fi** on port 5555 without a password, so a Dot without a screen can always be reached. Anyone on your network can control the Dot this way, so keep it on a network you trust.
+- **adb root is off,** as LineageOS 18.1 ships it, and the Dot has no screen to turn it on. Nothing in this guide needs it: `biscuit_service` and the other commands run from a normal `adb shell`.
 
 ### Kiosk Satellite installer
 

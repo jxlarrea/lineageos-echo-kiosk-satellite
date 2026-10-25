@@ -220,11 +220,14 @@ public final class Commands extends BroadcastReceiver {
 
     private static void connectWifi(WifiManager wifi, String ssid, String password) {
         WifiConfiguration config = new WifiConfiguration();
+        // Android 11 only takes the outer quotes off before the name and
+        // password reach wpa_supplicant, so nothing inside is escaped.
         config.SSID = "\"" + ssid + "\"";
         if (password.isEmpty()) {
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
         } else {
-            config.preSharedKey = "\"" + password + "\"";
+            // A 64 digit hex key goes as it is, a passphrase in quotes.
+            config.preSharedKey = password.matches("[0-9A-Fa-f]{64}") ? password : "\"" + password + "\"";
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
         }
         wifi.setWifiEnabled(true);

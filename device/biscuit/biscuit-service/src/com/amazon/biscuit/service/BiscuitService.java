@@ -714,15 +714,21 @@ public final class BiscuitService extends Service {
         } else {
             id = wifi.addNetwork(config);
         }
-        if (id >= 0) {
-            wifi.enableNetwork(id, true);
-            wifi.saveConfiguration();
-            wifi.reconnect();
+        if (id < 0) {
+            // Such as a password shorter than 8 or longer than 63 characters.
+            Slog.w(TAG, "Android did not take the Wi-Fi network " + ssid);
+            return;
         }
+        wifi.enableNetwork(id, true);
+        wifi.saveConfiguration();
+        wifi.reconnect();
     }
 
+    // Android 11 only takes the outer quotes off before the name and password
+    // reach wpa_supplicant, so nothing inside is escaped: a backslash added
+    // before a quote would become part of the password.
     private static String quote(String s) {
-        return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
+        return "\"" + s + "\"";
     }
 
     private static boolean isHexPsk(String s) {

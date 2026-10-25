@@ -13,6 +13,11 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Changed
 - **An Unreleased heading for one device.** A `## <device> Unreleased` heading marks only that device's builds as `-dev`, so work on one Echo no longer changes another Echo's release version.
 
+## Echo Dot (2nd gen) 2026.10.8 - 2026-10-25
+
+### Fixed
+- **Wi-Fi passwords with a quote or a backslash** ([#2](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/2)). `biscuit_service wifi connect` put a backslash before every `"` and `\` in the network name and password, as Android 7 needed. Android 11 hands them to Wi-Fi as they are, so those backslashes became part of the password and the Dot never connected, without an error. They now go as typed. When Android turns a network down, such as for a password shorter than 8 characters, BiscuitService now logs it.
+
 ## Echo Dot (2nd gen) 2026.10.7 - 2026-10-25
 
 ### Fixed

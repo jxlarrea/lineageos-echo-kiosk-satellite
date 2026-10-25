@@ -1,0 +1,68 @@
+# Building
+
+One LineageOS 18.1 tree builds every device. It is R0rt1z2's LineageOS 18.1 port in [amazon-oss](https://github.com/amazon-oss), with this repository's Kiosk Satellite Edition layer and patches staged on top before each build.
+
+## Layout
+
+| Path | What it holds |
+| --- | --- |
+| `manifest/local.xml` | The amazon-oss projects on top of LineageOS 18.1, plus the Linaro toolchain the kernel needs |
+| `manifest/lock.xml` | Every project pinned to a commit. The first sync writes it and later syncs use it |
+| `patches/common/` | Patches every device gets |
+| `patches/<device>/` | Patches for one device, its kernel included |
+| `common/` | The Kiosk Satellite Edition layer every device inherits. It is staged as `vendor/kiosk-satellite` |
+| `device/<device>/` | What one device adds on top of its amazon-oss tree. It is staged as `device/kiosk-satellite/<device>` |
+| `sources/device/amazon/<device>/` | A device tree of this repository's own, where amazon-oss has none. It is staged as `device/amazon/<device>` |
+| `blobs/<device>/` | The proprietary files a device takes from its Fire OS image, each with its checksum |
+| `docker/` | The build container |
+| `scripts/` | Sync, stage, build and release signing |
+| `tests/` | Checks that run on the host |
+
+Patches follow the amazon-oss layout: `patches/<set>/<project path>/NNNN-*.patch`, for example `patches/crown/device/amazon/crown/0001-crown-Inherit-the-Kiosk-Satellite-Edition-layer.patch`. Staging applies amazon-oss's own `patches/` project first, then `patches/common` and then the device's set. Every device shares one tree, so when the list of patches changes the files any patch touches go back to their synced state before the patches apply again.
+
+## Building an image
+
+Builds run in Docker. The tree, ccache and build output take well over 100 GB, so `workspace` can be a symlink to a larger disk. `ECHO_WORKSPACE` can also point somewhere else.
+
+```sh
+make docker
+make sync
+make biscuit
+docker logs -f lineage-18.1-biscuit-build
+```
+
+`make biscuit` stages the tree and starts a detached `lineage-18.1-biscuit-build` container that runs `m bacon`. The zip lands in `workspace/lineage-18.1/out/target/product/biscuit/`. Check the log for `#### build completed successfully` instead of trusting an exit code. `make crown` does the same for the Echo Show 8 once its image is ready.
+
+`make stage DEVICE=biscuit` only stages the tree, which is useful before building a single module by hand. `BUILD_TARGET=<module> DEVICE=biscuit scripts/build.sh` builds one module in the container.
+
+`make test` runs the host checks. `tests/test-biscuit-system-update.sh` checks the Echo Dot's system update script against a fake TWRP.
+
+## The Echo Dot's proprietary files
+
+`scripts/extract-biscuit-blobs.sh` downloads the Fire OS 6.5.7.4 OTA, unpacks its system image and copies every file `blobs/biscuit/*.txt` lists, after checking its size and checksum. It also applies the fixups the Fire OS audio libraries need on Android 11. Staging runs it.
+
+Amazon's wake word engine Pryon and the en-US Alexa model come from that OTA like the other files. The other wake words and locales come from Amazon's DAVS. DAVS hands them out only to an Echo registered to an Amazon account, so the build cannot download them. They live in the private [amazon-davs-models](https://github.com/jxlarrea/amazon-davs-models) repository, one folder per set. Check it out next to this repository or set `DAVS_MODELS` to where it is. The build checks every file against `blobs/biscuit/davs-models.manifest` before it installs them under `/system/etc/pryon`. `sources/device/amazon/biscuit/pryon/locales.txt` names the sets each locale listens with.
+
+## WebView
+
+The Echo Shows ship LineageOS's prebuilt Chromium WebView (`external/chromium-webview/prebuilt/arm`), which LineageOS keeps current on its `main` branch for every release. Before each release, set that project's revision in `manifest/lock.xml` to the newest commit on `main` and sync, so the Shows ship the newest WebView. The Echo Dot has no screen and ships no WebView.
+
+## Releases
+
+The release a build is comes from `CHANGELOG.md`: its newest heading, such as `## 2026.11.1`. While that heading is `## Unreleased`, the build is the release before it with `-dev` after it. Before the first release it is `0.0.0-dev`. The image reports it as `ro.biscuit.release`. System updates compare it with the releases on GitHub.
+
+To make a release:
+
+1. Rename `## Unreleased` in `CHANGELOG.md` to the release, for example `## 2026.11.1`. Then commit.
+2. Build every device that is part of it.
+3. Sign each zip. The Echo Dot checks the signature before it installs an update:
+
+   ```sh
+   scripts/sign-release.sh workspace/lineage-18.1/out/target/product/biscuit/lineage-18.1-<date>-UNOFFICIAL-biscuit.zip
+   ```
+
+   The private key stays outside the repository, in `~/.config/biscuit-ota/release-key.pem` unless `BISCUIT_OTA_KEY` says otherwise. The image ships the public half from `device/biscuit/ota/release-key.pem`.
+
+4. Publish a GitHub release tagged with the version, without the `## `. Attach every zip and its `.sig`. The Echo Dot takes the zip with `biscuit` in its name and the `.sig` of the same name.
+
+A release without a signed zip can only be installed by hand.

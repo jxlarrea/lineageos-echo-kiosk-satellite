@@ -16,3 +16,4 @@ $(DEVICES):
 
 test:
 	bash tests/test-stage-tree.sh
+	bash tests/test-biscuit-system-update.sh

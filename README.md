@@ -1,49 +1,40 @@
 # LineageOS for Amazon Echo devices, Kiosk Satellite Edition
 
-One repository that builds Kiosk Satellite Edition images of LineageOS 18.1 for several Echo models from a shared base: R0rt1z2's LineageOS 18.1 port in [amazon-oss](https://github.com/amazon-oss).
+LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) for Home Assistant. The Echo Shows run the full Kiosk Satellite experience on their screens. The Echo Dot has no screen, so it runs Kiosk Satellite headless as a voice satellite, intercom and speaker. Every image is built from one shared base, [R0rt1z2](https://github.com/R0rt1z2)'s LineageOS 18.1 port for the MT8163 Echos in [amazon-oss](https://github.com/amazon-oss), with a Kiosk Satellite Edition layer on top.
 
-| Device | Codename | Status |
-| --- | --- | --- |
-| Echo Show 8 (1st gen) | `crown` | Being set up |
-| Echo Show 5 (1st gen) | `checkers` | Planned |
-| Echo Dot (2nd gen) | `biscuit` | Boots Android 11 with Wi-Fi, Bluetooth and Kiosk Satellite. Audio is next |
+| Device | Codename | Status | Guide |
+| --- | --- | --- | --- |
+| Echo Dot (2nd gen) | `biscuit` | Ready | [Echo Dot](docs/echo-dot.md) |
+| Echo Show 8 (1st gen) | `crown` | In progress | |
+| Echo Show 5 (1st gen) | `checkers` | Planned | |
 
-The Echo Dot image for CM14.1 lives in [lineageos-biscuit-kiosk-satellite](https://github.com/jxlarrea/lineageos-biscuit-kiosk-satellite) until the Dot moves here.
+Each image leaves out what Kiosk Satellite never uses on that device, installs Kiosk Satellite on its first boot with every permission it needs and updates itself from this repository's releases. The device's guide lists everything its image does.
 
-## Layout
+## Installing
 
-| Path | What it holds |
-| --- | --- |
-| `manifest/local.xml` | The amazon-oss projects on top of LineageOS 18.1, plus the Linaro toolchain the kernel needs |
-| `manifest/lock.xml` | Every project pinned to a commit. The first sync writes it and later syncs use it |
-| `patches/common/` | Patches every device gets |
-| `patches/<device>/` | Patches for one device |
-| `common/` | The Kiosk Satellite Edition layer every device inherits. It is staged as `vendor/kiosk-satellite` |
-| `device/<device>/` | What one device adds on top of its amazon-oss tree. It is staged as `device/kiosk-satellite/<device>` |
-| `docker/` | The build container |
-| `scripts/` | Sync, stage and build |
+1. **Unlock the device and install TWRP.** [Unlocking](docs/unlocking.md) covers each device. [Getting into TWRP](docs/twrp.md) covers starting TWRP and checking its version.
+2. **Install the image** with the steps in the device's guide.
 
-Patches follow the amazon-oss layout: `patches/<set>/<project path>/NNNN-*.patch`, for example `patches/crown/device/amazon/crown/0001-crown-Inherit-the-Kiosk-Satellite-Edition-layer.patch`. Staging applies amazon-oss's own `patches/` project first, then `patches/common` and then the device's set. Every device shares one tree, so when the list of patches changes the files any patch touches go back to their synced state before the patches apply again.
+The images come from the [releases](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases). Each release has a zip with its signature for each device, with the device's codename in its name.
+
+### Coming from the CM14.1 Echo Dot image
+
+The Echo Dot used to have a LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](https://github.com/jxlarrea/lineageos-biscuit-kiosk-satellite). Its last release, 2026.10.5, does not update to this image over the air. [Moving from the CM14.1 image](docs/echo-dot.md#moving-from-the-cm141-image) covers the move by hand, with Kiosk Satellite's settings kept.
+
+## Updating
+
+Once installed, a device updates itself. Home Assistant shows a new release on the device's **Firmware** update entity. Kiosk Satellite shows it in its remote admin. The device's guide covers the details.
 
 ## Building
 
-Builds run in Docker. The tree, ccache and build output take well over 100 GB, so `workspace` can be a symlink to a larger disk, or `ECHO_WORKSPACE` can point somewhere else.
-
-```sh
-make docker
-make sync
-make crown
-docker logs -f lineage-18.1-crown-build
-```
-
-`make crown` stages the tree and starts a detached `lineage-18.1-crown-build` container that runs `m bacon`. The zip lands in `workspace/lineage-18.1/out/target/product/crown/`. Check the log for `#### build completed successfully` instead of trusting an exit code.
-
-`make stage DEVICE=crown` only stages the tree, which is useful before building a single module by hand.
-
-## WebView
-
-The Echo Shows ship LineageOS's prebuilt Chromium WebView (`external/chromium-webview/prebuilt/arm`), which LineageOS keeps current on its `main` branch for every release. Before each release, set that project's revision in `manifest/lock.xml` to the newest commit on `main` and sync, so the Shows ship the newest WebView. The Echo Dot has no screen and ships no WebView.
+See [Building](docs/building.md). Builds run in Docker from one LineageOS 18.1 tree for every device.
 
 ## Credits
 
-The shared base is R0rt1z2's work in [amazon-oss](https://github.com/amazon-oss). meiser79 brought the Echo Dot up on LineageOS 18.1 first, and [docs/credits.md](docs/credits.md) lists the components his port guided.
+- [R0rt1z2](https://github.com/R0rt1z2), for the LineageOS 18.1 port for the MT8163 Echos in [amazon-oss](https://github.com/amazon-oss) that every image builds on. Also for amonet on the Echo Dot with its TWRP.
+- [hkfuertes](https://github.com/hkfuertes), for the [CM14.1 port](https://github.com/hkfuertes/amazon_device_biscuit) of the Echo Dot. BiscuitService, the light ring daemon, the audio route and the light sensor HAL came from it.
+- [meiser79](https://github.com/meiser79), who brought the Echo Dot up on LineageOS 18.1 first. Their port guided the Echo Dot image.
+- xyz and k4y0z for amonet and its first Echo Dot port.
+- [bboe](https://github.com/bboe) for [firebreak](https://github.com/bboe/firebreak).
+
+[Credits](docs/credits.md) records what each one's work brought to this repository.

@@ -16,6 +16,7 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 - **The line out jack.** With something plugged in, audio plays through the jack at full level and the Dot's speaker stays off. Unplugging it moves the audio back to the speaker.
 - **Bluetooth both ways.** Phones can play to the Dot as a Bluetooth speaker. The Dot can also play to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
 - **5 GHz Wi-Fi**, the DFS channels 52 to 144 included, with Wi-Fi power saving off. See [Network](#network).
+- **WPA2/WPA3 networks.** The Dot joins a network in WPA2/WPA3 transition mode with WPA2. On stock LineageOS 18.1, Android tries WPA3 there, which the Dot's Wi-Fi cannot do, and the Dot never connects.
 - **More free memory.** With Kiosk Satellite connected and Amazon's wake word engine listening, about 235 MB of the Dot's 480 MB stays available.
 
 ## Before you start
@@ -216,6 +217,7 @@ Switching between the two restarts Bluetooth, which drops what was connected. `a
   ```
 
 - **5 GHz.** The Dot joins networks on every 5 GHz channel the US allows, the DFS channels 52 to 144 included, since a Dot has no SIM to learn its country from. It connects on the 20 MHz primary channel of a wider network.
+- **WPA2/WPA3.** The Dot joins a network in WPA2/WPA3 transition mode with WPA2. Its Wi-Fi cannot do WPA3, so it cannot join a network that only offers WPA3. Use WPA2 or WPA2/WPA3 for the Dot's network.
 - **adb works over Wi-Fi** on port 5555 without a password, so a Dot without a screen can always be reached. Anyone on your network can control the Dot this way, so keep it on a network you trust.
 
 ### Kiosk Satellite installer

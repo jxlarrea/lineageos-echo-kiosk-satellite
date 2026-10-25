@@ -16,7 +16,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ## Echo Dot (2nd gen) 2026.10.7 - 2026-10-25
 
 ### Fixed
-- **Wi-Fi networks in WPA2/WPA3 transition mode** ([#1](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/1)). Android 11 upgrades a saved WPA2 network to WPA3 (SAE) when the access point offers both, but the Echos' Wi-Fi drivers cannot do SAE, so the Dot never joined such a network. It now connects with WPA2, as the CM14 image did. This fix applies to every Echo. A network that only offers WPA3 still cannot be joined.
+- **Wi-Fi networks in WPA2/WPA3 transition mode** ([#1](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/1)). Android 11 upgrades a saved WPA2 network to WPA3 (SAE) when the access point offers both, but the Echos' Wi-Fi drivers cannot do SAE, so the Dot never joined such a network. It now connects with WPA2, as the CM14 image did. This fix applies to every Echo. A network that only offers WPA3 still cannot be joined. The Echo Dot guide says so.
 - **Kiosk Satellite could not restart itself.** ks-install granted all files access, but not the other permissions Android 11 only gives through their own Settings screens. Restarting needs Display over other apps, so Kiosk Satellite tried to open a Settings screen the Dot cannot show. ks-install now also allows Kiosk Satellite to display over other apps, change system settings, read app usage and install its own updates, on every boot.
 
 ## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25

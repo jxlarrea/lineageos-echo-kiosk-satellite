@@ -66,8 +66,17 @@ if $update || ! pm path "$PKG" >/dev/null 2>&1; then
     rm -f "$APK"
     log "installed Kiosk Satellite"
     # Started once, as Android requires before it delivers the boot
-    # broadcast.
-    am start -n "$PKG/.ProvisionActivity" >/dev/null 2>&1
+    # broadcast. A fresh install also becomes the home screen, so the kiosk
+    # is what comes back whenever something else took the screen: an app in
+    # the background loses the microphone on Android 11. Kiosk Satellite
+    # takes the role as device owner and keeps the launcher as its fallback.
+    # Only on the first install, so turning it off in Kiosk Satellite stays
+    # off.
+    if $update; then
+        am start -n "$PKG/.ProvisionActivity" >/dev/null 2>&1
+    else
+        am start -n "$PKG/.ProvisionActivity" --es ks.provision '{"home.enabled":true}' >/dev/null 2>&1
+    fi
     sleep 10
 fi
 
@@ -85,6 +94,26 @@ for op in MANAGE_EXTERNAL_STORAGE SYSTEM_ALERT_WINDOW WRITE_SETTINGS GET_USAGE_S
     appops set "$PKG" "$op" allow 2>/dev/null
 done
 dumpsys deviceidle whitelist "+$PKG" >/dev/null
+
+# Two services Android only turns on from Settings: notification access, so
+# Now Playing can follow the apps playing on the Show, and the System UI
+# guard, an accessibility service that closes the notification shade and
+# recents while the kiosk is locked. Other accessibility services stay on.
+cmd notification allow_listener "$PKG/$PKG.MediaSessionListener" 2>/dev/null
+guard="$PKG/$PKG.KioskAccessibilityService"
+services="$(settings get secure enabled_accessibility_services)"
+case ":$services:" in
+    *":$guard:"*) ;;
+    *)
+        if [ -z "$services" ] || [ "$services" = "null" ]; then
+            services="$guard"
+        else
+            services="$services:$guard"
+        fi
+        settings put secure enabled_accessibility_services "$services"
+        ;;
+esac
+settings put secure accessibility_enabled 1
 
 # Device owner needs a device with no accounts, which a kiosk has.
 if ! dumpsys device_policy | grep -A3 "Device Owner" | grep -q "package="; then

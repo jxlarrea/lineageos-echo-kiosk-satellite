@@ -1,0 +1,106 @@
+PhoneWindowManager: Let holding the power button turn the screen on and off
+
+The Echo Shows' power button is also their privacy button. Their privacy
+chip turns privacy on and off on any press shorter than about 3 seconds,
+whatever Android does, and leaves it alone on a longer one. A short press
+to turn the screen off or on therefore also turned privacy on or off.
+
+LONG_PRESS_POWER_TOGGLE_SCREEN (7), set through power_button_long_press,
+turns the screen off, or on when it is off, once the button has been
+held for ro.config.long_press_power_screen_ms, 3200 by default, past the
+chip's threshold. A press on a sleeping screen waits for it instead of
+waking the screen at once, and Android does nothing on a short press, so
+the short press only does what the chip does.
+
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -283,6 +283,12 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     static final int LONG_PRESS_POWER_GO_TO_VOICE_ASSIST = 4;
+     static final int LONG_PRESS_POWER_ASSISTANT = 5; // Settings.Secure.ASSISTANT
+     static final int LONG_PRESS_POWER_TORCH = 6;
++    // Holding the button for ro.config.long_press_power_screen_ms turns the
++    // screen on and off, and a short press does nothing here. For a button
++    // whose short press does something else in hardware, such as the Echo
++    // Shows' privacy button, which turns privacy on and off on any press
++    // shorter than 3 seconds.
++    static final int LONG_PRESS_POWER_TOGGLE_SCREEN = 7;
+ 
+     // must match: config_veryLongPresOnPowerBehavior in config.xml
+     static final int VERY_LONG_PRESS_POWER_NOTHING = 0;
+@@ -1142,8 +1148,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                         mResolvedLongPressOnPowerBehavior = getResolvedLongPressOnPowerBehavior();
+                         Message msg = mHandler.obtainMessage(MSG_POWER_LONG_PRESS);
+                         msg.setAsynchronous(true);
+-                        mHandler.sendMessageDelayed(msg,
+-                                ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout());
++                        mHandler.sendMessageDelayed(msg, getPowerLongPressTimeout());
+ 
+                         if (hasVeryLongPressOnPowerBehavior()) {
+                             Message longMsg = mHandler.obtainMessage(MSG_POWER_VERY_LONG_PRESS);
+@@ -1153,18 +1158,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                     }
+                 }
+             } else {
+-                if (mSupportLongPressPowerWhenNonInteractive && hasLongPressOnPowerBehavior()) {
++                if ((mSupportLongPressPowerWhenNonInteractive && hasLongPressOnPowerBehavior())
++                        || getResolvedLongPressOnPowerBehavior() == LONG_PRESS_POWER_TOGGLE_SCREEN) {
+                     if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
+                         powerLongPress();
+                     } else {
+                         mResolvedLongPressOnPowerBehavior = getResolvedLongPressOnPowerBehavior();
+-                        if (mResolvedLongPressOnPowerBehavior != LONG_PRESS_POWER_TORCH) {
++                        if (mResolvedLongPressOnPowerBehavior != LONG_PRESS_POWER_TORCH
++                                && mResolvedLongPressOnPowerBehavior != LONG_PRESS_POWER_TOGGLE_SCREEN) {
+                             wakeUpFromPowerKey(event.getDownTime());
+                         }
+                         Message msg = mHandler.obtainMessage(MSG_POWER_LONG_PRESS);
+                         msg.setAsynchronous(true);
+-                        mHandler.sendMessageDelayed(msg,
+-                                ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout());
++                        mHandler.sendMessageDelayed(msg, getPowerLongPressTimeout());
+ 
+                         if (hasVeryLongPressOnPowerBehavior()) {
+                             Message longMsg = mHandler.obtainMessage(MSG_POWER_VERY_LONG_PRESS);
+@@ -1265,6 +1271,11 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 + " count=" + count + " beganFromNonInteractive=" + mBeganFromNonInteractive +
+                 " mShortPressOnPowerBehavior=" + mShortPressOnPowerBehavior);
+ 
++        if (getResolvedLongPressOnPowerBehavior() == LONG_PRESS_POWER_TOGGLE_SCREEN) {
++            // The hold does the screen, and the short press is the hardware's.
++            return;
++        }
++
+         if (count == 2) {
+             powerMultiPressAction(eventTime, interactive, mDoublePressOnPowerBehavior);
+         } else if (count == 3) {
+@@ -1403,11 +1414,29 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         return 1;
+     }
+ 
++    private long getPowerLongPressTimeout() {
++        if (mResolvedLongPressOnPowerBehavior == LONG_PRESS_POWER_TOGGLE_SCREEN) {
++            return SystemProperties.getLong("ro.config.long_press_power_screen_ms", 3200);
++        }
++        return ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout();
++    }
++
+     private void powerLongPress() {
+         final int behavior = mResolvedLongPressOnPowerBehavior;
+         switch (behavior) {
+             case LONG_PRESS_POWER_NOTHING:
+                 break;
++            case LONG_PRESS_POWER_TOGGLE_SCREEN:
++                mPowerKeyHandled = true;
++                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
++                        "Power - Long Press - Toggle Screen");
++                if (isScreenOn() && !isDozeMode()) {
++                    mPowerManager.goToSleep(SystemClock.uptimeMillis(),
++                            PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON, 0);
++                } else {
++                    wakeUpFromPowerKey(SystemClock.uptimeMillis());
++                }
++                break;
+             case LONG_PRESS_POWER_GLOBAL_ACTIONS:
+                 mPowerKeyHandled = true;
+                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,

@@ -33,3 +33,4 @@ on property:sys.boot_completed=1 && property:persist.echo.adb_wifi=1
 # boot, after mt8163-common's post-fs-data value.
 on boot
     write /proc/sys/vm/min_free_kbytes 8192
+

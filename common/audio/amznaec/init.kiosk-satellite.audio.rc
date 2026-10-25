@@ -1,0 +1,21 @@
+#
+# SPDX-FileCopyrightText: 2026 The LineageOS Project
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# The audio HAL with the echo canceller preloaded (libamznaec_shim). This is
+# AOSP's definition from android.hardware.audio.service.rc with the setenv
+# added. That file sorts first in /vendor/etc/init, so this one overrides it.
+# setprop persist.vendor.amznaec.enable 0 and a restart of the HAL pass the
+# microphones through untouched.
+service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service
+    override
+    class hal
+    user audioserver
+    # media gid needed for /dev/fm (radio) and for /data/misc/media (tee)
+    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct wakelock context_hub
+    capabilities BLOCK_SUSPEND
+    ioprio rt 4
+    task_profiles ProcessCapacityHigh HighPerformance
+    onrestart restart audioserver
+    setenv LD_PRELOAD libamznaec_shim.so

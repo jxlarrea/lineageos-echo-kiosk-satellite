@@ -101,6 +101,22 @@ public class EchoService extends Service {
             Settings.Secure.putString(context.getContentResolver(),
                     Settings.Secure.IMMERSIVE_MODE_CONFIRMATIONS, "confirmed");
         }
+        // Holding the button turns the screen on and off, and a short press is
+        // left to the privacy chip, which turns privacy on and off on any press
+        // shorter than about 3 seconds. echo_service button menu brings back
+        // Android's power menu and short press.
+        if (Settings.Global.getString(context.getContentResolver(),
+                Settings.Global.POWER_BUTTON_LONG_PRESS) == null) {
+            Settings.Global.putInt(context.getContentResolver(),
+                    Settings.Global.POWER_BUTTON_LONG_PRESS, Commands.LONG_PRESS_POWER_SCREEN);
+        }
+        // A screen that is off stays dark, with no clock on it. echo_service
+        // screen ambient on brings LineageOS's ambient display back.
+        for (String key : new String[] { Settings.Secure.DOZE_ALWAYS_ON, Settings.Secure.DOZE_ENABLED }) {
+            if (Settings.Secure.getString(context.getContentResolver(), key) == null) {
+                Settings.Secure.putInt(context.getContentResolver(), key, 0);
+            }
+        }
         nameDevice(context);
     }
 

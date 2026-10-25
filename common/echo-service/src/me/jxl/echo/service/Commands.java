@@ -63,6 +63,12 @@ public final class Commands extends BroadcastReceiver {
     // Android's default for adb keys: they expire after 7 days unused.
     private static final long ADB_KEY_DEFAULT_MS = 7L * 24 * 60 * 60 * 1000;
     private static final int PAIRING_SECONDS = 300;
+    private static final String PRIVACY_STATE = "/sys/devices/platform/gpio-privacy/state";
+    // PhoneWindowManager's long press actions: the power menu, and holding the
+    // button past the privacy chip's threshold to turn the screen on and off
+    // (patches/cronos/frameworks/base).
+    static final int LONG_PRESS_POWER_MENU = 1;
+    static final int LONG_PRESS_POWER_SCREEN = 7;
 
     private static final String[] STREAM_NAMES = { "music", "alarm", "notification", "ring", "system" };
     private static final int[] STREAMS = {
@@ -112,6 +118,8 @@ public final class Commands extends BroadcastReceiver {
             case "time": return time(context, rest);
             case "adb": return adb(context, rest);
             case "lockscreen": return lockscreen(context, rest);
+            case "privacy": return privacy(rest);
+            case "button": return button(context, rest);
             case "locale": return locale(rest);
             case "screen": return screen(context, rest);
             case "volume": return volume(context, rest);
@@ -148,6 +156,8 @@ public final class Commands extends BroadcastReceiver {
         out.append("Time: ").append(timeStatus(context)).append('\n');
         out.append("Locale: ").append(currentLocales()).append('\n');
         out.append("Lock screen: ").append(lockscreenStatus(context)).append('\n');
+        out.append("Privacy: ").append(privacyStatus()).append('\n');
+        out.append("Button: ").append(buttonStatus(context)).append('\n');
         out.append("Screen: ").append(screenStatus(context)).append('\n');
         out.append("Kiosk Satellite: ").append(kioskSatelliteStatus(context)).append('\n');
         out.append("System update: ").append(SystemUpdate.get(context).summary());
@@ -458,6 +468,62 @@ public final class Commands extends BroadcastReceiver {
         return lock.isLockScreenDisabled(user) ? "off" : "on, swipe to unlock";
     }
 
+    // Privacy and the button
+
+    // A press shorter than about 3 seconds turns privacy on and off in the
+    // privacy chip itself, so the only thing to set here is what holding the
+    // button does.
+    private static String privacy(String[] args) throws UsageException {
+        if (args.length > 0 && !args[0].equals("status")) {
+            throw new UsageException("usage: privacy [status]. The button turns privacy on and off.");
+        }
+        return privacyStatus();
+    }
+
+    private static String privacyStatus() {
+        String state = readLine(PRIVACY_STATE);
+        if (state.isEmpty()) return "no privacy button";
+        return "1".equals(state) ? "on, microphones and camera off" : "off";
+    }
+
+    private static String button(Context context, String[] args) throws UsageException {
+        ContentResolver resolver = context.getContentResolver();
+        switch (arg(args, 0)) {
+            case "":
+            case "status":
+                return buttonStatus(context);
+            case "screen":
+                Settings.Global.putInt(resolver, Settings.Global.POWER_BUTTON_LONG_PRESS, LONG_PRESS_POWER_SCREEN);
+                return buttonStatus(context);
+            case "menu":
+                Settings.Global.putInt(resolver, Settings.Global.POWER_BUTTON_LONG_PRESS, LONG_PRESS_POWER_MENU);
+                return buttonStatus(context);
+            default:
+                throw new UsageException("usage: button [status|screen|menu]");
+        }
+    }
+
+    private static String buttonStatus(Context context) {
+        int longPress = Settings.Global.getInt(context.getContentResolver(),
+                Settings.Global.POWER_BUTTON_LONG_PRESS, LONG_PRESS_POWER_MENU);
+        if (longPress == LONG_PRESS_POWER_SCREEN) {
+            return "holding it " + SystemProperties.getLong("ro.config.long_press_power_screen_ms", 3200) / 1000f
+                    + " s turns the screen on and off, a short press turns privacy on and off";
+        }
+        return (longPress == LONG_PRESS_POWER_MENU ? "holding it opens the power menu"
+                : "holding it does action " + longPress)
+                + ", a short press turns the screen on and off and privacy on and off";
+    }
+
+    private static String readLine(String path) {
+        try (BufferedReader in = new BufferedReader(new FileReader(path))) {
+            String line = in.readLine();
+            return line == null ? "" : line.trim();
+        } catch (IOException e) {
+            return "";
+        }
+    }
+
     // Locale
 
     private static String locale(String[] args) throws UsageException {
@@ -509,6 +575,12 @@ public final class Commands extends BroadcastReceiver {
                 Settings.System.putInt(resolver, Settings.System.SCREEN_OFF_TIMEOUT, ms);
                 return screenStatus(context);
             }
+            case "ambient": {
+                boolean on = onOff(arg(args, 1));
+                Settings.Secure.putInt(resolver, Settings.Secure.DOZE_ALWAYS_ON, on ? 1 : 0);
+                Settings.Secure.putInt(resolver, Settings.Secure.DOZE_ENABLED, on ? 1 : 0);
+                return screenStatus(context);
+            }
             case "stay-awake":
                 Settings.Global.putInt(resolver, Settings.Global.STAY_ON_WHILE_PLUGGED_IN,
                         onOff(arg(args, 1)) ? BatteryManager.BATTERY_PLUGGED_AC
@@ -516,7 +588,7 @@ public final class Commands extends BroadcastReceiver {
                 return screenStatus(context);
             default:
                 throw new UsageException("usage: screen [status|on|off|brightness <0-255|auto>"
-                        + "|timeout <seconds|never>|stay-awake on|off]");
+                        + "|timeout <seconds|never>|stay-awake on|off|ambient on|off]");
         }
     }
 
@@ -528,10 +600,12 @@ public final class Commands extends BroadcastReceiver {
         int brightness = Settings.System.getInt(resolver, Settings.System.SCREEN_BRIGHTNESS, -1);
         int timeout = Settings.System.getInt(resolver, Settings.System.SCREEN_OFF_TIMEOUT, -1);
         boolean awake = Settings.Global.getInt(resolver, Settings.Global.STAY_ON_WHILE_PLUGGED_IN, 0) != 0;
+        boolean ambient = Settings.Secure.getInt(resolver, Settings.Secure.DOZE_ALWAYS_ON, 0) != 0;
         return (power.isInteractive() ? "on" : "off")
                 + ", brightness " + (auto ? "auto" : String.valueOf(brightness))
                 + ", timeout " + (timeout == Integer.MAX_VALUE ? "never" : timeout / 1000 + " s")
-                + ", stay awake " + (awake ? "on" : "off");
+                + ", stay awake " + (awake ? "on" : "off")
+                + ", ambient display " + (ambient ? "on" : "off");
     }
 
     // Volume

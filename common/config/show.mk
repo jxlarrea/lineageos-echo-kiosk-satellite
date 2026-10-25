@@ -11,7 +11,15 @@ LOCAL_PATH := vendor/kiosk-satellite
 # system updates for Kiosk Satellite.
 PRODUCT_PACKAGES += \
     EchoService \
-    echo_service
+    echo_service \
+    echo_mic_test
+
+# Echo cancellation on the microphones (audio/amznaec): the FPGA's copy of
+# the speaker signal is the reference, so the wake word works over music.
+# Each device sets ro.vendor.amznaec.gain_db for its microphone gain.
+PRODUCT_PACKAGES += \
+    libamznaec_shim \
+    init.kiosk-satellite.audio.rc
 
 # Kiosk Satellite on first boot, with its grants and device owner. curl
 # fetches it from GitHub.
@@ -41,14 +49,17 @@ endif
 PRODUCT_PACKAGES += \
     EchoNetworkStackOverlay
 
-# No setup wizard (EchoService overrides it) and no lock screen (overlay/).
-# Built into SettingsProvider instead of a runtime overlay, so it has them
-# when it first creates its database.
+# No setup wizard (EchoService overrides it), no lock screen and none of the
+# Bluetooth profiles a kiosk has nothing for (overlay/). Both are built into
+# their packages instead of runtime overlays: SettingsProvider needs its
+# defaults when it first creates its database, and Bluetooth's manifest
+# enables each profile's service from the same values.
 DEVICE_PACKAGE_OVERLAYS += \
     $(LOCAL_PATH)/overlay
 
 PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
-    $(LOCAL_PATH)/overlay/frameworks/base/packages/SettingsProvider
+    $(LOCAL_PATH)/overlay/frameworks/base/packages/SettingsProvider \
+    $(LOCAL_PATH)/overlay/packages/apps/Bluetooth
 
 # adb on USB from the first boot, so a Show can be set up without its
 # screen. A new computer still has to be allowed on the screen once.

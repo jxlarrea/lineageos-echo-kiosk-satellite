@@ -82,3 +82,12 @@ prebuilt_etc {
     sub_dir: "init",
 }
 
+
+// Prints the level of each channel of an Echo Show's microphone stream and
+// can save it, to find a weak microphone or measure the speaker's echo.
+cc_binary {
+    name: "echo_mic_test",
+    srcs: ["tools/echo_mic_test.c"],
+    shared_libs: ["libtinyalsa"],
+    cflags: ["-Wall", "-Werror"],
+}

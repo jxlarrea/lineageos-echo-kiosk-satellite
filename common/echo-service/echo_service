@@ -43,13 +43,20 @@ adb:
   adb root on|off                allow adb root (LineageOS's Rooted debugging)
   adb keys expire on|off         whether allowed computers expire after 7 days
 
-Lock screen, language and screen:
+Lock screen, privacy, language and screen:
   lockscreen [status]|on|off     the swipe lock screen
+  privacy [status]               whether privacy is on. A short press of the button
+                                 turns it on and off, in the privacy chip
+  button [status]                what the button does
+  button screen|menu             screen: holding it 3 s turns the screen on and off,
+                                 a short press only does privacy (default). menu:
+                                 Android's power menu and short press
   locale [<tag>]                 the language, such as en-US or es-MX
   screen [status]|on|off         wake the screen or turn it off
   screen brightness <0-255|auto>
   screen timeout <seconds|never>
   screen stay-awake on|off       keep the screen on while plugged in
+  screen ambient on|off          the clock on a sleeping screen
 
 Volume:
   volume                         every volume

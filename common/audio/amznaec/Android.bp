@@ -1,0 +1,57 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// Echo cancellation for the Echo Shows' microphones, preloaded into the
+// audio HAL (init.kiosk-satellite.audio.rc). It links against the WebRTC
+// audio processing library the image already ships in /vendor/lib. Speex
+// (speexdsp/, BSD) is the optional second engine.
+cc_library_shared {
+    name: "libamznaec_shim",
+    vendor: true,
+    compile_multilib: "32",
+    srcs: [
+        "amznaec_shim.cpp",
+        "speexdsp/libspeexdsp/mdf.c",
+        "speexdsp/libspeexdsp/preprocess.c",
+        "speexdsp/libspeexdsp/filterbank.c",
+        "speexdsp/libspeexdsp/fftwrap.c",
+        "speexdsp/libspeexdsp/kiss_fft.c",
+        "speexdsp/libspeexdsp/kiss_fftr.c",
+    ],
+    local_include_dirs: [
+        "speexdsp/include",
+        "speexdsp/libspeexdsp",
+    ],
+    include_dirs: [
+        "external/webrtc",
+        "external/tinyalsa/include",
+    ],
+    shared_libs: [
+        "libwebrtc_audio_preprocessing",
+        "libcutils",
+        "liblog",
+        "libdl",
+    ],
+    cflags: [
+        "-DWEBRTC_POSIX",
+        "-DFLOATING_POINT",
+        "-DUSE_KISS_FFT",
+        "-DEXPORT=",
+        "-DVAR_ARRAYS",
+        "-Wall",
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+        "-Wno-unused-function",
+        "-Wno-sign-compare",
+        "-Wno-implicit-fallthrough",
+    ],
+}
+
+prebuilt_etc {
+    name: "init.kiosk-satellite.audio.rc",
+    src: "init.kiosk-satellite.audio.rc",
+    sub_dir: "init",
+    vendor: true,
+}

@@ -41,6 +41,7 @@
                 <action android:name="com.amazon.biscuit.service.IBiscuitService" />
                 <action android:name="com.amazon.biscuit.service.BLUETOOTH_PAIRING_MODE" />
                 <action android:name="com.amazon.biscuit.service.BLUETOOTH_OFF" />
+                <action android:name="com.amazon.biscuit.service.BLUETOOTH_CONNECT" />
                 <action android:name="com.amazon.biscuit.service.WIFI_ON" />
                 <action android:name="com.amazon.biscuit.service.WIFI_OFF" />
                 <action android:name="com.amazon.biscuit.service.WIFI_CONNECT" />

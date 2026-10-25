@@ -8,4 +8,10 @@
 
 #define BTM_DEF_LOCAL_NAME "Echo Dot"
 
+/* A loudspeaker that renders audio, so phones list the Dot with speakers. */
+#define BTA_DM_COD {0x24, 0x04, 0x14}
+
+/* No screen and no keypad: phones pair without a code to compare. */
+#define BTM_LOCAL_IO_CAPS BTM_IO_CAP_NONE
+
 #endif

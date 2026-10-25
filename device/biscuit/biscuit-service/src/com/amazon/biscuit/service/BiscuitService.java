@@ -6,7 +6,13 @@
 package com.amazon.biscuit.service;
 
 import android.app.Service;
+import android.bluetooth.BluetoothA2dp;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothClass;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
+import android.content.ContentResolver;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -17,9 +23,14 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.net.LocalSocketAddress;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.os.UserHandle;
+import android.provider.Settings;
+import android.util.Slog;
 
 import java.io.BufferedReader;
 import java.io.FileDescriptor;
@@ -67,6 +78,7 @@ public final class BiscuitService extends Service {
     private static final String MIC_MUTE_CHANGED = "com.amazon.biscuit.service.MICROPHONE_MUTE_CHANGED";
     public static final String BLUETOOTH_PAIRING_MODE = "com.amazon.biscuit.service.BLUETOOTH_PAIRING_MODE";
     public static final String BLUETOOTH_OFF = "com.amazon.biscuit.service.BLUETOOTH_OFF";
+    public static final String BLUETOOTH_CONNECT = "com.amazon.biscuit.service.BLUETOOTH_CONNECT";
     public static final String WIFI_ON = "com.amazon.biscuit.service.WIFI_ON";
     public static final String WIFI_OFF = "com.amazon.biscuit.service.WIFI_OFF";
     public static final String WIFI_CONNECT = "com.amazon.biscuit.service.WIFI_CONNECT";
@@ -81,6 +93,7 @@ public final class BiscuitService extends Service {
     private static final String EXTRA_SSID = "ssid";
     private static final String EXTRA_PSK = "psk";
     private static final String EXTRA_VOLUME = "volume";
+    private static final String EXTRA_NAME = "name";
     private static final String EXTRA_COUNTDOWN_REMAINING_MS = "com.amazon.biscuit.service.EXTRA_COUNTDOWN_REMAINING_MS";
     private static final String EXTRA_COUNTDOWN_TOTAL_MS = "com.amazon.biscuit.service.EXTRA_COUNTDOWN_TOTAL_MS";
     private static final String EXTRA_STREAM_TYPE = "android.media.EXTRA_VOLUME_STREAM_TYPE";
@@ -90,11 +103,55 @@ public final class BiscuitService extends Service {
     private static final String VOLUME_BUTTON = "com.amazon.biscuit.service.VOLUME_BUTTON";
     private static final String EXTRA_DIRECTION = "direction";
     private static final int PAIRING_MODE_SECONDS = 300;
+    private static final long CONNECT_SEARCH_MS = 60000;
+    private static final long CONNECT_PAIR_MS = 60000;
+    private static final String TAG = "BiscuitService";
+    private static final long A2DP_SINK_MASK = 1L << BluetoothProfile.A2DP_SINK;
     private static final String SYSTEM_UPDATE_UNAVAILABLE =
             "{\"available\":false,\"state\":\"idle\","
             + "\"checkError\":\"System updates are not available on this image yet.\"}";
     private final Object mLock = new Object();
     private volatile boolean mMicMuted;
+
+    // A search for Bluetooth headphones or a speaker to play to. Only the
+    // main thread touches these.
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private boolean mConnecting;
+    private BluetoothAdapter mConnectAdapter;
+    private String mConnectName;
+    private long mConnectDeadline;
+    private BluetoothDevice mConnectDevice;
+    private boolean mConnectFromBond;
+
+    // While pairing mode lasts, the pairing a phone asks for, which a Dot
+    // has no screen to confirm on. Main thread only.
+    private boolean mAcceptingPairing;
+    private final BroadcastReceiver mPairingReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+            if (device == null) return;
+            Slog.i(TAG, "Accepting pairing from " + device.getName());
+            answerPairingRequest(device, intent);
+            abortBroadcast();
+        }
+    };
+    private final Runnable mStopAcceptingPairing = new Runnable() {
+        public void run() {
+            stopAcceptingPairing();
+        }
+    };
+    private final Runnable mConnectTimeout = new Runnable() {
+        public void run() {
+            if (mConnecting) finishConnect("timed out");
+        }
+    };
+    private final BroadcastReceiver mConnectReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (onConnectEvent(intent)) abortBroadcast();
+        }
+    };
 
     // The app holding the volume buttons, if any, and the token whose death
     // gives them back, so a crashed app never leaves the buttons dead.
@@ -224,6 +281,8 @@ public final class BiscuitService extends Service {
             startBluetoothPairingMode();
         } else if (intent != null && BLUETOOTH_OFF.equals(intent.getAction())) {
             stopBluetooth();
+        } else if (intent != null && BLUETOOTH_CONNECT.equals(intent.getAction())) {
+            connectBluetoothAudio(intent.getStringExtra(EXTRA_NAME));
         } else if (intent != null && WIFI_ON.equals(intent.getAction())) {
             setWifiEnabled(true);
         } else if (intent != null && WIFI_OFF.equals(intent.getAction())) {
@@ -341,18 +400,223 @@ public final class BiscuitService extends Service {
     private void startBluetoothPairingMode() {
         final BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) return;
-        if (!adapter.isEnabled()) adapter.enable();
         new Thread(new Runnable() {
             public void run() {
-                for (int i = 0; i < 20 && !adapter.isEnabled(); i++) {
-                    try { Thread.sleep(500); } catch (InterruptedException ignored) { return; }
-                }
-                if (adapter.isEnabled()) {
-                    adapter.setScanMode(BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE,
-                            PAIRING_MODE_SECONDS);
-                }
+                if (!useBluetoothRole(adapter, false)) return;
+                adapter.setScanMode(BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE,
+                        PAIRING_MODE_SECONDS);
+                mHandler.post(new Runnable() {
+                    public void run() {
+                        startAcceptingPairing();
+                    }
+                });
             }
         }, "BiscuitBtPairingMode").start();
+    }
+
+    private void startAcceptingPairing() {
+        if (!mAcceptingPairing) {
+            IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_PAIRING_REQUEST);
+            // Ahead of Settings, whose pairing prompt nobody could answer.
+            filter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+            registerReceiver(mPairingReceiver, filter);
+            mAcceptingPairing = true;
+        }
+        mHandler.removeCallbacks(mStopAcceptingPairing);
+        mHandler.postDelayed(mStopAcceptingPairing, PAIRING_MODE_SECONDS * 1000L);
+    }
+
+    private void stopAcceptingPairing() {
+        mHandler.removeCallbacks(mStopAcceptingPairing);
+        if (!mAcceptingPairing) return;
+        unregisterReceiver(mPairingReceiver);
+        mAcceptingPairing = false;
+    }
+
+    private static void answerPairingRequest(BluetoothDevice device, Intent request) {
+        int variant = request.getIntExtra(BluetoothDevice.EXTRA_PAIRING_VARIANT, -1);
+        if (variant == BluetoothDevice.PAIRING_VARIANT_PIN) {
+            // What headphones and old phones without a keypad on the other
+            // end use.
+            device.setPin("0000".getBytes());
+        } else {
+            device.setPairingConfirmation(true);
+        }
+    }
+
+    // Android 11's Bluetooth stack runs A2DP sink, for phones that play to
+    // the Dot, or A2DP source, for the Dot to play to headphones, not both:
+    // the second to start takes over from the first. The Dot runs the one
+    // asked for last and keeps it in the profiles Bluetooth leaves out,
+    // which it reads each time it starts. Runs on a worker thread and is
+    // false when Bluetooth did not come on.
+    private boolean useBluetoothRole(BluetoothAdapter adapter, boolean source) {
+        ContentResolver resolver = getContentResolver();
+        long disabled = Settings.Global.getLong(resolver,
+                Settings.Global.BLUETOOTH_DISABLED_PROFILES, 0);
+        long wanted = source ? disabled | A2DP_SINK_MASK : disabled & ~A2DP_SINK_MASK;
+        if (wanted != disabled) {
+            Settings.Global.putLong(resolver, Settings.Global.BLUETOOTH_DISABLED_PROFILES, wanted);
+            Slog.i(TAG, source ? "Bluetooth now plays to headphones and speakers"
+                    : "Bluetooth now plays what phones send");
+            if (adapter.getState() != BluetoothAdapter.STATE_OFF) {
+                adapter.disable();
+                waitForBluetooth(adapter, BluetoothAdapter.STATE_OFF);
+            }
+        }
+        if (!adapter.isEnabled()) adapter.enable();
+        return waitForBluetooth(adapter, BluetoothAdapter.STATE_ON);
+    }
+
+    private static boolean waitForBluetooth(BluetoothAdapter adapter, int state) {
+        for (int i = 0; i < 40 && adapter.getState() != state; i++) {
+            try { Thread.sleep(250); } catch (InterruptedException e) { return false; }
+        }
+        return adapter.getState() == state;
+    }
+
+    // Plays to Bluetooth headphones or a speaker in pairing mode: the first
+    // one found that plays A2DP audio, or the first whose name also has the
+    // given text in it. With a name, one paired before connects without
+    // pairing mode. The Dot confirms the pairing itself, since it has no
+    // screen to ask on, then connects A2DP.
+    private void connectBluetoothAudio(final String name) {
+        // An adapter of its own: system_server's shared one searches as the
+        // android package, and the devices found then go to that package only.
+        BluetoothManager manager =
+                createAttributionContext(TAG).getSystemService(BluetoothManager.class);
+        final BluetoothAdapter adapter = manager != null ? manager.getAdapter() : null;
+        if (adapter == null) return;
+        new Thread(new Runnable() {
+            public void run() {
+                if (!useBluetoothRole(adapter, true)) return;
+                mHandler.post(new Runnable() {
+                    public void run() {
+                        startConnectSearch(adapter, name);
+                    }
+                });
+            }
+        }, "BiscuitBtConnect").start();
+    }
+
+    private void startConnectSearch(BluetoothAdapter adapter, String name) {
+        if (mConnecting) return;
+        stopAcceptingPairing();
+        mConnecting = true;
+        mConnectAdapter = adapter;
+        mConnectName = name != null && name.length() > 0 ? name.toLowerCase() : null;
+        mConnectDeadline = SystemClock.elapsedRealtime() + CONNECT_SEARCH_MS;
+        mConnectDevice = null;
+        mConnectFromBond = false;
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        filter.addAction(BluetoothDevice.ACTION_PAIRING_REQUEST);
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
+        // Ahead of Settings, whose pairing prompt nobody could answer.
+        filter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+        registerReceiver(mConnectReceiver, filter);
+        if (mConnectName != null) {
+            for (BluetoothDevice device : adapter.getBondedDevices()) {
+                String bonded = device.getName();
+                BluetoothClass cls = device.getBluetoothClass();
+                if (bonded == null || !bonded.toLowerCase().contains(mConnectName)) continue;
+                if (cls == null || !cls.doesClassMatch(BluetoothClass.PROFILE_A2DP)) continue;
+                // Headphones reconnect by themselves when they come on.
+                if (device.isConnected() && adapter.getProfileConnectionState(BluetoothProfile.A2DP)
+                        == BluetoothProfile.STATE_CONNECTED) {
+                    finishConnect("connected");
+                    return;
+                }
+                Slog.i(TAG, "Connecting to " + bonded);
+                mConnectDevice = device;
+                mConnectFromBond = true;
+                mHandler.postDelayed(mConnectTimeout, CONNECT_PAIR_MS);
+                adapter.connectAllEnabledProfiles(device);
+                return;
+            }
+        }
+        searchForBluetoothAudio(adapter);
+    }
+
+    private void searchForBluetoothAudio(BluetoothAdapter adapter) {
+        Slog.i(TAG, "Looking for Bluetooth audio" + (mConnectName != null ? " named " + mConnectName : ""));
+        if (adapter.isDiscovering()) adapter.cancelDiscovery();
+        if (!adapter.startDiscovery()) finishConnect("could not search");
+    }
+
+    // True when the pairing request was answered here.
+    private boolean onConnectEvent(Intent intent) {
+        if (!mConnecting) return false;
+        BluetoothAdapter adapter = mConnectAdapter;
+        BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        String action = intent.getAction();
+        if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+            if (mConnectDevice != null || device == null) return false;
+            BluetoothClass cls = intent.getParcelableExtra(BluetoothDevice.EXTRA_CLASS);
+            // Not just any audio and video device: a TV box is one too.
+            if (cls == null || !cls.doesClassMatch(BluetoothClass.PROFILE_A2DP)) return false;
+            String found = intent.getStringExtra(BluetoothDevice.EXTRA_NAME);
+            if (found == null) found = device.getName();
+            if (mConnectName != null && (found == null || !found.toLowerCase().contains(mConnectName))) return false;
+            Slog.i(TAG, "Pairing with " + found);
+            mConnectDevice = device;
+            adapter.cancelDiscovery();
+            mHandler.postDelayed(mConnectTimeout, CONNECT_PAIR_MS);
+            // Headphones that forgot an earlier pairing turn the old key
+            // down, and the stack pairs again, which ends up here as well.
+            if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+                adapter.connectAllEnabledProfiles(device);
+            } else if (!device.createBond()) {
+                finishConnect("could not pair with " + found);
+            }
+        } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
+            // A search lasts about 12 seconds. Search again until one turns up.
+            if (mConnectDevice != null) return false;
+            if (SystemClock.elapsedRealtime() < mConnectDeadline && adapter.startDiscovery()) return false;
+            finishConnect("found none");
+        } else if (!isConnectDevice(device)) {
+            return false;
+        } else if (BluetoothDevice.ACTION_PAIRING_REQUEST.equals(action)) {
+            answerPairingRequest(device, intent);
+            return true;
+        } else if (BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
+            int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
+            int previous = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE,
+                    BluetoothDevice.ERROR);
+            if (state == BluetoothDevice.BOND_BONDED) {
+                Slog.i(TAG, "Paired, connecting");
+                adapter.connectAllEnabledProfiles(device);
+            } else if (state == BluetoothDevice.BOND_NONE && previous == BluetoothDevice.BOND_BONDING) {
+                finishConnect("pairing failed");
+            }
+        } else if (BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(action)) {
+            int state = intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, -1);
+            if (state == BluetoothA2dp.STATE_CONNECTED) {
+                finishConnect("connected");
+            } else if (state == BluetoothA2dp.STATE_DISCONNECTED && mConnectFromBond) {
+                // Off or out of range: look for it in pairing mode instead.
+                mConnectFromBond = false;
+                mConnectDevice = null;
+                mHandler.removeCallbacks(mConnectTimeout);
+                mConnectDeadline = SystemClock.elapsedRealtime() + CONNECT_SEARCH_MS;
+                searchForBluetoothAudio(adapter);
+            }
+        }
+        return false;
+    }
+
+    private boolean isConnectDevice(BluetoothDevice device) {
+        return device != null && device.equals(mConnectDevice);
+    }
+
+    private void finishConnect(String result) {
+        Slog.i(TAG, "Bluetooth audio: " + result);
+        unregisterReceiver(mConnectReceiver);
+        mHandler.removeCallbacks(mConnectTimeout);
+        mConnecting = false;
+        mConnectAdapter = null;
+        mConnectDevice = null;
     }
 
     private void stopBluetooth() {

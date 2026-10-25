@@ -5,7 +5,7 @@
 -->
 <!--
     The Echo Dot (2nd gen) has a speaker, a line out jack and a microphone
-    array. The kernel reports the jack as a headset, but it has no
+    array, and plays to Bluetooth headphones and speakers. The kernel reports the jack as a headset, but it has no
     microphone, so capture stays on the array. The formats and rates are
     the ones its Fire OS 6 audio HAL declares. Playback stays 16 bit so the
     speaker tuning in audio.primary.biscuit can work on it.
@@ -57,6 +57,11 @@
                 <route type="mix" sink="primary input" sources="Built-In Mic"/>
             </routes>
         </module>
+
+        <!-- Bluetooth headphones and speakers, through the A2DP audio HAL
+             as on the Echo Shows: the 2.0 audio HAL service opens no
+             module by the name the Bluetooth audio HAL takes. -->
+        <xi:include href="a2dp_audio_policy_configuration.xml"/>
     </modules>
 
     <xi:include href="audio_policy_volumes.xml"/>

@@ -5,6 +5,10 @@ ro.hardware.audio.primary=biscuit
 # buffer it plays, about 50 a second.
 log.tag.AudioALSAPlaybackHandlerNormal=F
 
+# Bluetooth
+# A2DP audio goes through audio.a2dp.default, as on the Echo Shows.
+persist.bluetooth.bluetooth_audio_hal.disabled=true
+
 # Media
 # Codec2 linear buffers from ION. mt8163-common adds the BLOB pool, which
 # allocates them through gralloc, and gralloc.default has no BLOB format,
@@ -28,3 +32,6 @@ ro.hardware.sensors=biscuit
 
 # Wi-Fi
 wifi.interface=wlan0
+# The Dot has no SIM to learn its country from. US rules open the most
+# 5 GHz channels, DFS ones included (kernel patch 0014).
+ro.boot.wificountrycode=US

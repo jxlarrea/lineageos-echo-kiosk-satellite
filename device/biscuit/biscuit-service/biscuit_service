@@ -31,6 +31,9 @@ Countdown:
 
 Bluetooth:
   bt pair                    enable Bluetooth and enter pairing mode
+  bt connect [name]          pair with and play to Bluetooth headphones or a
+                             speaker in pairing mode, the first found or the
+                             first whose name has this text in it
   bt off                     disable Bluetooth / disconnect clients
 
 WiFi:
@@ -101,6 +104,12 @@ case "$1" in
         case "$2" in
             pair|pairing|pairing-mode|on)
                 start "$PKG.BLUETOOTH_PAIRING_MODE"
+                ;;
+            connect)
+                if [ -n "${3:-}" ]; then
+                    exec am startservice -a "$PKG.BLUETOOTH_CONNECT" --es name "$3" "$COMP"
+                fi
+                start "$PKG.BLUETOOTH_CONNECT"
                 ;;
             off|disable|stop)
                 start "$PKG.BLUETOOTH_OFF"

@@ -33,7 +33,7 @@ See [Building](docs/building.md). Builds run in Docker from one LineageOS 18.1 t
 
 - [R0rt1z2](https://github.com/R0rt1z2), for the LineageOS 18.1 port for the MT8163 Echos in [amazon-oss](https://github.com/amazon-oss) that every image builds on. Also for amonet on the Echo Dot with its TWRP.
 - [hkfuertes](https://github.com/hkfuertes), for the [CM14.1 port](https://github.com/hkfuertes/amazon_device_biscuit) of the Echo Dot. BiscuitService, the light ring daemon, the audio route and the light sensor HAL came from it.
-- [meiser79](https://github.com/meiser79), who brought the Echo Dot up on LineageOS 18.1 first. Their port guided the Echo Dot image.
+- [meiser79](https://github.com/meiser79), who brought the Echo Dot up on LineageOS 18.1 first. [Their port](https://github.com/meiser79/android_device_amazon_biscuit) guided the Echo Dot image.
 - xyz and k4y0z for amonet and its first Echo Dot port.
 - [bboe](https://github.com/bboe) for [firebreak](https://github.com/bboe/firebreak).
 

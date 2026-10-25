@@ -15,7 +15,7 @@
 
 ## meiser79's Echo Dot port
 
-[meiser79](https://github.com/meiser79) brought the Echo Dot (2nd gen) up on LineageOS 18.1 first, in [android_device_amazon_biscuit](https://github.com/meiser79/android_device_amazon_biscuit), [android_kernel_amazon_biscuit](https://github.com/meiser79/android_kernel_amazon_biscuit) and [android_vendor_amazon_biscuit](https://github.com/meiser79/android_vendor_amazon_biscuit). This repository does not include meiser79's code. The port's README, TODO and port study showed what the Dot needs and what to avoid. This table records which component that work guided and how.
+[meiser79](https://github.com/meiser79) brought the Echo Dot (2nd gen) up on LineageOS 18.1 first, in [android_device_amazon_biscuit](https://github.com/meiser79/android_device_amazon_biscuit), [android_kernel_amazon_biscuit](https://github.com/meiser79/android_kernel_amazon_biscuit) and [android_vendor_amazon_biscuit](https://github.com/meiser79/android_vendor_amazon_biscuit). This repository does not include meiser79's code. The README, TODO and port study in [the device tree](https://github.com/meiser79/android_device_amazon_biscuit) showed what the Dot needs and what to avoid. This table records which component that work guided and how.
 
 | Component | What the port showed us |
 | --- | --- |

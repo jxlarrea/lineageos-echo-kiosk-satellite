@@ -2,6 +2,11 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Unreleased
+
+### Changed
+- **Credits link meiser79's device tree.** The README and [docs/credits.md](docs/credits.md) now link [android_device_amazon_biscuit](https://github.com/meiser79/android_device_amazon_biscuit), the port that guided the Echo Dot image.
+
 ## 2026.10.6 - 2026-10-25
 
 ### Fixed

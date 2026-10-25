@@ -5,7 +5,7 @@
 -->
 <!--
     The Echo Dot's service for Kiosk Satellite: the LED ring, the buttons,
-    volume, microphone mute, Bluetooth pairing and Wi-Fi. It runs inside
+    volume, microphone mute, Bluetooth, Wi-Fi and system updates. It runs inside
     system_server, as the empty launcher does, so it costs no process of its
     own while it stays started.
 -->
@@ -17,6 +17,7 @@
     <protected-broadcast android:name="com.amazon.biscuit.service.ACTION_BUTTON" />
     <protected-broadcast android:name="com.amazon.biscuit.service.MICROPHONE_MUTE_CHANGED" />
     <protected-broadcast android:name="com.amazon.biscuit.service.VOLUME_BUTTON" />
+    <protected-broadcast android:name="com.amazon.biscuit.service.SYSTEM_UPDATE_CHANGED" />
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
@@ -24,6 +25,11 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- REBOOT is not asked for: the system uid holds it, and a privileged
+         app that asks for it would need a privapp-permissions entry, or
+         system_server refuses to start. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:label="Biscuit Service"
@@ -31,6 +37,17 @@
         <receiver android:name=".BiscuitService$BootReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- biscuit_service update check|install. Only senders holding
+             REBOOT, such as root and the shell, get through. -->
+        <receiver
+            android:name=".SystemUpdate$Receiver"
+            android:permission="android.permission.REBOOT">
+            <intent-filter>
+                <action android:name="com.amazon.biscuit.service.SYSTEM_UPDATE_CHECK" />
+                <action android:name="com.amazon.biscuit.service.SYSTEM_UPDATE_INSTALL" />
             </intent-filter>
         </receiver>
 

@@ -20,6 +20,35 @@ PRODUCT_PACKAGES += \
     BiscuitService \
     biscuit_service
 
+# Kiosk Satellite on first boot, with its grants and device owner, as on
+# CM14. curl fetches it from GitHub.
+PRODUCT_PACKAGES += \
+    curl \
+    ks-install
+
+# What Kiosk Satellite looks for on a Dot: the Action button and the volume
+# buttons as BiscuitService broadcasts, and Amazon's wake word engine.
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    ro.biscuit.action_broadcast=1 \
+    ro.biscuit.pryon=1 \
+    ro.biscuit.volume_claim=1
+
+# System updates from this repository's GitHub releases through BiscuitService
+# and TWRP (biscuit-service/SystemUpdate.java, ota/). scripts/build.sh sets
+# BISCUIT_RELEASE from the newest CHANGELOG.md heading, with -dev after it
+# while that heading is Unreleased.
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/ota/twrp-update.sh:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/twrp-update.sh \
+    $(LOCAL_PATH)/ota/release-key.pem:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/release-key.pem
+
+# In system/build.prop, where releasetools.py reads the release from.
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.biscuit.ota=1
+ifneq ($(BISCUIT_RELEASE),)
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.biscuit.release=$(BISCUIT_RELEASE)
+endif
+
 # WebView is left out, but its loader and platform support libraries stay:
 # public.libraries.txt lists them, and no app can start without them.
 PRODUCT_PACKAGES += \

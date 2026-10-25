@@ -60,3 +60,15 @@ service traced_perf /system/bin/true
     override
     oneshot
     disabled
+
+# Kiosk Satellite Edition: installs Kiosk Satellite on first boot and keeps
+# its grants in place (ks-install.sh). setprop persist.biscuit.ks_install 0
+# turns it off.
+service ks_install /system/bin/ks-install
+    user root
+    group root
+    disabled
+    oneshot
+
+on property:sys.boot_completed=1
+    start ks_install

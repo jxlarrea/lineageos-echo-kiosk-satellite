@@ -1,0 +1,15 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// Amazon's wake word engine as a service for Kiosk Satellite.
+cc_binary {
+    name: "biscuit-pryond",
+    srcs: ["biscuit-pryond.cpp"],
+    cflags: ["-Wall", "-Werror"],
+    shared_libs: [
+        "libcutils",
+        "libdl",
+    ],
+}

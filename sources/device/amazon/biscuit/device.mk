@@ -42,6 +42,14 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(call find-copy-subdir-files,*.animation,$(LOCAL_PATH)/leds/animations,$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ledd)
 
+# Amazon's wake words: biscuit-pryond with Pryon and the models from
+# blobs/biscuit, and the models each locale listens with.
+PRODUCT_PACKAGES += \
+    biscuit-pryond
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/pryon/locales.txt:$(TARGET_COPY_OUT_SYSTEM)/etc/pryon/locales.txt
+
 # The device name as the DHCP hostname (rro/NetworkStack).
 PRODUCT_PACKAGES += \
     BiscuitNetworkStackOverlay \

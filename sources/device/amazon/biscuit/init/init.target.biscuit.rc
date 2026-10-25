@@ -85,6 +85,15 @@ service biscuit-ledd /system/bin/biscuit-ledd
 on property:sys.boot_completed=1
     start biscuit-ledd
 
+# Amazon's wake word engine for Kiosk Satellite on /dev/socket/biscuit-pryon.
+# It loads nothing until an app connects, so any app may: it hears only the
+# audio that app sends it.
+service biscuit-pryond /system/bin/biscuit-pryond
+    class main
+    user nobody
+    group nobody
+    socket biscuit-pryon stream 0666 system system
+
 # The device name, which Android sends as the DHCP hostname.
 # settings put only works for root from a shell, not for system.
 service biscuit-hostname /system/bin/biscuit-hostname

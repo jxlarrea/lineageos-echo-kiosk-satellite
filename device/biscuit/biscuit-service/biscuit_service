@@ -41,8 +41,13 @@ WiFi:
   wifi connect <ssid> [psk]  save/connect WPA-PSK or open network
   wifi off                   disable WiFi
 
+System update:
+  update status              show the installed and newest release
+  update check               ask GitHub for a newer release
+  update install             download, verify and install the newest release
+
 Service:
-  status                     show the microphone and volume button state
+  status                     show the microphone, volume button and update state
 EOF
 }
 
@@ -130,6 +135,19 @@ case "$1" in
                 ;;
             off|disable|stop)
                 start "$PKG.WIFI_OFF"
+                ;;
+        esac
+        ;;
+    update)
+        case "$2" in
+            status|'')
+                exec dumpsys activity service "$COMP"
+                ;;
+            check)
+                exec am broadcast -a "$PKG.SYSTEM_UPDATE_CHECK" -n "$PKG/.SystemUpdate\$Receiver"
+                ;;
+            install)
+                exec am broadcast -a "$PKG.SYSTEM_UPDATE_INSTALL" -n "$PKG/.SystemUpdate\$Receiver"
                 ;;
         esac
         ;;

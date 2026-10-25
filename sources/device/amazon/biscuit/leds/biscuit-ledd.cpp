@@ -28,6 +28,8 @@
 #include <time.h>
 #include <vector>
 
+#include <cutils/sockets.h>
+
 #define LED_FRAME "/sys/bus/i2c/devices/0-003f/frame"
 #define LED_BOOT "/sys/bus/i2c/devices/0-003f/boot_animation"
 #define ANIM_DIR "/system/etc/biscuit-ledd"
@@ -453,12 +455,10 @@ int main() {
             usleep(boot.frames[i].ms * 1000);
         }
     }
-    int s = -1;
-    const char* env = getenv("ANDROID_SOCKET_biscuit-ledd");
-    if (env) {
-        s = atoi(env);
-        if (listen(s, 4) < 0) s = -1;
-    }
+    // init's socket. Android 11 publishes it as ANDROID_SOCKET_biscuit_ledd,
+    // with the dash replaced, which libcutils knows.
+    int s = android_get_control_socket("biscuit-ledd");
+    if (s >= 0 && listen(s, 4) < 0) s = -1;
     if (s < 0) s = make_socket();
     if (s < 0) return 1;
     for (;;) {

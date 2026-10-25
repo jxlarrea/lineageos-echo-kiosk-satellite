@@ -115,9 +115,6 @@ public final class BiscuitService extends Service {
     // which once left it out turns it back on.
     private static final long ROLE_PROFILES_MASK = SINK_ROLE_MASK | SOURCE_ROLE_MASK
             | (1L << BluetoothProfile.AVRCP) | (1L << BluetoothProfile.AVRCP_CONTROLLER);
-    private static final String SYSTEM_UPDATE_UNAVAILABLE =
-            "{\"available\":false,\"state\":\"idle\","
-            + "\"checkError\":\"System updates are not available on this image yet.\"}";
     private final Object mLock = new Object();
     private volatile boolean mMicMuted;
 
@@ -224,17 +221,18 @@ public final class BiscuitService extends Service {
             }
         }
 
-        // System updates are not ported to this image yet.
         public String systemUpdateStatus() throws RemoteException {
-            return SYSTEM_UPDATE_UNAVAILABLE;
+            return SystemUpdate.get(BiscuitService.this).status();
         }
 
         public boolean checkSystemUpdate() throws RemoteException {
-            return false;
+            return SystemUpdate.get(BiscuitService.this).check();
         }
 
         public boolean installSystemUpdate() throws RemoteException {
-            return false;
+            SystemUpdate update = SystemUpdate.get(BiscuitService.this);
+            if (!update.mayInstall(Binder.getCallingUid())) throw new SecurityException("not the device owner");
+            return update.install();
         }
     };
 
@@ -274,6 +272,9 @@ public final class BiscuitService extends Service {
         filter.addAction(AudioManager.ACTION_MICROPHONE_MUTE_CHANGED);
         registerReceiver(mAudioReceiver, filter);
         startInBluetoothSpeakerRole();
+        // BiscuitService starts once per boot: carry on with an update TWRP
+        // has just installed, or look for one.
+        SystemUpdate.get(this).resume();
     }
 
     // A Dot that never chose takes audio from phones, which is what pairing
@@ -346,7 +347,7 @@ public final class BiscuitService extends Service {
             writer.println("Volume buttons claimed by: "
                     + (mVolumeClaimPackage != null ? mVolumeClaimPackage : "nobody"));
         }
-        writer.println("System update: " + SYSTEM_UPDATE_UNAVAILABLE);
+        writer.println("System update: " + SystemUpdate.get(this).status());
     }
 
     // Kiosk Satellite listens for this one, as the CM14 image sent it.

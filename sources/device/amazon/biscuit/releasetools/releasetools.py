@@ -7,7 +7,16 @@ The OTA writes /dev/block/current-system and current-boot (recovery.fstab),
 which TWRP links to the slot it booted on. Before anything is written, the
 package checks that it runs in amonet v2's TWRP and that both links point
 at the partitions of the slot amonet reports as active.
+
+The package also carries the release it holds, which system updates check
+before they install it: the system image is block based, so its build.prop
+cannot be read from the zip.
 """
+
+import common
+
+# Read by BiscuitService's SystemUpdate.java.
+_RELEASE_PROP = "META-INF/com/amazon/biscuit/release.prop"
 
 _AMONET_SLOT_ASSERTION = (
     'assert(run_program("/sbin/sh", "-c", '
@@ -37,6 +46,15 @@ def _replace_device_assertion(info):
 
 def FullOTA_Assertions(info):
     _replace_device_assertion(info)
+
+
+def FullOTA_InstallEnd(info):
+    release = info.info_dict["build.prop"].GetProp("ro.biscuit.release")
+    if not release:
+        print("No ro.biscuit.release, so the package cannot be a system update")
+        return
+    common.ZipWriteStr(info.output_zip, _RELEASE_PROP,
+                       "ro.product.device=biscuit\nro.biscuit.release=%s\n" % release)
 
 
 def IncrementalOTA_Assertions(info):

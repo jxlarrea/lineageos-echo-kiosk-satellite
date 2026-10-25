@@ -19,7 +19,9 @@ PRODUCT_NAME := lineage_biscuit
 PRODUCT_DEVICE := biscuit
 PRODUCT_MANUFACTURER := Amzn
 PRODUCT_BRAND := google
-PRODUCT_MODEL := Echo Dot
+# (KS) marks the Kiosk Satellite Edition image wherever Android shows the
+# manufacturer and model, such as in Home Assistant.
+PRODUCT_MODEL := Echo Dot (KS)
 PRODUCT_CHARACTERISTICS := tablet,nosdcard
 
 # One locale keeps every APK's resources small: system is 768 MiB.

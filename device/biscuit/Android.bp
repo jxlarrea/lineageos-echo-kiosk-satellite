@@ -199,3 +199,9 @@ sh_binary {
     name: "biscuit_service",
     src: "biscuit-service/biscuit_service",
 }
+
+// Installs Kiosk Satellite on first boot and keeps its grants (init/).
+sh_binary {
+    name: "ks-install",
+    src: "init/ks-install.sh",
+}

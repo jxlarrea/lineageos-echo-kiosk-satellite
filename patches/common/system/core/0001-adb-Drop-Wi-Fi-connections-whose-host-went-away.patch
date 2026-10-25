@@ -1,0 +1,28 @@
+adb: Drop Wi-Fi connections whose host went away
+
+adbd never turned on TCP keepalives for the connections it accepts. A host
+that went away without closing its connection, such as a computer that
+went to sleep, a restarted adb server or a router that dropped the idle
+flow, stayed connected for as long as adbd ran, with its socket and
+threads. Each connection has a serial of its own, so new ones still work,
+but on an Echo that runs for months the stale ones only pile up.
+
+Probe an accepted connection after 30 s idle and every 30 s, and drop it
+after 10 missed probes, with adb's own set_tcp_keepalive().
+
+diff --git a/adb/transport_local.cpp b/adb/transport_local.cpp
+index 5ec8e16..40e8804 100644
+--- a/adb/transport_local.cpp
++++ b/adb/transport_local.cpp
+@@ -270,6 +270,11 @@ void server_socket_thread(std::function<unique_fd(std::string_view, std::string*
+             D("server: new connection on fd %d", fd.get());
+             close_on_exec(fd.get());
+             disable_tcp_nagle(fd.get());
++            // A host that went away without closing the connection, such as a
++            // computer that went to sleep or a router that dropped the idle
++            // flow, otherwise stays connected for as long as adbd runs. Probe
++            // after 30 s idle and every 30 s, and drop it after 10 misses.
++            set_tcp_keepalive(fd.get(), 30);
+             std::string serial = android::base::StringPrintf("host-%d", fd.get());
+             // We don't care about port value in "register_socket_transport" as it is used
+             // only from ADB_HOST. "server_socket_thread" is never called from ADB_HOST.

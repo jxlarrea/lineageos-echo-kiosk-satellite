@@ -2,14 +2,13 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
-## Unreleased
+## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25
 
 ### Changed
 - **The Echo Show 5 (2nd gen) instead of the 1st gen.** The second Echo Show this repository plans for is the Echo Show 5 (2nd gen), `cronos`, in place of the Echo Show 5 (1st gen), `checkers`. The manifest syncs its amazon-oss device and vendor trees.
 
-## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25
-
 ### Fixed
+- **Stale adb connections over Wi-Fi.** A computer that went to sleep or lost its connection to the Echo without closing adb used to stay connected in adbd for as long as the Echo ran. adbd now checks idle connections every 30 seconds and drops one whose host is gone within about 5 minutes. This fix applies to every Echo.
 - **Media provider restart loop on the Dot.** The media provider waits for the DRM server when it starts, which the Dot had left out, so Android killed and restarted it every 80 seconds and shared storage never mounted.
 - **mediaserver crash in `dumpsys`.** Without the OMX service there is no codec list to show. `dumpsys media.player` crashed mediaserver.
 - **Audio froze after one slow call.** amazon-oss stops Android from restarting audioserver when an audio call takes over 5 seconds, but the expired call then timed out again and again while holding a lock every audio call needs, so audio stayed down. It now gives up on the call once and lets the others go on. This fix applies to every Echo.

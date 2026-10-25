@@ -2,6 +2,11 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Unreleased
+
+### Changed
+- **The Echo Show 5 (2nd gen) instead of the 1st gen.** The second Echo Show this repository plans for is the Echo Show 5 (2nd gen), `cronos`, in place of the Echo Show 5 (1st gen), `checkers`. The manifest syncs its amazon-oss device and vendor trees.
+
 ## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25
 
 ### Fixed

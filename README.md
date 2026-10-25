@@ -6,7 +6,7 @@ LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk 
 | --- | --- | --- | --- |
 | Echo Dot (2nd gen) | `biscuit` | Ready | [Echo Dot](docs/echo-dot.md) |
 | Echo Show 8 (1st gen) | `crown` | In progress | |
-| Echo Show 5 (1st gen) | `checkers` | Planned | |
+| Echo Show 5 (2nd gen) | `cronos` | Planned | |
 
 Each image leaves out what Kiosk Satellite never uses on that device, installs Kiosk Satellite on its first boot with every permission it needs and updates itself from this repository's releases. The device's guide lists everything its image does.
 

@@ -57,7 +57,7 @@ uvx firebreak@latest unlock
 
 The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 
-## Echo Show 8 (1st gen) and Echo Show 5 (1st gen)
+## Echo Show 8 (1st gen) and Echo Show 5 (2nd gen)
 
 Their images are not ready yet. This section comes with them.
 

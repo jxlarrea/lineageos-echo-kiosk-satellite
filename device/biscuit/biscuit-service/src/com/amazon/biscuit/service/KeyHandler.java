@@ -32,6 +32,13 @@ public final class KeyHandler implements DeviceKeyHandler {
 
     private final Context mContext;
 
+    // The last Action button event broadcast. PhoneWindowManager hands a key
+    // this class lets through to it twice, before queueing it and again
+    // before dispatching it, so each press and release would go out twice
+    // and Kiosk Satellite would act on the button twice.
+    private long mLastActionTime = -1;
+    private int mLastAction = -1;
+
     public KeyHandler(Context context) {
         mContext = context;
         Slog.i(TAG, "The Echo Dot's buttons go to BiscuitService");
@@ -53,7 +60,7 @@ public final class KeyHandler implements DeviceKeyHandler {
                 action = BiscuitService.MIC_MUTE_TOGGLE;
                 break;
             case KeyEvent.KEYCODE_HELP:
-                if (event.getRepeatCount() == 0) {
+                if (event.getRepeatCount() == 0 && !isRepeatCall(event)) {
                     Intent intent = new Intent(ACTION_BUTTON);
                     intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND
                             | Intent.FLAG_RECEIVER_REGISTERED_ONLY);
@@ -81,5 +88,13 @@ public final class KeyHandler implements DeviceKeyHandler {
             }
         }
         return null;
+    }
+
+    // The two calls come from different input threads.
+    private synchronized boolean isRepeatCall(KeyEvent event) {
+        if (event.getEventTime() == mLastActionTime && event.getAction() == mLastAction) return true;
+        mLastActionTime = event.getEventTime();
+        mLastAction = event.getAction();
+        return false;
     }
 }

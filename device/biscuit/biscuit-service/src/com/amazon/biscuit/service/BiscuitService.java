@@ -278,12 +278,13 @@ public final class BiscuitService extends Service {
     }
 
     // A Dot that never chose takes audio from phones, which is what pairing
-    // mode is for. Bluetooth is already up by now, so it restarts once.
+    // mode is for. Bluetooth is already up by now, so it restarts once. A
+    // role always leaves one A2DP profile out, so with both in no role was
+    // chosen: SettingsProvider writes the setting as 0 on the first boot.
     private void startInBluetoothSpeakerRole() {
-        if (Settings.Global.getString(getContentResolver(),
-                Settings.Global.BLUETOOTH_DISABLED_PROFILES) != null) {
-            return;
-        }
+        long disabled = Settings.Global.getLong(getContentResolver(),
+                Settings.Global.BLUETOOTH_DISABLED_PROFILES, 0);
+        if ((disabled & (SINK_ROLE_MASK | SOURCE_ROLE_MASK)) != 0) return;
         final BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) return;
         new Thread(new Runnable() {

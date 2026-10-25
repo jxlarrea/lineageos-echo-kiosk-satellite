@@ -25,3 +25,11 @@ on property:sys.boot_completed=1 && property:persist.echo.adb_wifi=0
 on property:sys.boot_completed=1 && property:persist.echo.adb_wifi=1
     setprop service.adb.tcp.port 5555
     restart adbd
+
+# Half the kernel's emergency reserve mt8163-common sets (16 MB), which it
+# sizes for the Echos with 2 GB. The low and high watermarks follow it, and
+# at 8 MB a 1 GB Show has about 30 MB more available. The Dot goes down to
+# 4 MB, but a Show still needs room for its display and camera. Runs on
+# boot, after mt8163-common's post-fs-data value.
+on boot
+    write /proc/sys/vm/min_free_kbytes 8192

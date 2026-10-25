@@ -11,6 +11,10 @@ TREE="$(realpath "${LINEAGE_TREE:-$WORKSPACE_DIR/lineage-18.1}")"
 DEVICE="${DEVICE:-}"
 CONTAINER="lineage-18.1-$DEVICE-build"
 BUILD_TARGET="${BUILD_TARGET:-bacon}"
+# CLEAN=1 empties the device's output folder first. The build never deletes
+# what a device stopped installing, such as an app taken out of the image,
+# and the zip packs the whole folder, so release builds use it.
+CLEAN="${CLEAN:-0}"
 BUILD_JOBS="${BUILD_JOBS:-$(nproc)}"
 CCACHE_DIR="${CCACHE_DIR:-$WORKSPACE_DIR/ccache}"
 CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-50G}"
@@ -79,8 +83,9 @@ docker run -d \
     # changes the release would keep the old ro.biscuit.release.
     rm -f \"\$OUT/system/build.prop\" \
       \"\$OUT/obj/ETC/system_build_prop_intermediates/build.prop\"
+    if [ '$CLEAN' = 1 ]; then m installclean; fi
     m -j'$BUILD_JOBS' '$BUILD_TARGET'
   "
 
-echo "Started $CONTAINER ($BUILD_TARGET, $LUNCH_TARGET, release $BISCUIT_RELEASE)."
+echo "Started $CONTAINER ($BUILD_TARGET, $LUNCH_TARGET, release $BISCUIT_RELEASE$([[ $CLEAN = 1 ]] && echo ", clean"))."
 echo "Monitor: docker logs -f $CONTAINER"

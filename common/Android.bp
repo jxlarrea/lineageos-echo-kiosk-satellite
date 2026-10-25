@@ -15,9 +15,54 @@ android_app {
     platform_apis: true,
     certificate: "platform",
     privileged: true,
-    // echo_service sets up what the setup wizard would ask for, so a Show
-    // boots straight to Kiosk Satellite.
-    overrides: ["LineageSetupWizard"],
+    // What a kiosk never uses, which Android then leaves out of the image.
+    // The Shows keep SystemUI, WebView, Settings, the keyboard, the
+    // launcher, the file picker and captive portal sign-in: Kiosk
+    // Satellite's home screen setting falls back to the launcher if the
+    // kiosk cannot start, and Settings is the way back from there.
+    overrides: [
+        // echo_service sets up what the setup wizard would ask for, so a
+        // Show boots straight to Kiosk Satellite.
+        "LineageSetupWizard",
+
+        // System updates come from EchoService, and nothing is backed up.
+        "Seedvault",
+        "SharedStorageBackup",
+        "Updater",
+
+        // Telephony: the Shows have no modem, and the phone process and its
+        // providers only cost memory.
+        "BlockedNumberProvider",
+        "MmsService",
+        "SimAppDialog",
+        "Telecom",
+        "TeleService",
+        "TelephonyProvider",
+
+        // Apps a kiosk does not open. Kiosk Satellite uses the camera
+        // itself.
+        "AudioFX",
+        "BookmarkProvider",
+        "BuiltInPrintService",
+        "CalendarProvider",
+        "Camera2",
+        "Contacts",
+        "ContactsProvider",
+        "DeskClock",
+        "EasterEgg",
+        "Eleven",
+        "Etar",
+        "ExactCalculator",
+        "Gallery2",
+        "Jelly",
+        "LocalContactsBackup",
+        "PrintRecommendationService",
+        "PrintSpooler",
+        "Profiles",
+        "QuickAccessWallet",
+        "Recorder",
+        "SecureElement",
+    ],
 }
 
 sh_binary {

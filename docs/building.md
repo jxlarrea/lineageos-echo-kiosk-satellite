@@ -31,7 +31,7 @@ make biscuit
 docker logs -f lineage-18.1-biscuit-build
 ```
 
-`make biscuit` stages the tree and starts a detached `lineage-18.1-biscuit-build` container that runs `m bacon`. The zip lands in `workspace/lineage-18.1/out/target/product/biscuit/`. Check the log for `#### build completed successfully` instead of trusting an exit code. `make crown` does the same for the Echo Show 8 once its image is ready.
+`make biscuit` stages the tree and starts a detached `lineage-18.1-biscuit-build` container that runs `m bacon`. The zip lands in `workspace/lineage-18.1/out/target/product/biscuit/`. Check the log for `#### build completed successfully` instead of trusting an exit code. `CLEAN=1 make biscuit` empties the device's output folder first, which release builds need (see [Releases](#releases)). `make crown` does the same for the Echo Show 8 once its image is ready.
 
 `make stage DEVICE=biscuit` only stages the tree, which is useful before building a single module by hand. `BUILD_TARGET=<module> DEVICE=biscuit scripts/build.sh` builds one module in the container.
 
@@ -56,7 +56,7 @@ The release a build is comes from `CHANGELOG.md`: the newest heading that names 
 To make a release of the Echo Dot:
 
 1. Rename `## Unreleased` in `CHANGELOG.md` to the release, for example `## Echo Dot (2nd gen) 2026.10.7 - 2026-11-02`. Then commit.
-2. Build it with `make biscuit`.
+2. Build it from a clean output folder with `CLEAN=1 make biscuit`. Without it, files from earlier builds that the image no longer installs, such as an app taken out, stay in the output folder and end up in the zip. Commit everything first: the build stages the working tree as it is, uncommitted changes included.
 3. Copy the zip to a name with the release and the codename in it, such as `lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip`, then sign it. The Dot checks the signature before it installs an update:
 
    ```sh

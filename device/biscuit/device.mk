@@ -80,11 +80,6 @@ PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
     $(LOCAL_PATH)/overlay/frameworks/base/packages/SettingsProvider \
     $(LOCAL_PATH)/overlay/lineage-sdk
 
-# WPA2/WPA3 transition mode networks join with WPA2. The overlay lives in
-# the layer the Echos share (common/rro/Wifi).
-PRODUCT_PACKAGES += \
-    EchoWifiOverlay
-
 # Always on mains: mt8163-common then keeps all four cores online.
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.vendor.power.wall_powered=true

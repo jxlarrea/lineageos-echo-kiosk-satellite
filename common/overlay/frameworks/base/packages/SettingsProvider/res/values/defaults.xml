@@ -13,4 +13,8 @@
     <!-- No lock screen, so the screen goes straight back to Kiosk
          Satellite. echo_service lockscreen on brings it back. -->
     <bool name="def_lockscreen_disabled">true</bool>
+
+    <!-- The screen never turns off on its own: Kiosk Satellite decides when
+         it dims or sleeps. echo_service screen timeout changes it. -->
+    <integer name="def_screen_off_timeout">2147483647</integer>
 </resources>

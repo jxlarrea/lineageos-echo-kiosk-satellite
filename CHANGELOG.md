@@ -2,6 +2,11 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Echo Dot (2nd gen) 2026.10.10 - 2026-10-25
+
+### Fixed
+- **Kiosk Satellite installed twice on a fresh Dot** ([#3](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/3)). Since 2026.10.7 the Dot also got the Echo Shows' layer: their ks-install, which ran next to the Dot's own at every boot, and EchoService, a second service and updater the Dot does not use. In 2026.10.9 the Shows' 8 MB kernel reserve also replaced the Dot's 4 MB one, which left about 20 MB less memory available. The Dot now only gets what every Echo shares, the Wi-Fi overlay.
+
 ## Echo Dot (2nd gen) 2026.10.9 - 2026-10-25
 
 ### Added
@@ -15,7 +20,12 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 - **Nothing to tap through on a fresh Show.** There is no setup wizard and no lock screen. adb works over USB from the first boot, so a computer only has to be allowed on the screen once, and allowed computers do not expire. Android's full screen tip is marked as seen. Once the Show is online, Kiosk Satellite installs itself as on the Dot, with device owner and every permission it needs.
 - **System updates on the Echo Shows.** EchoService installs a release through TWRP as BiscuitService does on the Dot, in the Show's one slot. A Show's zip is larger than its cache partition, so it downloads to `/data`. If an install fails while it writes system, the Show stays in TWRP instead of starting a system that may not boot.
 
+- **Leaner Echo Shows.** The image leaves out what a kiosk never uses: telephony, LineageOS's updater, AudioFX, print, backup, the secure element, the wallet and the apps for calendar, contacts, the clock, music, the gallery, the calculator, the browser, the camera and the recorder. SystemUI, WebView, Settings, the keyboard, the launcher and the file picker stay. The kernel's emergency reserve is 8 MB instead of 16 MB, which leaves a 1 GB Show about 30 MB more available.
+- **The screen stays on.** The screen timeout defaults to never, so only Kiosk Satellite decides when the screen dims or sleeps. `echo_service screen timeout` changes it.
+
 ### Changed
+- **Clean release builds.** `CLEAN=1 make <device>` empties the device's output folder before the build, since the build never deletes what an image stopped installing and the zip packs the whole folder. Release builds use it.
+- **One layer for every Echo and one for the Echo Shows.** `common/config/common.mk` holds what every Echo gets and `common/config/show.mk` what only the Echo Shows get.
 - **An Unreleased heading for one device.** A `## <device> Unreleased` heading marks only that device's builds as `-dev`, so work on one Echo no longer changes another Echo's release version.
 
 ## Echo Dot (2nd gen) 2026.10.8 - 2026-10-25

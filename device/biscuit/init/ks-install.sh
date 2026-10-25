@@ -65,9 +65,15 @@ for permission in RECORD_AUDIO ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION \
         READ_EXTERNAL_STORAGE WRITE_EXTERNAL_STORAGE; do
     pm grant "$PKG" "android.permission.$permission" 2>/dev/null
 done
-# Android 11 gives an app that targets it access to every file only through
-# this app op, which Settings would otherwise ask for.
-appops set "$PKG" MANAGE_EXTERNAL_STORAGE allow 2>/dev/null
+# Android 11 gives these only through app ops, each behind its own Settings
+# screen: all files access for the File Manager, drawing over other apps,
+# which starting itself again from the background needs, changing system
+# settings, usage access for the foreground app sensor and installing its
+# own updates.
+for op in MANAGE_EXTERNAL_STORAGE SYSTEM_ALERT_WINDOW WRITE_SETTINGS GET_USAGE_STATS \
+        REQUEST_INSTALL_PACKAGES; do
+    appops set "$PKG" "$op" allow 2>/dev/null
+done
 dumpsys deviceidle whitelist "+$PKG" >/dev/null
 
 # Device owner needs a device with no accounts, which a headless one has.

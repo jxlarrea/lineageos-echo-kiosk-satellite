@@ -13,6 +13,11 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Changed
 - **An Unreleased heading for one device.** A `## <device> Unreleased` heading marks only that device's builds as `-dev`, so work on one Echo no longer changes another Echo's release version.
 
+## Echo Dot (2nd gen) 2026.10.7 - 2026-10-25
+
+### Fixed
+- **Kiosk Satellite could not restart itself.** ks-install granted all files access, but not the other permissions Android 11 only gives through their own Settings screens. Restarting needs Display over other apps, so Kiosk Satellite tried to open a Settings screen the Dot cannot show. ks-install now also allows Kiosk Satellite to display over other apps, change system settings, read app usage and install its own updates, on every boot.
+
 ## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25
 
 ### Changed

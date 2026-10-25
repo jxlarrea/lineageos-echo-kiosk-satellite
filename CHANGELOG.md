@@ -9,6 +9,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 
 ### Fixed
 - **Stale adb connections over Wi-Fi.** A computer that went to sleep or lost its connection to the Echo without closing adb used to stay connected in adbd for as long as the Echo ran. adbd now checks idle connections every 30 seconds and drops one whose host is gone within about 5 minutes. This fix applies to every Echo.
+- **System update checks from Kiosk Satellite got stuck.** BiscuitService runs in system_server, so a check or install Kiosk Satellite asked for ran with Kiosk Satellite's identity. Android refused the status broadcast and the update stayed at "checking" until a reboot. BiscuitService now makes those calls as itself, as it does for the microphone mute, and a failed status broadcast can no longer leave an update stuck.
 - **Media provider restart loop on the Dot.** The media provider waits for the DRM server when it starts, which the Dot had left out, so Android killed and restarted it every 80 seconds and shared storage never mounted.
 - **mediaserver crash in `dumpsys`.** Without the OMX service there is no codec list to show. `dumpsys media.player` crashed mediaserver.
 - **Audio froze after one slow call.** amazon-oss stops Android from restarting audioserver when an audio call takes over 5 seconds, but the expired call then timed out again and again while holding a lock every audio call needs, so audio stayed down. It now gives up on the call once and lets the others go on. This fix applies to every Echo.

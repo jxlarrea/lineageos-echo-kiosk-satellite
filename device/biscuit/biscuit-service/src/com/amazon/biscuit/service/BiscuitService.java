@@ -190,7 +190,12 @@ public final class BiscuitService extends Service {
         }
 
         public boolean setMicMuted(boolean muted) throws RemoteException {
-            setRealMicMuted(muted);
+            final long identity = Binder.clearCallingIdentity();
+            try {
+                setRealMicMuted(muted);
+            } finally {
+                Binder.restoreCallingIdentity(identity);
+            }
             return true;
         }
 
@@ -225,14 +230,27 @@ public final class BiscuitService extends Service {
             return SystemUpdate.get(BiscuitService.this).status();
         }
 
+        // BiscuitService runs in system_server, so its calls into the system
+        // keep the app's identity unless it is cleared. Without that the
+        // status broadcast fails and the updater stays stuck in its state.
         public boolean checkSystemUpdate() throws RemoteException {
-            return SystemUpdate.get(BiscuitService.this).check();
+            final long identity = Binder.clearCallingIdentity();
+            try {
+                return SystemUpdate.get(BiscuitService.this).check();
+            } finally {
+                Binder.restoreCallingIdentity(identity);
+            }
         }
 
         public boolean installSystemUpdate() throws RemoteException {
             SystemUpdate update = SystemUpdate.get(BiscuitService.this);
             if (!update.mayInstall(Binder.getCallingUid())) throw new SecurityException("not the device owner");
-            return update.install();
+            final long identity = Binder.clearCallingIdentity();
+            try {
+                return update.install();
+            } finally {
+                Binder.restoreCallingIdentity(identity);
+            }
         }
     };
 

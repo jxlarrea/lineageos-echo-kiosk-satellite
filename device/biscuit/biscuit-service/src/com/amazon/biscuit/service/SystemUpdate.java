@@ -344,10 +344,16 @@ final class SystemUpdate {
         changed();
     }
 
+    // The state is already set, so a broadcast that fails only costs the
+    // listeners a nudge. It must never leave the updater stuck.
     private void changed() {
         Intent intent = new Intent(CHANGED);
         intent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
-        mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+        try {
+            mContext.sendBroadcastAsUser(intent, UserHandle.ALL);
+        } catch (RuntimeException e) {
+            Log.w(TAG, "status broadcast failed", e);
+        }
     }
 
     private void fetchReleases() throws IOException, JSONException {

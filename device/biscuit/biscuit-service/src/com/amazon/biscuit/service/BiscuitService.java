@@ -106,7 +106,15 @@ public final class BiscuitService extends Service {
     private static final long CONNECT_SEARCH_MS = 60000;
     private static final long CONNECT_PAIR_MS = 60000;
     private static final String TAG = "BiscuitService";
-    private static final long A2DP_SINK_MASK = 1L << BluetoothProfile.A2DP_SINK;
+    // The profile that takes audio from phones and the one that plays to
+    // headphones and speakers. AVRCP stays on in both: the stack opens it
+    // with every A2DP connection and aborts when its service is missing.
+    private static final long SINK_ROLE_MASK = 1L << BluetoothProfile.A2DP_SINK;
+    private static final long SOURCE_ROLE_MASK = 1L << BluetoothProfile.A2DP;
+    // Every profile the role decides on. AVRCP is among them so that a Dot
+    // which once left it out turns it back on.
+    private static final long ROLE_PROFILES_MASK = SINK_ROLE_MASK | SOURCE_ROLE_MASK
+            | (1L << BluetoothProfile.AVRCP) | (1L << BluetoothProfile.AVRCP_CONTROLLER);
     private static final String SYSTEM_UPDATE_UNAVAILABLE =
             "{\"available\":false,\"state\":\"idle\","
             + "\"checkError\":\"System updates are not available on this image yet.\"}";
@@ -265,6 +273,23 @@ public final class BiscuitService extends Service {
         IntentFilter filter = new IntentFilter(VOLUME_CHANGED);
         filter.addAction(AudioManager.ACTION_MICROPHONE_MUTE_CHANGED);
         registerReceiver(mAudioReceiver, filter);
+        startInBluetoothSpeakerRole();
+    }
+
+    // A Dot that never chose takes audio from phones, which is what pairing
+    // mode is for. Bluetooth is already up by now, so it restarts once.
+    private void startInBluetoothSpeakerRole() {
+        if (Settings.Global.getString(getContentResolver(),
+                Settings.Global.BLUETOOTH_DISABLED_PROFILES) != null) {
+            return;
+        }
+        final BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if (adapter == null) return;
+        new Thread(new Runnable() {
+            public void run() {
+                useBluetoothRole(adapter, false, adapter.isEnabled());
+            }
+        }, "BiscuitBtRole").start();
     }
 
     @Override
@@ -446,16 +471,24 @@ public final class BiscuitService extends Service {
 
     // Android 11's Bluetooth stack runs A2DP sink, for phones that play to
     // the Dot, or A2DP source, for the Dot to play to headphones, not both:
-    // the second to start takes over from the first. The Dot runs the one
-    // asked for last and keeps it in the profiles Bluetooth leaves out,
+    // the second to start takes over from the first. A phone that sees
+    // both roles also takes the Dot for a phone. The Dot runs the role asked
+    // for last and keeps the choice in the profiles Bluetooth leaves out,
     // which it reads each time it starts. Runs on a worker thread and is
     // false when Bluetooth did not come on.
     private boolean useBluetoothRole(BluetoothAdapter adapter, boolean source) {
+        return useBluetoothRole(adapter, source, true);
+    }
+
+    private boolean useBluetoothRole(BluetoothAdapter adapter, boolean source, boolean enable) {
         ContentResolver resolver = getContentResolver();
+        String saved = Settings.Global.getString(resolver,
+                Settings.Global.BLUETOOTH_DISABLED_PROFILES);
         long disabled = Settings.Global.getLong(resolver,
                 Settings.Global.BLUETOOTH_DISABLED_PROFILES, 0);
-        long wanted = source ? disabled | A2DP_SINK_MASK : disabled & ~A2DP_SINK_MASK;
-        if (wanted != disabled) {
+        long wanted = (disabled & ~ROLE_PROFILES_MASK)
+                | (source ? SINK_ROLE_MASK : SOURCE_ROLE_MASK);
+        if (wanted != disabled || saved == null) {
             Settings.Global.putLong(resolver, Settings.Global.BLUETOOTH_DISABLED_PROFILES, wanted);
             Slog.i(TAG, source ? "Bluetooth now plays to headphones and speakers"
                     : "Bluetooth now plays what phones send");
@@ -464,6 +497,7 @@ public final class BiscuitService extends Service {
                 waitForBluetooth(adapter, BluetoothAdapter.STATE_OFF);
             }
         }
+        if (!enable) return adapter.isEnabled();
         if (!adapter.isEnabled()) adapter.enable();
         return waitForBluetooth(adapter, BluetoothAdapter.STATE_ON);
     }

@@ -22,7 +22,7 @@ that is set too.
  2 files changed, 1337 insertions(+), 12 deletions(-)
 
 diff --git a/arch/arm64/configs/biscuit_defconfig b/arch/arm64/configs/biscuit_defconfig
-index 1b218751..2930de48 100644
+index a8ff025f..fe8c9d11 100644
 --- a/arch/arm64/configs/biscuit_defconfig
 +++ b/arch/arm64/configs/biscuit_defconfig
 @@ -4,6 +4,7 @@ CONFIG_CPUSETS=y
@@ -30,7 +30,7 @@ index 1b218751..2930de48 100644
  CONFIG_MEMCG_SWAP=y
  CONFIG_SYSCTL_SYSCALL=y
 +CONFIG_EXPERT=y
- CONFIG_SLUB_DEBUG=y
+ # CONFIG_SLUB_DEBUG is not set
  CONFIG_CC_STACKPROTECTOR_STRONG=y
  CONFIG_MODULE_FORCE_LOAD=y
 @@ -77,6 +78,7 @@ CONFIG_NL80211_TESTMODE=y
@@ -1405,6 +1405,3 @@ index a2fc3a09..990abf99 100644
 +	(5250 - 5330 @ 80), (20), DFS, AUTO-BW
 +	(5490 - 5710 @ 160), (27), DFS
 +
--- 
-2.47.3
-

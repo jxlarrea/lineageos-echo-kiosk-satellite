@@ -33,5 +33,5 @@ ro.hardware.sensors=biscuit
 # Wi-Fi
 wifi.interface=wlan0
 # The Dot has no SIM to learn its country from. US rules open the most
-# 5 GHz channels, DFS ones included (kernel patch 0014).
+# 5 GHz channels, DFS ones included (kernel patch 0013).
 ro.boot.wificountrycode=US

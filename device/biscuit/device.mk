@@ -130,9 +130,3 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
 # the Dot can accept a key prompt.
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     persist.adb.tcp.port=5555
-
-# Bring-up: logcat kept in /data/misc/logd, which TWRP can read when Android
-# does not get as far as adb. Releases leave this out.
-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
-    persist.logd.logpersistd=logcatd \
-    persist.logd.logpersistd.buffer=all

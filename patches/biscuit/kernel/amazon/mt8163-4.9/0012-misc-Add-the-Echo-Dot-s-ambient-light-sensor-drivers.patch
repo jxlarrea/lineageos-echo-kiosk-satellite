@@ -38,7 +38,7 @@ with the options Fire OS 6 used.
  create mode 100644 include/linux/i2c/ams_tsl2540.h
 
 diff --git a/arch/arm64/configs/biscuit_defconfig b/arch/arm64/configs/biscuit_defconfig
-index 94786b53..1b218751 100644
+index 46a91420..a8ff025f 100644
 --- a/arch/arm64/configs/biscuit_defconfig
 +++ b/arch/arm64/configs/biscuit_defconfig
 @@ -364,3 +364,8 @@ CONFIG_CRYPTO_LZ4=y

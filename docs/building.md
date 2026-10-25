@@ -49,20 +49,23 @@ The Echo Shows ship LineageOS's prebuilt Chromium WebView (`external/chromium-we
 
 ## Releases
 
-The release a build is comes from `CHANGELOG.md`: its newest heading, such as `## 2026.11.1`. While that heading is `## Unreleased`, the build is the release before it with `-dev` after it. Before the first release it is `0.0.0-dev`. The image reports it as `ro.biscuit.release`. System updates compare it with the releases on GitHub.
+Each device has releases of its own, with a version of its own. The Echo Dot's are tagged `biscuit-` and the release, such as `biscuit-2026.10.6`. Their title is `Echo Dot (2nd gen) 2026.10.6`. A device's updater only looks at its own tags.
 
-To make a release:
+The release a build is comes from `CHANGELOG.md`: the newest heading that names the device, such as `## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25`. While a `## Unreleased` heading is above it, the build is that release with `-dev` after it. Before the device's first release it is `0.0.0-dev`. The image reports it as `ro.biscuit.release`. System updates compare it with the device's releases on GitHub. `device_name` in `scripts/build.sh` holds the name each device's headings and releases go by.
 
-1. Rename `## Unreleased` in `CHANGELOG.md` to the release, for example `## 2026.11.1`. Then commit.
-2. Build every device that is part of it.
-3. Sign each zip. The Echo Dot checks the signature before it installs an update:
+To make a release of the Echo Dot:
+
+1. Rename `## Unreleased` in `CHANGELOG.md` to the release, for example `## Echo Dot (2nd gen) 2026.10.7 - 2026-11-02`. Then commit.
+2. Build it with `make biscuit`.
+3. Copy the zip to a name with the release and the codename in it, such as `lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip`, then sign it. The Dot checks the signature before it installs an update:
 
    ```sh
-   scripts/sign-release.sh workspace/lineage-18.1/out/target/product/biscuit/lineage-18.1-<date>-UNOFFICIAL-biscuit.zip
+   scripts/sign-release.sh lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip
+   sha256sum lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip > lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip.sha256
    ```
 
    The private key stays outside the repository, in `~/.config/biscuit-ota/release-key.pem` unless `BISCUIT_OTA_KEY` says otherwise. The image ships the public half from `device/biscuit/ota/release-key.pem`.
 
-4. Publish a GitHub release tagged with the version, without the `## `. Attach every zip and its `.sig`. The Echo Dot takes the zip with `biscuit` in its name and the `.sig` of the same name.
+4. Publish a GitHub release tagged `biscuit-2026.10.7` and titled `Echo Dot (2nd gen) 2026.10.7`. Attach the zip, its `.sig` and its `.sha256`.
 
 A release without a signed zip can only be installed by hand.

@@ -15,7 +15,7 @@ Each image leaves out what Kiosk Satellite never uses on that device, installs K
 1. **Unlock the device and install TWRP.** [Unlocking](docs/unlocking.md) covers each device. [Getting into TWRP](docs/twrp.md) covers starting TWRP and checking its version.
 2. **Install the image** with the steps in the device's guide.
 
-The images come from the [releases](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases). Each release has a zip with its signature for each device, with the device's codename in its name.
+The images come from the [releases](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases). Each release is for one device, with the device in its title and its codename in its tag, such as **Echo Dot (2nd gen) 2026.10.6** tagged `biscuit-2026.10.6`. The device's guide links its releases.
 
 ### Coming from the CM14.1 Echo Dot image
 

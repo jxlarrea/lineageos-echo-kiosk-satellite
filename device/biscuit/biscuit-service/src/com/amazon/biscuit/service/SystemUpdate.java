@@ -45,9 +45,10 @@ import java.util.zip.ZipFile;
  * System updates from the GitHub releases, installed through TWRP, as on the
  * CM14 image.
  *
- * A release carries an OTA zip for each Echo and a SHA256withRSA signature of
- * each, made with the key whose public half ships in /system/etc/biscuit-ota.
- * The Dot takes the zip with biscuit in its name. It is downloaded to
+ * Each Echo has releases of its own, tagged with its codename and the
+ * release, such as biscuit-2026.10.6. A Dot release carries the OTA zip and a
+ * SHA256withRSA signature of it, made with the key whose public half ships in
+ * /system/etc/biscuit-ota. It is downloaded to
  * /cache/biscuit-ota and checked against GitHub's digest and that signature.
  * twrp-update.sh then installs it, run by TWRP from an openrecoveryscript.
  * The bootloader always starts boot_a, so slot A gets the update first. Once
@@ -65,7 +66,7 @@ final class SystemUpdate {
     static final String INSTALL = "com.amazon.biscuit.service.SYSTEM_UPDATE_INSTALL";
 
     private static final String RELEASES =
-            "https://api.github.com/repos/jxlarrea/lineageos-echo-kiosk-satellite/releases?per_page=30";
+            "https://api.github.com/repos/jxlarrea/lineageos-echo-kiosk-satellite/releases?per_page=100";
     // Another releases list in GitHub's format, to test an update before it
     // is published. The release signature is checked all the same.
     private static final String RELEASES_PROPERTY = "persist.biscuit.ota.releases";
@@ -88,6 +89,9 @@ final class SystemUpdate {
     // Written by releasetools.py: the release the zip holds.
     private static final String RELEASE_PROP = "META-INF/com/amazon/biscuit/release.prop";
     private static final String DEVICE = "biscuit";
+    // Each Echo has releases of its own, tagged with its codename: the Dot's
+    // are biscuit-2026.10.6 and on.
+    private static final String TAG_PREFIX = DEVICE + "-";
 
     // Time on slot A before installing into slot B, so a release that boots
     // and then falls over is noticed while slot B still holds the last one.
@@ -358,11 +362,13 @@ final class SystemUpdate {
         for (int i = 0; i < releases.length() && current != null; i++) {
             JSONObject release = releases.getJSONObject(i);
             if (release.optBoolean("draft") || release.optBoolean("prerelease")) continue;
-            String tag = release.optString("tag_name");
+            String fullTag = release.optString("tag_name");
+            if (!fullTag.startsWith(TAG_PREFIX)) continue;
+            String tag = fullTag.substring(TAG_PREFIX.length());
             int[] version = parseVersion(tag);
             if (version == null || compare(version, current) <= 0) continue;
-            // Every Echo's zip is in the same release. The Dot's has biscuit
-            // in its name, and its signature has the same name plus .sig.
+            // The Dot's zip has biscuit in its name, and its signature has the
+            // same name plus .sig.
             JSONObject zip = null, sig = null;
             JSONArray assets = release.optJSONArray("assets");
             for (int j = 0; assets != null && j < assets.length(); j++) {

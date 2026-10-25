@@ -26,7 +26,7 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 
 ## Installing
 
-1. Download the Echo Dot's `.zip` file, the one with `biscuit` in its name, from the [latest release](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases/latest).
+1. Download the `.zip` file of the newest [Echo Dot release](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=biscuit), the release titled **Echo Dot (2nd gen)** with the highest version.
 2. Start TWRP:
 
    ```sh

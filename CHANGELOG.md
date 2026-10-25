@@ -2,12 +2,7 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
-## Unreleased
-
-### Changed
-- **Credits link meiser79's device tree.** The README and [docs/credits.md](docs/credits.md) now link [android_device_amazon_biscuit](https://github.com/meiser79/android_device_amazon_biscuit), the port that guided the Echo Dot image.
-
-## 2026.10.6 - 2026-10-25
+## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25
 
 ### Fixed
 - **Media provider restart loop on the Dot.** The media provider waits for the DRM server when it starts, which the Dot had left out, so Android killed and restarted it every 80 seconds and shared storage never mounted.
@@ -32,4 +27,5 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 - **System updates on the Dot.** Kiosk Satellite and `adb shell biscuit_service update check` and `update install` find a newer release of this image on GitHub, check its checksum and signature and install it through TWRP, into slot A and then slot B, as on CM14.
 - **Faster Dot boot.** system_server and the system apps are compiled ahead of time, which cuts boot from 39 to 27 seconds. The system image is 517 MB.
 - **Documentation for each device.** The README lists the devices and links each one's guide. [The Echo Dot guide](docs/echo-dot.md) covers installing, moving from the CM14.1 image with Kiosk Satellite's settings kept, updating, settings and device commands. [Unlocking](docs/unlocking.md) and [Getting into TWRP](docs/twrp.md) are shared, with a section for each device. [Building](docs/building.md) covers the build and releases.
-- **Credits.** [docs/credits.md](docs/credits.md) credits R0rt1z2's amazon-oss base, hkfuertes' CM14.1 port that BiscuitService, the light ring and the light sensor HAL came from. It also records the components meiser79's port guided.
+- **Releases for each device.** Each Echo has releases of its own, tagged with its codename, such as `biscuit-2026.10.6` for the Echo Dot. The Dot's updater only looks at its own. Each device's guide links its releases.
+- **Credits.** [docs/credits.md](docs/credits.md) credits R0rt1z2's amazon-oss base, hkfuertes' CM14.1 port that BiscuitService, the light ring and the light sensor HAL came from. It also records the components [meiser79's port](https://github.com/meiser79/android_device_amazon_biscuit) guided.

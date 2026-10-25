@@ -16,14 +16,29 @@ CCACHE_DIR="${CCACHE_DIR:-$WORKSPACE_DIR/ccache}"
 CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-50G}"
 LUNCH_TARGET="lineage_$DEVICE-userdebug"
 
+# The name each device's releases go by, in CHANGELOG.md headings and on
+# GitHub.
+device_name() {
+  case "$1" in
+    biscuit) echo "Echo Dot (2nd gen)" ;;
+    crown) echo "Echo Show 8 (1st gen)" ;;
+    checkers) echo "Echo Show 5 (1st gen)" ;;
+  esac
+}
+
 # The release this build is, for ro.biscuit.release: the newest CHANGELOG.md
-# heading. While that heading is Unreleased, it is the release before it with
-# -dev after it, or 0.0.0-dev before the first release. System updates
-# compare it with the GitHub releases.
+# heading for this device, such as "## Echo Dot (2nd gen) 2026.10.6". While
+# an Unreleased heading is above it, it is that release with -dev after it,
+# or 0.0.0-dev before the device's first release. System updates compare it
+# with the device's GitHub releases.
 release_version() {
-  awk '/^## / {
-    if ($2 == "Unreleased") { dev = 1; next }
-    print $2 (dev ? "-dev" : ""); found = 1; exit
+  awk -v name="$(device_name "$DEVICE")" '/^## / {
+    heading = substr($0, 4)
+    if (heading == "Unreleased") { dev = 1; next }
+    if (name != "" && index(heading, name " ") == 1) {
+      split(substr(heading, length(name) + 2), words, " ")
+      print words[1] (dev ? "-dev" : ""); found = 1; exit
+    }
   }
   END { if (!found) print "0.0.0" (dev ? "-dev" : "") }' "$REPO_ROOT/CHANGELOG.md"
 }

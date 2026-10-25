@@ -93,12 +93,19 @@ grep -Fq 'META-INF/com/amazon/biscuit/release.prop' \
     "$REPO_ROOT/sources/device/amazon/biscuit/releasetools/releasetools.py"
 grep -Fq 'META-INF/com/amazon/biscuit/release.prop' "$SRC/SystemUpdate.java"
 grep -Fq "export BISCUIT_RELEASE='\$BISCUIT_RELEASE'" "$REPO_ROOT/scripts/build.sh"
-eval "$(sed -n '/^release_version()/,/^}/p' "$REPO_ROOT/scripts/build.sh")"
+eval "$(sed -n '/^device_name()/,/^}/p;/^release_version()/,/^}/p' "$REPO_ROOT/scripts/build.sh")"
 REPO_ROOT="$TMPDIR"
-printf '# Changelog\n\n## Unreleased\n\n### Fixed\n- x\n\n## 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG.md"
+DEVICE=biscuit
+printf '# Changelog\n\n## Unreleased\n\n### Fixed\n- x\n\n## Echo Dot (2nd gen) 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG.md"
 [[ "$(release_version)" == 2026.10.3-dev ]]
-printf '# Changelog\n\n## 2026.10.4 - 2026-10-24\n\n## 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG.md"
+printf '# Changelog\n\n## Echo Dot (2nd gen) 2026.10.4 - 2026-10-24\n\n## Echo Dot (2nd gen) 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG.md"
 [[ "$(release_version)" == 2026.10.4 ]]
+# Another device's release is not the Dot's.
+printf '# Changelog\n\n## Echo Show 8 (1st gen) 2026.11.1 - 2026-11-02\n\n## Echo Dot (2nd gen) 2026.10.4 - 2026-10-24\n' >"$TMPDIR/CHANGELOG.md"
+[[ "$(release_version)" == 2026.10.4 ]]
+DEVICE=crown
+[[ "$(release_version)" == 2026.11.1 ]]
+DEVICE=biscuit
 printf '# Changelog\n\n## Unreleased\n\n### Added\n- x\n' >"$TMPDIR/CHANGELOG.md"
 [[ "$(release_version)" == 0.0.0-dev ]]
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -108,6 +115,7 @@ grep -Fq 'boolean installSystemUpdate();' "$SRC/IBiscuitService.aidl"
 grep -Fq 'android:permission="android.permission.REBOOT"' "$SERVICE/AndroidManifest.xml"
 grep -Fq 'cmd /sbin/sh " + STEP_SCRIPT + "\nreboot\n' "$SRC/SystemUpdate.java"
 grep -Fq 'jxlarrea/lineageos-echo-kiosk-satellite/releases' "$SRC/SystemUpdate.java"
+grep -Fq 'TAG_PREFIX = DEVICE + "-"' "$SRC/SystemUpdate.java"
 bash -n "$SERVICE/biscuit_service"
 bash -n "$REPO_ROOT/scripts/sign-release.sh"
 

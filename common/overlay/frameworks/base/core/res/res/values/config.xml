@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- No notification assistant: a kiosk has no use for suggested replies
+         and actions, and binding the assistant kept ExtServices running all
+         the time. -->
+    <string name="config_defaultAssistantAccessComponent" translatable="false"></string>
+</resources>

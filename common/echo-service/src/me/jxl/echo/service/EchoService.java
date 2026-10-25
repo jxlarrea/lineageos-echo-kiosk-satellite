@@ -9,7 +9,9 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.os.SystemProperties;
@@ -96,8 +98,9 @@ public class EchoService extends Service {
         }
         // Android's "Viewing full screen" tip would cover the kiosk the first
         // time it goes full screen, with nobody there to dismiss it.
-        if (Settings.Secure.getString(context.getContentResolver(),
-                Settings.Secure.IMMERSIVE_MODE_CONFIRMATIONS) == null) {
+        String confirmations = Settings.Secure.getString(context.getContentResolver(),
+                Settings.Secure.IMMERSIVE_MODE_CONFIRMATIONS);
+        if (confirmations == null || confirmations.isEmpty()) {
             Settings.Secure.putString(context.getContentResolver(),
                     Settings.Secure.IMMERSIVE_MODE_CONFIRMATIONS, "confirmed");
         }
@@ -117,7 +120,26 @@ public class EchoService extends Service {
                 Settings.Secure.putInt(context.getContentResolver(), key, 0);
             }
         }
+        hideTrustOnboarding(context);
         nameDevice(context);
+    }
+
+    // LineageOS's Trust interface posts "Discover Trust" at every boot until
+    // someone opens it, and dismissing it does not count. Nobody opens it on
+    // a kiosk. Its flag lives in LineageOS's own settings provider, reached
+    // through the provider's calls, as LineageSettings does.
+    private static void hideTrustOnboarding(Context context) {
+        final Uri lineageSettings = Uri.parse("content://lineagesettings");
+        final String key = "trust_interface_hinted";
+        try {
+            Bundle current = context.getContentResolver().call(lineageSettings, "GET_system", key, null);
+            if (current != null && "1".equals(current.getString(Settings.NameValueTable.VALUE))) return;
+            Bundle value = new Bundle();
+            value.putString(Settings.NameValueTable.VALUE, "1");
+            context.getContentResolver().call(lineageSettings, "PUT_system", key, value);
+        } catch (RuntimeException e) {
+            Log.w(TAG, "cannot mark LineageOS's Trust interface as seen", e);
+        }
     }
 
     // Names the Show after ro.echo.hostname and the last three characters of

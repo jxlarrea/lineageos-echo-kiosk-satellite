@@ -62,6 +62,9 @@ android_app {
         "QuickAccessWallet",
         "Recorder",
         "SecureElement",
+
+        // System tracing, a developer tool that also stays in memory.
+        "Traceur",
     ],
 }
 

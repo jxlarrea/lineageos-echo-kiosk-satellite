@@ -47,10 +47,16 @@
  *                                         one triple per selected mic; default is a
  *                                         line along x with 2 cm spacing
  *   persist.vendor.amznaec.target     90  beam target azimuth in degrees (90 = broadside)
- *   persist.vendor.amznaec.engine     0   0 = WebRTC (linear filter plus nonlinear
+ *   persist.vendor.amznaec.engine     ro.vendor.amznaec.engine, else 0
+ *                                         0 = WebRTC (linear filter plus nonlinear
  *                                         suppression, attenuates the near end during
  *                                         double talk), 1 = Speex MDF (linear only,
- *                                         near end untouched, residual echo higher)
+ *                                         near end untouched, residual echo higher),
+ *                                         2 = Speex below the split and the Echo Dot's
+ *                                         pattern removal across the microphones above
+ *                                         it (mic_pattern.h), needs two microphones
+ *   persist.vendor.amznaec.split_hz   1000  engine 2: where the output turns from
+ *                                         Speex to the pattern removal
  *   persist.vendor.amznaec.spx_stereo 1   Speex models the two loopback channels as
  *                                         two speakers (0 = mono average reference)
  *   persist.vendor.amznaec.spx_headroom_db 12  attenuation applied before Speex's 16 bit
@@ -104,6 +110,8 @@
 #include "speex/speex_echo.h"
 #include "speex/speex_preprocess.h"
 
+#include "mic_pattern.h"
+
 namespace {
 
 constexpr int kRate = 16000;
@@ -122,7 +130,7 @@ struct Settings {
     bool enable, aec, ns, hpf, log, extended, agnostic;
     int aec_level, ns_level, delay_ms, mics, mute, array, target_deg;
     int engine, spx_filter_ms, spx_echo_suppress, spx_echo_suppress_active, spx_denoise, spx_noise_suppress, spx_stereo;
-    int spx_headroom_db, gain_db, ref_clip;
+    int spx_headroom_db, gain_db, ref_clip, split_hz;
     char geom[PROPERTY_VALUE_MAX];
     char replay[PROPERTY_VALUE_MAX];
     char dump[PROPERTY_VALUE_MAX];
@@ -143,6 +151,8 @@ struct State {
     std::vector<webrtc::Point> geometry;
     SpeexEchoState* spx = nullptr;          /* engine 1 */
     SpeexPreprocessState* spx_pp = nullptr;
+    MicPattern* pattern = nullptr;          /* engine 2 */
+    float linear[kBlock];
     float hpf_x1 = 0, hpf_y1 = 0;           /* engine 1 high pass state */
     FILE* replay = nullptr;    /* debug replay source, see the header */
     FILE* dump_in = nullptr;   /* debug dumps, see the header */
@@ -200,7 +210,9 @@ Settings read_settings() {
     property_get("persist.vendor.amznaec.geom", s.geom, "");
     property_get("persist.vendor.amznaec.replay", s.replay, "");
     property_get("persist.vendor.amznaec.dump", s.dump, "");
-    s.engine = property_get_int32("persist.vendor.amznaec.engine", 0);
+    s.engine = property_get_int32("persist.vendor.amznaec.engine",
+                                  property_get_int32("ro.vendor.amznaec.engine", 0));
+    s.split_hz = property_get_int32("persist.vendor.amznaec.split_hz", 1000);
     s.spx_filter_ms = property_get_int32("persist.vendor.amznaec.spx_filter_ms", 64);
     s.spx_echo_suppress = property_get_int32("persist.vendor.amznaec.spx_echo_suppress", 0);
     s.spx_echo_suppress_active = property_get_int32("persist.vendor.amznaec.spx_echo_suppress_active", 0);
@@ -264,6 +276,7 @@ void teardown_l() {
     g.pcm = nullptr;
     if (g.spx_pp) { speex_preprocess_state_destroy(g.spx_pp); g.spx_pp = nullptr; }
     if (g.spx) { speex_echo_state_destroy(g.spx); g.spx = nullptr; }
+    if (g.pattern) { mic_pattern_free(g.pattern); g.pattern = nullptr; }
     g.hpf_x1 = g.hpf_y1 = 0;
     g.in.clear();
     g.out.clear();
@@ -405,7 +418,13 @@ void process_block_l(uint8_t* frames) {
         e_in += (double)g.near_[g.sel[0]][f] * g.near_[g.sel[0]][f];
     }
 
-    if (g.spx && g.mode == 0) {
+    if (g.spx && g.pattern && g.mode == 0) {
+        const float* mics[kMics];
+        for (int m = 0; m < g.mics; m++) mics[m] = g.near_[m];
+        run_speex(g.near_[0], g.linear);
+        mic_pattern_process(g.pattern, g.linear, mics, g.ref, kBlock, g.outbuf);
+        memcpy(g.near_[0], g.outbuf, sizeof(g.outbuf));
+    } else if (g.spx && g.mode == 0) {
         run_speex(g.near_[g.sel[0]], g.outbuf);
         memcpy(g.near_[g.sel[0]], g.outbuf, sizeof(g.outbuf));
     } else if (g.spx && g.mode == 1) {
@@ -463,10 +482,11 @@ void process_block_l(uint8_t* frames) {
         double n = 500.0 * kBlock;
         auto dbf = [n](double e) { return e > 0 ? 10.0 * log10(e / n) : -120.0; };
         webrtc::AudioProcessing* a0 = (g.mode == 0) ? g.apm[g.sel[0]] : g.apm[0];
-        ALOGI("5s: ref %.1f dBFS, mic in %.1f dBFS, out %.1f dBFS, echo %s, mode %d, engine %s",
+        ALOGI("5s: ref %.1f dBFS, mic in %.1f dBFS, out %.1f dBFS, echo %s, mode %d, engine %s, pattern %.2f",
               dbf(g.e_ref), dbf(g.e_in), dbf(g.e_out),
               a0 ? (a0->echo_cancellation()->stream_has_echo() ? "yes" : "no") : "n/a", g.mode,
-              g.spx ? "speex" : "webrtc");
+              g.pattern ? "speex+pattern" : g.spx ? "speex" : "webrtc",
+              g.pattern ? mic_pattern_mix(g.pattern) : 0.0f);
         g.e_ref = g.e_in = g.e_out = 0;
     }
 }
@@ -507,8 +527,14 @@ extern "C" struct pcm* pcm_open(unsigned int card, unsigned int device, unsigned
     if (g.mode < 0 || g.mode > 2 || (g.mode != 0 && g.nsel < 2)) g.mode = 0;
     build_geometry(g.s);
     bool ok = true;
-    if (g.s.engine == 1 && g.mode != 2) {
+    if ((g.s.engine == 1 || g.s.engine == 2) && g.mode != 2) {
         ok = make_speex(g.s);
+        /* The pattern removal needs microphone 0 as the output and a second
+         * microphone. Without them this is engine 1. */
+        if (ok && g.s.engine == 2 && g.mode == 0 && g.mics >= 2 && g.sel[0] == 0) {
+            g.pattern = mic_pattern_create(g.mics, g.s.split_hz);
+            if (!g.pattern) ALOGW("pattern removal unavailable, running Speex alone");
+        }
     } else if (g.mode == 0) {
         for (int k = 0; k < g.nsel && ok; k++) {
             g.apm[g.sel[k]] = make_apm(g.s, 1, false);
@@ -547,7 +573,7 @@ extern "C" struct pcm* pcm_open(unsigned int card, unsigned int device, unsigned
               card, device, config->channels, config->rate, config->period_size,
               g.s.aec, g.s.aec_level, g.s.ns, g.s.ns_level, g.s.hpf, g.s.delay_ms,
               g.s.extended, g.s.agnostic, g.s.mics, g.s.mute, g.mode, g.s.target_deg, geom.c_str(),
-              g.spx ? "speex" : "webrtc", g.s.spx_filter_ms, g.s.spx_echo_suppress,
+              g.pattern ? "speex+pattern" : g.spx ? "speex" : "webrtc", g.s.spx_filter_ms, g.s.spx_echo_suppress,
               g.s.spx_echo_suppress_active, g.s.spx_denoise, g.s.spx_noise_suppress, g.s.spx_stereo, g.s.gain_db);
     }
     pthread_mutex_unlock(&g.lock);

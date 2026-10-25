@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<!--
+    Features the Echo Shows inherit from the tablet configuration but a kiosk
+    never uses. system_server starts a service for each of these, so
+    removing them keeps those services out of its memory.
+    unavailable-feature removes a feature wherever another file declares it.
+-->
+<permissions>
+    <!-- Autofill also kept ExtServices running for its inline suggestions. -->
+    <unavailable-feature name="android.software.autofill" />
+    <!-- Nothing is backed up, and the backup app is left out. -->
+    <unavailable-feature name="android.software.backup" />
+    <unavailable-feature name="android.software.companion_device_setup" />
+    <!-- The print apps are left out. -->
+    <unavailable-feature name="android.software.print" />
+</permissions>

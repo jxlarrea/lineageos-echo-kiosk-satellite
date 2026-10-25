@@ -13,6 +13,7 @@ cc_library_shared {
     compile_multilib: "32",
     srcs: [
         "amznaec_shim.cpp",
+        "mic_pattern.cpp",
         "speexdsp/libspeexdsp/mdf.c",
         "speexdsp/libspeexdsp/preprocess.c",
         "speexdsp/libspeexdsp/filterbank.c",

@@ -1,0 +1,30 @@
+cronos: Pass the microphones through Amazon's ASR and Voice pipelines
+
+The audio HAL ran Amazon's front end on every recording: its own echo
+canceller, beamformer and level normalization, tuned for Amazon's wake word
+engine. It left a voice about 40 dB below what other wake word engines
+expect and fought the echo canceller the Kiosk Satellite Edition preloads
+into the HAL. With the ASR and Voice pipelines in passthrough, Android gets
+microphone 0 as that canceller leaves it.
+
+diff --git a/proprietary/vendor/etc/audio-algorithms/asp.cfg b/proprietary/vendor/etc/audio-algorithms/asp.cfg
+--- a/proprietary/vendor/etc/audio-algorithms/asp.cfg
++++ b/proprietary/vendor/etc/audio-algorithms/asp.cfg
+@@ -51,7 +51,7 @@
+         },
+ 
+         "ASR": {
+-            "Passthrough": false,
++            "Passthrough": true,
+             "Frame length" : 128,
+             "Input": {
+                 "Sample rate" : 16000,
+@@ -73,7 +73,7 @@
+         },
+ 
+         "Voice": {
+-            "Passthrough": false,
++            "Passthrough": true,
+             "Frame length" : 128,
+             "Input": {
+                 "Sample rate" : 16000,

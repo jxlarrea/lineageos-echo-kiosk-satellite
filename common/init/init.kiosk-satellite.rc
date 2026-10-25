@@ -34,3 +34,39 @@ on property:sys.boot_completed=1 && property:persist.echo.adb_wifi=1
 on boot
     write /proc/sys/vm/min_free_kbytes 8192
 
+
+# Services a kiosk never uses, replaced by definitions that do nothing, as
+# on the Echo Dot. init keeps the first definition of a service unless a
+# later one says override. Metrics, incident reports, storage statistics,
+# identity credentials and heap tracing: nothing on a Show reads them.
+# persist.media.metrics.enabled=0 tells every media metrics client to skip
+# the service.
+service statsd /system/bin/true
+    override
+    oneshot
+    disabled
+
+service incidentd /system/bin/true
+    override
+    oneshot
+    disabled
+
+service storaged /system/bin/true
+    override
+    oneshot
+    disabled
+
+service credstore /system/bin/true
+    override
+    oneshot
+    disabled
+
+service traced_perf /system/bin/true
+    override
+    oneshot
+    disabled
+
+service mediametrics /system/bin/true
+    override
+    oneshot
+    disabled

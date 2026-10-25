@@ -58,6 +58,7 @@ DEVICE_PACKAGE_OVERLAYS += \
     $(LOCAL_PATH)/overlay
 
 PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
+    $(LOCAL_PATH)/overlay/frameworks/base/core \
     $(LOCAL_PATH)/overlay/frameworks/base/packages/SettingsProvider \
     $(LOCAL_PATH)/overlay/packages/apps/Bluetooth
 
@@ -65,3 +66,30 @@ PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
 # screen. A new computer still has to be allowed on the screen once.
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     persist.sys.usb.config=mtp,adb
+
+# Memory, as on the Echo Dot. One cached process and every OOM adjustment a
+# full one (patches/cronos/frameworks/base): Android otherwise kept idle apps
+# such as Settings, the keyboard and the launcher in memory the kiosk never
+# switches to. Shared storage on sdcardfs instead of FUSE, so MediaProvider
+# does not run all the time: both properties are needed, since
+# StorageManagerService resets persist.sys.fuse from the settings_fuse flag at
+# boot. Media metrics clients skip the service init/ leaves out.
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    ro.config.max_cached_processes=1 \
+    ro.config.oomadj_update_quick=false \
+    persist.sys.fuse=false \
+    persist.sys.fflag.override.settings_fuse=false \
+    persist.media.metrics.enabled=0
+
+# Java heaps keep less free space after each collection than the tablet
+# defaults. The device's dalvik-heap.mk sets these in system/build.prop, where
+# the first definition stays, so they go in product/build.prop, which Android
+# loads later.
+PRODUCT_PRODUCT_PROPERTIES += \
+    dalvik.vm.heaptargetutilization=0.9 \
+    dalvik.vm.heapmaxfree=4m
+
+# Features the Shows never use, which keeps their services out of
+# system_server (permissions/).
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/permissions/kiosk-satellite-show.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/permissions/kiosk-satellite-show.xml

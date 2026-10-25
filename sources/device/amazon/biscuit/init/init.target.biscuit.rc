@@ -20,6 +20,14 @@ on boot
     write /sys/kernel/mm/ksm/sleep_millisecs 500
     write /sys/kernel/mm/ksm/run 1
 
+# The kernel's emergency reserve. mt8163-common sets 16 MB on post-fs-data,
+# for Echos with twice the Dot's RAM. Fire OS and CM14 kept the kernel's
+# own 2.8 MB with the same Wi-Fi and Bluetooth drivers. The watermarks
+# follow the reserve, and at 4 MB the Dot has about 39 MB more available
+# than at 16 MB.
+on boot
+    write /proc/sys/vm/min_free_kbytes 4096
+
 # Microphone mute. The Fire OS audio HAL drives GPIO 87 through mt_gpio,
 # which 4.9 moved under /sys/devices/platform. Its path in the HAL is
 # changed to this link (scripts/extract-biscuit-blobs.sh).

@@ -3,7 +3,17 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-$(call inherit-product, frameworks/native/build/phone-hdpi-512-dalvik-heap.mk)
+# ART heaps: frameworks/native's phone-hdpi-512-dalvik-heap.mk, set here so
+# the target utilization can differ. At 0.9 a heap keeps less free space
+# after each collection, which saves a few MB across system_server, Bluetooth
+# and Kiosk Satellite for a few more collections.
+PRODUCT_PROPERTY_OVERRIDES += \
+    dalvik.vm.heapstartsize=5m \
+    dalvik.vm.heapgrowthlimit=48m \
+    dalvik.vm.heapsize=128m \
+    dalvik.vm.heaptargetutilization=0.9 \
+    dalvik.vm.heapminfree=512k \
+    dalvik.vm.heapmaxfree=2m
 
 # AAPT
 PRODUCT_AAPT_CONFIG := normal

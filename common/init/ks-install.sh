@@ -35,7 +35,10 @@ if ! $update && [ "$(getprop persist.echo.ks_install)" = "0" ] && [ "$(id -u)" =
     exit 0
 fi
 
-if $update || ! pm path "$PKG" >/dev/null 2>&1; then
+fresh=false
+pm path "$PKG" >/dev/null 2>&1 || fresh=true
+
+if $update || $fresh; then
     # Wait for the network: Wi-Fi may still be joining, or not set up yet.
     tries=0
     until fetch -o /dev/null --max-time 20 https://api.github.com; do
@@ -65,10 +68,6 @@ if $update || ! pm path "$PKG" >/dev/null 2>&1; then
     fi
     rm -f "$APK"
     log "installed Kiosk Satellite"
-    # Started once, as Android requires before it delivers the boot
-    # broadcast.
-    am start -n "$PKG/.ProvisionActivity" >/dev/null 2>&1
-    sleep 10
 fi
 
 for permission in RECORD_AUDIO CAMERA ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION \
@@ -85,6 +84,16 @@ for op in MANAGE_EXTERNAL_STORAGE SYSTEM_ALERT_WINDOW WRITE_SETTINGS GET_USAGE_S
     appops set "$PKG" "$op" allow 2>/dev/null
 done
 dumpsys deviceidle whitelist "+$PKG" >/dev/null
+
+# Device owner needs a device with no accounts, which a kiosk has. It comes
+# before the two services below, because Android starts Kiosk Satellite to
+# run them, and its first run needs the device owner: that is when it becomes
+# the home screen and reads the real Wi-Fi MAC address. The grants above do
+# not start it.
+if ! dumpsys device_policy | grep -A3 "Device Owner" | grep -q "package="; then
+    dpm set-device-owner "$PKG/.KioskAdminReceiver" >/dev/null 2>&1 &&
+        log "Kiosk Satellite is the device owner"
+fi
 
 # Two services Android only turns on from Settings: notification access, so
 # Now Playing can follow the apps playing on the Show, and the System UI
@@ -106,37 +115,10 @@ case ":$services:" in
 esac
 settings put secure accessibility_enabled 1
 
-# Device owner needs a device with no accounts, which a kiosk has.
-if ! dumpsys device_policy | grep -A3 "Device Owner" | grep -q "package="; then
-    dpm set-device-owner "$PKG/.KioskAdminReceiver" >/dev/null 2>&1 &&
-        log "Kiosk Satellite is the device owner"
-fi
-
 log "permissions granted"
 
-# Kiosk Satellite also becomes the home screen, so the kiosk is what comes
-# back whenever something else took the screen: an app in the background
-# loses the microphone on Android 11. Kiosk Satellite takes the role itself,
-# which it can only do as the device owner and only once its setup is done,
-# so this asks again while it is in front, for up to 30 minutes, until the
-# role is taken. Then it never asks again, so turning it off in Kiosk
-# Satellite stays off. The launcher stays as its fallback.
-home_held() {
-    cmd package resolve-activity --brief -a android.intent.action.MAIN \
-        -c android.intent.category.HOME | tail -n 1 | grep -q "^$PKG/"
-}
-if [ "$(getprop persist.echo.ks_home)" != 1 ] && [ "$(id -u)" = 0 ]; then
-    tries=0
-    while [ $tries -lt 60 ]; do
-        if home_held; then
-            setprop persist.echo.ks_home 1
-            log "Kiosk Satellite is the home screen"
-            break
-        fi
-        if dumpsys activity activities | grep -m 1 "mResumedActivity" | grep -q "$PKG/"; then
-            am start -n "$PKG/.ProvisionActivity" --es ks.provision '{"home.enabled":true}' >/dev/null 2>&1
-        fi
-        tries=$((tries + 1))
-        sleep 30
-    done
+# A fresh install opens Kiosk Satellite once, as Android requires before it
+# delivers the boot broadcast.
+if $fresh; then
+    am start -n "$PKG/.ProvisionActivity" >/dev/null 2>&1
 fi

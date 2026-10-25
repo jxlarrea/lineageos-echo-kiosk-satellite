@@ -25,7 +25,10 @@ fetch() { curl -sSL --fail --capath "$CERTS" --connect-timeout 20 "$@"; }
 
 [ "$(getprop persist.biscuit.ks_install)" = "0" ] && exit 0
 
-if ! pm path "$PKG" >/dev/null 2>&1; then
+fresh=false
+pm path "$PKG" >/dev/null 2>&1 || fresh=true
+
+if $fresh; then
     # Wait for the network: Wi-Fi may still be joining, or not set up yet.
     tries=0
     until fetch -o /dev/null --max-time 20 https://api.github.com; do
@@ -55,10 +58,6 @@ if ! pm path "$PKG" >/dev/null 2>&1; then
     fi
     rm -f "$APK"
     log "installed Kiosk Satellite"
-    # Started once, as Android requires before it delivers the boot
-    # broadcast.
-    am start -n "$PKG/.ProvisionActivity" >/dev/null 2>&1
-    sleep 10
 fi
 
 for permission in RECORD_AUDIO ACCESS_COARSE_LOCATION ACCESS_FINE_LOCATION \
@@ -77,7 +76,16 @@ done
 dumpsys deviceidle whitelist "+$PKG" >/dev/null
 
 # Device owner needs a device with no accounts, which a headless one has.
+# Setting it starts Kiosk Satellite for the first time, after the grants
+# above, which do not start it. Its first run needs the device owner to read
+# the real Wi-Fi MAC address.
 if ! dumpsys device_policy | grep -A3 "Device Owner" | grep -q "package="; then
     dpm set-device-owner "$PKG/.KioskAdminReceiver" >/dev/null 2>&1 &&
         log "Kiosk Satellite is the device owner"
+fi
+
+# A fresh install opens Kiosk Satellite once, as Android requires before it
+# delivers the boot broadcast.
+if $fresh; then
+    am start -n "$PKG/.ProvisionActivity" >/dev/null 2>&1
 fi

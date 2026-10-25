@@ -10,4 +10,11 @@
          to pick a key management type and the Echo never joined (issue #1).
          It now connects with WPA2, as the CM14 image did. -->
     <bool name="config_wifiSaeUpgradeEnabled">false</bool>
+
+    <!-- No per-network MAC randomization: the Echo joins every network with
+         its factory address, the one Kiosk Satellite reports to Home
+         Assistant as the real Wi-Fi MAC address, so the router, DHCP
+         reservations and Home Assistant all see the same device. Android 11
+         already defaults to this. It is pinned here so it stays that way. -->
+    <bool name="config_wifi_connected_mac_randomization_supported">false</bool>
 </resources>

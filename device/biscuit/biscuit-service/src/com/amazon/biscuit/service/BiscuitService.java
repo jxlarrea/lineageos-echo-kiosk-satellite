@@ -605,7 +605,13 @@ public final class BiscuitService extends Service {
         BluetoothAdapter adapter = mConnectAdapter;
         BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
         String action = intent.getAction();
-        if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+        if (BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED.equals(action)
+                && intent.getIntExtra(BluetoothA2dp.EXTRA_STATE, -1) == BluetoothA2dp.STATE_CONNECTED
+                && isWantedDevice(device)) {
+            // Headphones paired before reconnect by themselves once Bluetooth
+            // is back on, which can beat the connection asked for here.
+            finishConnect("connected");
+        } else if (BluetoothDevice.ACTION_FOUND.equals(action)) {
             if (mConnectDevice != null || device == null) return false;
             BluetoothClass cls = intent.getParcelableExtra(BluetoothDevice.EXTRA_CLASS);
             // Not just any audio and video device: a TV box is one too.
@@ -662,6 +668,15 @@ public final class BiscuitService extends Service {
 
     private boolean isConnectDevice(BluetoothDevice device) {
         return device != null && device.equals(mConnectDevice);
+    }
+
+    // The device being connected, or while none is, any whose name has the
+    // text asked for.
+    private boolean isWantedDevice(BluetoothDevice device) {
+        if (device == null) return false;
+        if (mConnectDevice != null) return device.equals(mConnectDevice);
+        String name = device.getName();
+        return mConnectName == null || (name != null && name.toLowerCase().contains(mConnectName));
     }
 
     private void finishConnect(String result) {

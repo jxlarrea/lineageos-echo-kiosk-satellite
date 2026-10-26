@@ -114,7 +114,7 @@ public final class Commands extends BroadcastReceiver {
         switch (args[0]) {
             case "status": return status(context);
             case "wifi": return wifi(context, rest);
-            case "bt": return bluetooth(rest);
+            case "bt": return bluetooth(context, rest);
             case "time": return time(context, rest);
             case "adb": return adb(context, rest);
             case "lockscreen": return lockscreen(context, rest);
@@ -151,7 +151,7 @@ public final class Commands extends BroadcastReceiver {
         String temperature = temperature();
         if (!temperature.isEmpty()) out.append("Temperature: ").append(temperature).append('\n');
         out.append("Wi-Fi: ").append(wifiStatus(context)).append('\n');
-        out.append("Bluetooth: ").append(bluetoothStatus()).append('\n');
+        out.append("Bluetooth: ").append(bluetoothStatus(context)).append('\n');
         out.append("adb: ").append(adbStatus(context)).append('\n');
         out.append("Time: ").append(timeStatus(context)).append('\n');
         out.append("Locale: ").append(currentLocales()).append('\n');
@@ -277,13 +277,13 @@ public final class Commands extends BroadcastReceiver {
 
     // Bluetooth
 
-    private static String bluetooth(String[] args) throws UsageException {
+    private static String bluetooth(Context context, String[] args) throws UsageException {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) return "no Bluetooth";
         switch (arg(args, 0)) {
             case "":
             case "status":
-                return bluetoothStatus();
+                return bluetoothStatus(context);
             case "on":
                 adapter.enable();
                 return "Bluetooth on";
@@ -291,12 +291,16 @@ public final class Commands extends BroadcastReceiver {
                 adapter.disable();
                 return "Bluetooth off";
             case "pair":
-                adapter.enable();
-                makeDiscoverable(adapter, 0);
+                // Phones play to a Show that takes audio from them.
+                BluetoothAudio.get(context).useSpeakerRole(() -> makeDiscoverable(adapter, 0));
                 return "Discoverable as " + adapter.getName() + " for " + PAIRING_SECONDS / 60
                         + " minutes. Accept the pairing on the screen.";
+            case "connect":
+                BluetoothAudio.get(context).connect(arg(args, 1));
+                return "Looking for Bluetooth headphones or a speaker in pairing mode for a minute."
+                        + " adb logcat -s EchoBluetooth shows how it goes.";
             default:
-                throw new UsageException("usage: bt [status|on|off|pair]");
+                throw new UsageException("usage: bt [status|on|off|pair|connect [name]]");
         }
     }
 
@@ -314,11 +318,13 @@ public final class Commands extends BroadcastReceiver {
         sHandler.postDelayed(() -> makeDiscoverable(adapter, tries + 1), 250);
     }
 
-    private static String bluetoothStatus() {
+    private static String bluetoothStatus(Context context) {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
         if (adapter == null) return "none";
         if (!adapter.isEnabled()) return "off";
         StringBuilder out = new StringBuilder("on as ").append(adapter.getName());
+        out.append(BluetoothAudio.get(context).isHeadphonesRole()
+                ? ", plays to headphones and speakers" : ", plays what phones send");
         if (adapter.getScanMode() == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) out.append(", discoverable");
         StringBuilder paired = new StringBuilder();
         for (BluetoothDevice device : adapter.getBondedDevices()) {

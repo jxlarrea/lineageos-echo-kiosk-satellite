@@ -22,8 +22,10 @@ Wi-Fi:
   wifi on|off
 
 Bluetooth:
-  bt [status]                    on or off and the paired devices
-  bt pair                        discoverable for 5 minutes
+  bt [status]                    on or off, the role and the paired devices
+  bt pair                        play what phones send, discoverable for 5 minutes
+  bt connect [name]              play to headphones or a speaker in pairing mode,
+                                 or to one paired before whose name has the text
   bt on|off
 
 Time:

@@ -1,0 +1,33 @@
+Settings: Skip Bluetooth profiles the device is built without
+
+A paired device's details list phone book access and message access
+whenever the device ever asked for them, as phones do. On a device built
+without PBAP or MAP, the profile manager has no profile to add, so the
+list got null and Settings crashed opening the details of a phone, where
+the device could also be forgotten.
+
+Add each one only when the device has the profile.
+
+diff --git a/src/com/android/settings/bluetooth/BluetoothDetailsProfilesController.java b/src/com/android/settings/bluetooth/BluetoothDetailsProfilesController.java
+index dcaeffe..8488fc1 100644
+--- a/src/com/android/settings/bluetooth/BluetoothDetailsProfilesController.java
++++ b/src/com/android/settings/bluetooth/BluetoothDetailsProfilesController.java
+@@ -200,14 +200,15 @@ public class BluetoothDetailsProfilesController extends BluetoothDetailsControll
+ 
+         final int pbapPermission = device.getPhonebookAccessPermission();
+         // Only provide PBAP cabability if the client device has requested PBAP.
+-        if (pbapPermission != BluetoothDevice.ACCESS_UNKNOWN) {
+-            final PbapServerProfile psp = mManager.getProfileManager().getPbapProfile();
++        // A device built without the profile has none to show.
++        final PbapServerProfile psp = mManager.getProfileManager().getPbapProfile();
++        if (pbapPermission != BluetoothDevice.ACCESS_UNKNOWN && psp != null) {
+             result.add(psp);
+         }
+ 
+         final MapProfile mapProfile = mManager.getProfileManager().getMapProfile();
+         final int mapPermission = device.getMessageAccessPermission();
+-        if (mapPermission != BluetoothDevice.ACCESS_UNKNOWN) {
++        if (mapPermission != BluetoothDevice.ACCESS_UNKNOWN && mapProfile != null) {
+             result.add(mapProfile);
+         }
+ 

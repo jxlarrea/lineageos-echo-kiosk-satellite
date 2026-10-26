@@ -12,6 +12,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
 - **No on-screen onboarding.** There is no setup wizard and no lock screen. adb works over USB from the first boot, so a computer only has to be allowed on the screen once. Allowed computers do not expire. Android's screen timeout is set to never, so only Kiosk Satellite dims the screen or turns it off.
 - **Set up from adb.** `echo_service` joins Wi-Fi, sets the time and time zone from your computer and changes the Show's settings without touching the screen. See [Device commands](#device-commands).
 - **Privacy and the screen on separate presses.** Press the button briefly to turn privacy on or off. Hold it for 3 seconds to turn the screen on or off, as on Fire OS. See [The button](#the-button).
+- **Bluetooth both ways.** Phones can play to the Show as a Bluetooth speaker. The Show's audio can also go to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
 - **System updates.** EchoService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
 - **WPA2/WPA3 networks.** The image connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256.
 - **More free memory.** With Kiosk Satellite on screen for an hour, about 405 MB of the Show's 1 GB stays available.
@@ -175,6 +176,27 @@ With `menu`, every short press still turns privacy on or off as well.
 - **No clock on a sleeping screen.** LineageOS's ambient display is off, so the screen shows nothing while it is off. `echo_service screen ambient on` brings the clock back.
 - **No lock screen.** `echo_service lockscreen on` turns the swipe lock screen on.
 
+### Bluetooth
+
+Bluetooth is on. Android 11 can either take audio from phones or play to headphones and speakers, not both at once, so EchoService sets the Show up for one or the other. The last choice stays across reboots. A fresh Show takes audio from phones.
+
+- **As a Bluetooth speaker.** Make the Show discoverable for five minutes, then pair your phone with **Echo Show 5** and accept the pairing on the Show's screen:
+
+  ```sh
+  adb shell echo_service bt pair
+  ```
+
+- **With Bluetooth headphones or a speaker.** Put them in pairing mode, then run the command below. EchoService pairs the Show with the first ones it finds or with the first whose name has the text you give. Then the Show's audio plays through them. With a name, ones paired before reconnect without pairing mode:
+
+  ```sh
+  adb shell echo_service bt connect
+  adb shell echo_service bt connect '<name>'
+  ```
+
+  Without a name, EchoService takes any headphones or speaker nearby that is in pairing mode, so give a name where neighbors have Bluetooth audio.
+
+Switching between the two restarts Bluetooth, which drops what was connected. `adb logcat -s EchoBluetooth` shows how a `bt connect` went. Kiosk Satellite's Bluetooth proxy for Home Assistant keeps scanning in both.
+
 ### Network
 
 - **adb works over Wi-Fi** on port 5555, as on R0rt1z2's image. A computer still has to be allowed on the Show's screen once before it can connect. To turn it off, run the first command. The second turns it back on:
@@ -211,6 +233,7 @@ adb shell echo_service status
 adb shell "echo_service wifi connect '<ssid>' '<password>'"
 adb shell echo_service wifi on|off
 adb shell echo_service bt pair
+adb shell echo_service bt connect '<name>'
 adb shell echo_service bt on|off
 adb shell echo_service time sync '<seconds>' '<zone>'
 adb shell echo_service time zone '<zone>'

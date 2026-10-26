@@ -30,7 +30,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Added
 - **adb root on the Dot.** LineageOS 18.1 only allows `adb root` after Rooted debugging is turned on in Developer options, which the Dot has no screen for. `biscuit_service adb root on` turns it on and `off` turns it off again. It stays off by default. The Echo Dot guide explains it.
 
-## Echo Show 5 (2nd gen) Unreleased
+## Echo Show 5 (2nd gen) 2026.10.1 - 2026-10-26
 
 ### Added
 - **Echo Show 5 (2nd gen) on LineageOS 18.1.** The repository builds R0rt1z2's amazon-oss `cronos` tree with the Kiosk Satellite Edition layer on top. The screen, camera and Bluetooth work as they do in amazon-oss. The model reads Echo Show 5 2nd Gen (KS), and the Show names itself `echo-show-5-ks` and the end of its serial on the network.

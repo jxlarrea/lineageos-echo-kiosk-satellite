@@ -175,12 +175,23 @@ To hear only one microphone, for example to compare, turn the speaker removal of
 adb shell setprop persist.biscuit.mic_beam 0
 ```
 
-Kiosk Satellite hears microphone 0. If Kiosk Satellite barely hears the wake word, one of the Dot's microphones may be weak. Stop Kiosk Satellite, since it holds the microphones while it listens. Then print the level of each one over 4 seconds:
+Kiosk Satellite hears microphone 0. If Kiosk Satellite barely hears the wake word, one of the Dot's microphones may be weak. To check each one:
 
-```sh
-adb shell am force-stop me.jxl.kiosk_satellite
-adb shell biscuit_mic_test 4
-```
+1. Turn off **Enable Voice Satellite** in Kiosk Satellite's Voice Satellite settings, since Kiosk Satellite holds the microphones while it listens.
+2. The test needs `adb root` to open the microphones. Allow it and print the level of each one over 4 seconds:
+
+   ```sh
+   adb shell biscuit_service adb root on
+   adb root
+   adb shell biscuit_mic_test 4
+   ```
+
+3. Turn **Enable Voice Satellite** back on and switch root off again:
+
+   ```sh
+   adb unroot
+   adb shell biscuit_service adb root off
+   ```
 
 Channels 0 to 6 are the microphones and should read within a few dB of each other. Channels 7 and 8 are the speaker and read 0 when nothing plays. If microphone 0 reads far below the rest, pick another microphone and restart the Dot. The speaker removal keeps working with any of them:
 

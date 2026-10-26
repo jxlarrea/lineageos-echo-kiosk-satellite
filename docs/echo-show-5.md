@@ -133,14 +133,25 @@ adb shell echo_service volume
 adb shell echo_service volume music 10
 ```
 
-To check that both microphones work, stop Kiosk Satellite, since it holds the microphones while it listens. Then print the level of each channel over 4 seconds:
+To check that both microphones work:
 
-```sh
-adb shell am force-stop me.jxl.kiosk_satellite
-adb shell echo_mic_test 4
-```
+1. Turn off **Enable Voice Satellite** in Kiosk Satellite's Voice Satellite settings, since Kiosk Satellite holds the microphones while it listens.
+2. The test needs `adb root` to open the microphones. Allow it and print the level of each channel over 4 seconds:
 
-Channels 0 and 1 are the microphones and should read within a few dB of each other. Channels 2 and 3 are the speaker and read very low when nothing plays. `echo_service ks restart` starts Kiosk Satellite again.
+   ```sh
+   adb shell echo_service adb root on
+   adb root
+   adb shell echo_mic_test 4
+   ```
+
+3. Turn **Enable Voice Satellite** back on and switch root off again:
+
+   ```sh
+   adb unroot
+   adb shell echo_service adb root off
+   ```
+
+Channels 0 and 1 are the microphones and should read within a few dB of each other. Channels 2 and 3 are the speaker and read very low when nothing plays.
 
 ### The button
 

@@ -1,0 +1,39 @@
+StorageManagerService: Give all files access the shared storage without FUSE
+
+With FUSE off, as on sdcardfs, an app only sees the shared storage with
+the legacy storage op and a storage permission. An app targeting Android
+11 or later never gets the legacy op, and all files access is only
+checked under FUSE, so even an app holding it got the default view with
+nothing in it.
+
+Give an app holding all files access the view of a legacy app with write
+access, and remount it when the op changes, as the legacy op does.
+
+diff --git a/services/core/java/com/android/server/StorageManagerService.java b/services/core/java/com/android/server/StorageManagerService.java
+index 60136863..bc8c9a90 100644
+--- a/services/core/java/com/android/server/StorageManagerService.java
++++ b/services/core/java/com/android/server/StorageManagerService.java
+@@ -2004,6 +2004,8 @@ class StorageManagerService extends IStorageManager.Stub
+                 mIAppOpsService.startWatchingMode(OP_REQUEST_INSTALL_PACKAGES, null,
+                         mAppOpsCallback);
+                 mIAppOpsService.startWatchingMode(OP_LEGACY_STORAGE, null, mAppOpsCallback);
++                mIAppOpsService.startWatchingMode(OP_MANAGE_EXTERNAL_STORAGE, null,
++                        mAppOpsCallback);
+             } catch (RemoteException e) {
+             }
+         }
+@@ -4375,6 +4377,14 @@ class StorageManagerService extends IStorageManager.Stub
+             boolean hasLegacy = mIAppOpsService.checkOperation(OP_LEGACY_STORAGE,
+                     uid, packageName) == MODE_ALLOWED;
+ 
++            // Without FUSE there is no scoped view of /storage, only all of it or
++            // none of it, and a scoped app gets none. All files access asks for
++            // all of it, so it gets what a legacy app with write access gets.
++            if (!mIsFuseEnabled && mIAppOpsService.checkOperation(OP_MANAGE_EXTERNAL_STORAGE,
++                    uid, packageName) == MODE_ALLOWED) {
++                return Zygote.MOUNT_EXTERNAL_WRITE;
++            }
++
+             if (hasLegacy && hasWrite) {
+                 return Zygote.MOUNT_EXTERNAL_WRITE;
+             } else if (hasLegacy && hasRead) {

@@ -49,6 +49,12 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.biscuit.release=$(BISCUIT_RELEASE)
 endif
 
+# Media volume 11 of 15 on a fresh install, which Kiosk Satellite shows as
+# 75%. With Kiosk Satellite's media player and assistant volumes at their
+# default 100, that is the level that works best for the wake word.
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.config.media_vol_default=11
+
 # WebView is left out, but its loader and platform support libraries stay:
 # public.libraries.txt lists them, and no app can start without them.
 PRODUCT_PACKAGES += \

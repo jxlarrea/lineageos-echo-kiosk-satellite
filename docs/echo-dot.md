@@ -6,7 +6,7 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 
 ## What the image does
 
-- **Wake words over loud music.** The Dot has seven microphones. The image uses all of them to remove the speaker's own sound from what Kiosk Satellite hears, about 18 to 20 dB less music, so the wake word works with music at full volume.
+- **Wake words over loud music.** The Dot has seven microphones. The image uses all of them to remove the speaker's own sound from what Kiosk Satellite hears, about 18 to 20 dB less music, so the wake word works with music at full volume. See [Volume](#volume) for the levels that work best.
 - **Amazon's wake words.** The image includes the wake word engine the Dot shipped with, with its models for Alexa, Echo, Computer, Amazon and Ziggy in 17 locales. Choose **Amazon** as the wake word engine in Kiosk Satellite. It runs on the Dot and sends nothing to Amazon. A plain "stop" also stops a ringing timer or a reply.
 - **A louder microphone and speaker.** The microphone preamp is 36 dB instead of Fire OS's 20, so voices and intercom calls come through at a normal level. The image drives the speaker 3 dB louder than the Fire OS drivers alone, without distortion at full volume.
 - **Kiosk Satellite on first boot.** Once the Dot is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. No adb grants needed.
@@ -158,6 +158,14 @@ BiscuitService downloads the release and checks it against GitHub's checksum and
 BiscuitService checks for a new release a minute after every boot. Kiosk Satellite asks it to check again twice a day. [Device commands](#device-commands) covers the same from adb.
 
 ## Settings
+
+### Volume
+
+Keep the Dot's media volume at 75% and Kiosk Satellite's media player and assistant volumes at 100%. A fresh install sets these levels: media volume 11 of 15, which Kiosk Satellite shows as 75%, with Kiosk Satellite's own volumes at their defaults. Turn music down in Kiosk Satellite or Music Assistant rather than with the Dot's media volume.
+
+```sh
+adb shell biscuit_service volume set 11
+```
 
 ### Voice
 

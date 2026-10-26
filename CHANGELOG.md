@@ -5,6 +5,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ## Echo Dot (2nd gen) Unreleased
 
 ### Changed
+- **75% media volume on a fresh Dot.** A fresh install starts at media volume 11 of 15, which Kiosk Satellite shows as 75%, with Kiosk Satellite's media player and assistant volumes at their default 100. The Echo Dot guide recommends these levels. A Dot that is already set up keeps its volume.
 - **Amazon's wake word engine is shared with the Echo Shows.** `biscuit-pryond`, Pryon and its models moved from the Dot's device tree to the layer every Echo gets, with the same files, the same service and the same `ro.biscuit.pryon`. `scripts/extract-biscuit-blobs.sh` writes Pryon to `pryon-vendor.mk` and the Dot's other Fire OS files to `biscuit-vendor.mk`. `make check` fails a Dot image without the engine.
 
 ## Echo Dot (2nd gen) 2026.10.11 - 2026-10-25

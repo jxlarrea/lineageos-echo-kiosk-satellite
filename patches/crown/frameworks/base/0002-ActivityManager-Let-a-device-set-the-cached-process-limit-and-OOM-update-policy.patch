@@ -1,0 +1,55 @@
+ActivityManager: Let a device set the cached process limit and OOM update policy
+
+Android 11 keeps up to 32 cached processes, which only the
+activity_manager max_cached_processes flag can change. On the Echo Dot
+(2nd gen) the six it cached held about 46 MB that MemAvailable never
+counts. ro.config.max_cached_processes lets a device set a lower default.
+
+A quick OOM adjustment skips trimming when a process stays cached, so an
+empty process that went cached while still bound lived on until the next
+full update, which an idle device rarely runs.
+ro.config.oomadj_update_quick=false makes every update a full one. The
+activity_manager flags still override both.
+
+diff --git a/services/core/java/com/android/server/am/ActivityManagerConstants.java b/services/core/java/com/android/server/am/ActivityManagerConstants.java
+index 00d8208e..1181f178 100644
+--- a/services/core/java/com/android/server/am/ActivityManagerConstants.java
++++ b/services/core/java/com/android/server/am/ActivityManagerConstants.java
+@@ -26,6 +26,7 @@ import android.database.ContentObserver;
+ import android.net.Uri;
+ import android.os.Build;
+ import android.os.Handler;
++import android.os.SystemProperties;
+ import android.provider.DeviceConfig;
+ import android.provider.DeviceConfig.OnPropertiesChangedListener;
+ import android.provider.DeviceConfig.Properties;
+@@ -91,7 +92,11 @@ final class ActivityManagerConstants extends ContentObserver {
+     static final String KEY_FGS_START_FOREGROUND_TIMEOUT = "fgs_start_foreground_timeout";
+     static final String KEY_PENDINGINTENT_WARNING_THRESHOLD = "pendingintent_warning_threshold";
+ 
+-    private static final int DEFAULT_MAX_CACHED_PROCESSES = 32;
++    // A device with little memory, like the Echo Dot (2nd gen), can keep fewer
++    // cached processes around. The activity_manager max_cached_processes
++    // flag still overrides this.
++    private static final int DEFAULT_MAX_CACHED_PROCESSES =
++            SystemProperties.getInt("ro.config.max_cached_processes", 32);
+     private static final long DEFAULT_BACKGROUND_SETTLE_TIME = 60*1000;
+     private static final long DEFAULT_FGSERVICE_MIN_SHOWN_TIME = 2*1000;
+     private static final long DEFAULT_FGSERVICE_MIN_REPORT_TIME = 3*1000;
+@@ -353,10 +358,14 @@ final class ActivityManagerConstants extends ContentObserver {
+     private List<String> mDefaultImperceptibleKillExemptPackages;
+     private List<Integer> mDefaultImperceptibleKillExemptProcStates;
+ 
+-    @SuppressWarnings("unused")
+     private static final int OOMADJ_UPDATE_POLICY_SLOW = 0;
+     private static final int OOMADJ_UPDATE_POLICY_QUICK = 1;
+-    private static final int DEFAULT_OOMADJ_UPDATE_POLICY = OOMADJ_UPDATE_POLICY_QUICK;
++    // A quick update skips trimming when a process stays cached, so an empty
++    // process can outlive ro.config.max_cached_processes until the next full
++    // update. ro.config.oomadj_update_quick=false makes every update full.
++    private static final int DEFAULT_OOMADJ_UPDATE_POLICY =
++            SystemProperties.getBoolean("ro.config.oomadj_update_quick", true)
++                    ? OOMADJ_UPDATE_POLICY_QUICK : OOMADJ_UPDATE_POLICY_SLOW;
+ 
+     private static final String KEY_OOMADJ_UPDATE_POLICY = "oomadj_update_policy";
+ 

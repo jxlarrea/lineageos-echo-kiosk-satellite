@@ -1,0 +1,178 @@
+PhoneWindowManager: Let holding the power button turn the screen on and off
+
+The Echo Shows' power button is also their privacy button. Their privacy
+chips act on it whatever Android does.
+
+The Echo Show 5's chip turns privacy on and off on any press shorter than
+about 3 seconds and leaves it alone on a longer one. A short press to turn
+the screen off or on therefore also turned privacy on or off.
+LONG_PRESS_POWER_TOGGLE_SCREEN (7), set through power_button_long_press,
+turns the screen off or back on once the button has been held for
+ro.config.long_press_power_screen_ms, 3200 by default, past the chip's
+threshold. A press on a sleeping screen waits for it instead of waking the
+screen at once. Android does nothing on a short press, so the short press
+only does what the chip does.
+
+The Echo Show 8's chip does the opposite. A hold of about a second and a
+half turns privacy on and off at its release. Any press turns it off.
+Android took a hold for a short press at its release, so the screen went
+off with it. LONG_PRESS_POWER_PRIVACY_HOLD (8) turns the screen off or back
+on with a press released before ro.config.power_privacy_hold_ms, 500 by
+default. It does nothing on a longer one. A press on a sleeping screen
+waits for the release. While the file named by ro.config.power_privacy_state
+reads 1, Android leaves the press to the chip.
+
+diff --git a/services/core/java/com/android/server/policy/PhoneWindowManager.java b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+index 28724e2e..855af523 100644
+--- a/services/core/java/com/android/server/policy/PhoneWindowManager.java
++++ b/services/core/java/com/android/server/policy/PhoneWindowManager.java
+@@ -283,6 +283,19 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     static final int LONG_PRESS_POWER_GO_TO_VOICE_ASSIST = 4;
+     static final int LONG_PRESS_POWER_ASSISTANT = 5; // Settings.Secure.ASSISTANT
+     static final int LONG_PRESS_POWER_TORCH = 6;
++    // Holding the button for ro.config.long_press_power_screen_ms turns the
++    // screen on and off. A short press does nothing here. For a button
++    // whose short press does something else in hardware, such as the Echo
++    // Shows' privacy button, which turns privacy on and off on any press
++    // shorter than 3 seconds.
++    static final int LONG_PRESS_POWER_TOGGLE_SCREEN = 7;
++    // A short press, released before ro.config.power_privacy_hold_ms (500
++    // by default), turns the screen on and off. Android does nothing on a
++    // hold. For a button whose hold does something else in hardware, such
++    // as the Echo Show 8's privacy button. While the file named by
++    // ro.config.power_privacy_state reads 1, a press does nothing here
++    // either, since the chip turns privacy off on it.
++    static final int LONG_PRESS_POWER_PRIVACY_HOLD = 8;
+ 
+     // must match: config_veryLongPresOnPowerBehavior in config.xml
+     static final int VERY_LONG_PRESS_POWER_NOTHING = 0;
+@@ -461,6 +474,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+     volatile boolean mPowerKeyHandled;
+     volatile boolean mBackKeyHandled;
+     volatile boolean mBeganFromNonInteractive;
++    // Whether privacy was on when the power key went down (LONG_PRESS_POWER_PRIVACY_HOLD).
++    volatile boolean mPowerPressBeganInPrivacy;
+     volatile int mPowerKeyPressCounter;
+     volatile boolean mEndCallKeyHandled;
+     volatile boolean mCameraGestureTriggeredDuringGoingToSleep;
+@@ -1132,6 +1147,8 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 || mA11yShortcutChordVolumeUpKeyTriggered || gesturedServiceIntercepted
+                 || handledByPowerManager;
+         if (!mPowerKeyHandled) {
++            mPowerPressBeganInPrivacy = getResolvedLongPressOnPowerBehavior()
++                    == LONG_PRESS_POWER_PRIVACY_HOLD && isPrivacyOn();
+             if (interactive) {
+                 // When interactive, we're already awake.
+                 // Wait for a long press or for the button to be released to decide what to do.
+@@ -1142,8 +1159,7 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                         mResolvedLongPressOnPowerBehavior = getResolvedLongPressOnPowerBehavior();
+                         Message msg = mHandler.obtainMessage(MSG_POWER_LONG_PRESS);
+                         msg.setAsynchronous(true);
+-                        mHandler.sendMessageDelayed(msg,
+-                                ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout());
++                        mHandler.sendMessageDelayed(msg, getPowerLongPressTimeout());
+ 
+                         if (hasVeryLongPressOnPowerBehavior()) {
+                             Message longMsg = mHandler.obtainMessage(MSG_POWER_VERY_LONG_PRESS);
+@@ -1153,18 +1169,21 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                     }
+                 }
+             } else {
+-                if (mSupportLongPressPowerWhenNonInteractive && hasLongPressOnPowerBehavior()) {
++                if ((mSupportLongPressPowerWhenNonInteractive && hasLongPressOnPowerBehavior())
++                        || getResolvedLongPressOnPowerBehavior() == LONG_PRESS_POWER_TOGGLE_SCREEN
++                        || getResolvedLongPressOnPowerBehavior() == LONG_PRESS_POWER_PRIVACY_HOLD) {
+                     if ((event.getFlags() & KeyEvent.FLAG_LONG_PRESS) != 0) {
+                         powerLongPress();
+                     } else {
+                         mResolvedLongPressOnPowerBehavior = getResolvedLongPressOnPowerBehavior();
+-                        if (mResolvedLongPressOnPowerBehavior != LONG_PRESS_POWER_TORCH) {
++                        if (mResolvedLongPressOnPowerBehavior != LONG_PRESS_POWER_TORCH
++                                && mResolvedLongPressOnPowerBehavior != LONG_PRESS_POWER_TOGGLE_SCREEN
++                                && mResolvedLongPressOnPowerBehavior != LONG_PRESS_POWER_PRIVACY_HOLD) {
+                             wakeUpFromPowerKey(event.getDownTime());
+                         }
+                         Message msg = mHandler.obtainMessage(MSG_POWER_LONG_PRESS);
+                         msg.setAsynchronous(true);
+-                        mHandler.sendMessageDelayed(msg,
+-                                ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout());
++                        mHandler.sendMessageDelayed(msg, getPowerLongPressTimeout());
+ 
+                         if (hasVeryLongPressOnPowerBehavior()) {
+                             Message longMsg = mHandler.obtainMessage(MSG_POWER_VERY_LONG_PRESS);
+@@ -1265,6 +1284,25 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+                 + " count=" + count + " beganFromNonInteractive=" + mBeganFromNonInteractive +
+                 " mShortPressOnPowerBehavior=" + mShortPressOnPowerBehavior);
+ 
++        if (getResolvedLongPressOnPowerBehavior() == LONG_PRESS_POWER_TOGGLE_SCREEN) {
++            // The hold does the screen. The short press is the hardware's.
++            return;
++        }
++        if (getResolvedLongPressOnPowerBehavior() == LONG_PRESS_POWER_PRIVACY_HOLD) {
++            // The short press does the screen. A press on a sleeping screen
++            // waited for its release. One that began with privacy on is the
++            // hardware's.
++            if (mPowerPressBeganInPrivacy) {
++                return;
++            }
++            if (mBeganFromNonInteractive || !interactive) {
++                wakeUpFromPowerKey(eventTime);
++            } else {
++                goToSleepFromPowerButton(eventTime, 0);
++            }
++            return;
++        }
++
+         if (count == 2) {
+             powerMultiPressAction(eventTime, interactive, mDoublePressOnPowerBehavior);
+         } else if (count == 3) {
+@@ -1403,11 +1441,49 @@ public class PhoneWindowManager implements WindowManagerPolicy {
+         return 1;
+     }
+ 
++    private long getPowerLongPressTimeout() {
++        if (mResolvedLongPressOnPowerBehavior == LONG_PRESS_POWER_TOGGLE_SCREEN) {
++            return SystemProperties.getLong("ro.config.long_press_power_screen_ms", 3200);
++        }
++        if (mResolvedLongPressOnPowerBehavior == LONG_PRESS_POWER_PRIVACY_HOLD) {
++            return SystemProperties.getLong("ro.config.power_privacy_hold_ms", 500);
++        }
++        return ViewConfiguration.get(mContext).getDeviceGlobalActionKeyTimeout();
++    }
++
++    // Whether the privacy chip's state file reads 1.
++    private boolean isPrivacyOn() {
++        String path = SystemProperties.get("ro.config.power_privacy_state", "");
++        if (path.isEmpty()) {
++            return false;
++        }
++        try (java.io.FileInputStream in = new java.io.FileInputStream(path)) {
++            return in.read() == '1';
++        } catch (java.io.IOException e) {
++            return false;
++        }
++    }
++
+     private void powerLongPress() {
+         final int behavior = mResolvedLongPressOnPowerBehavior;
+         switch (behavior) {
+             case LONG_PRESS_POWER_NOTHING:
+                 break;
++            case LONG_PRESS_POWER_PRIVACY_HOLD:
++                // A hold is the hardware's, so the release is not a short press.
++                mPowerKeyHandled = true;
++                break;
++            case LONG_PRESS_POWER_TOGGLE_SCREEN:
++                mPowerKeyHandled = true;
++                performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,
++                        "Power - Long Press - Toggle Screen");
++                if (isScreenOn() && !isDozeMode()) {
++                    mPowerManager.goToSleep(SystemClock.uptimeMillis(),
++                            PowerManager.GO_TO_SLEEP_REASON_POWER_BUTTON, 0);
++                } else {
++                    wakeUpFromPowerKey(SystemClock.uptimeMillis());
++                }
++                break;
+             case LONG_PRESS_POWER_GLOBAL_ACTIONS:
+                 mPowerKeyHandled = true;
+                 performHapticFeedback(HapticFeedbackConstants.LONG_PRESS, false,

@@ -47,12 +47,14 @@ adb:
 
 Lock screen, privacy, language and screen:
   lockscreen [status]|on|off     the swipe lock screen
-  privacy [status]               whether privacy is on. A short press of the button
-                                 turns it on and off, in the privacy chip
+  privacy [status]               whether privacy is on. The privacy chip turns it
+                                 on and off on a short press on the Echo Show 5
+                                 and on a hold on the Echo Show 8
   button [status]                what the button does
-  button screen|menu             screen: holding it 3 s turns the screen on and off,
-                                 a short press only does privacy (default). menu:
-                                 Android's power menu and short press
+  button screen|press|menu       screen: holding it 3 s turns the screen on and off
+                                 (the Echo Show 5's default). press: a short press
+                                 does (the Echo Show 8's default). menu: a short
+                                 press does and holding it opens the power menu
   locale [<tag>]                 the language, such as en-US or es-MX
   screen [status]|on|off         wake the screen or turn it off
   screen brightness <0-255|auto>

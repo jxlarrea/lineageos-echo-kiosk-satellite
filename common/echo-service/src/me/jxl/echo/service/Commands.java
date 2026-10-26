@@ -41,6 +41,7 @@ import com.android.internal.app.LocalePicker;
 import com.android.internal.widget.LockPatternUtils;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -63,12 +64,18 @@ public final class Commands extends BroadcastReceiver {
     // Android's default for adb keys: they expire after 7 days unused.
     private static final long ADB_KEY_DEFAULT_MS = 7L * 24 * 60 * 60 * 1000;
     private static final int PAIRING_SECONDS = 300;
-    private static final String PRIVACY_STATE = "/sys/devices/platform/gpio-privacy/state";
+    // The privacy chip's state: gpio-privacy on the Echo Show 5, amazon-gating
+    // on the Echo Show 8. 1 while privacy is on.
+    private static final String[] PRIVACY_STATES = {
+        "/sys/devices/platform/gpio-privacy/state",
+        "/sys/devices/platform/amazon-gating/state",
+    };
     // PhoneWindowManager's long press actions: the power menu, and holding the
     // button past the privacy chip's threshold to turn the screen on and off
     // (patches/cronos/frameworks/base).
     static final int LONG_PRESS_POWER_MENU = 1;
     static final int LONG_PRESS_POWER_SCREEN = 7;
+    static final int LONG_PRESS_POWER_PRIVACY_HOLD = 8;
 
     private static final String[] STREAM_NAMES = { "music", "alarm", "notification", "ring", "system" };
     private static final int[] STREAMS = {
@@ -183,10 +190,22 @@ public final class Commands extends BroadcastReceiver {
     }
 
     // The SoC's own sensor, in millidegrees.
+    // The CPU's own sensor, mtktscpu on the MT8163 Echos. The first zone is a
+    // virtual one that reads below zero on the Echo Show 8.
     private static String temperature() {
-        try (BufferedReader in = new BufferedReader(new FileReader("/sys/class/thermal/thermal_zone0/temp"))) {
-            return String.format(Locale.US, "%.1f °C", Long.parseLong(in.readLine().trim()) / 1000f);
-        } catch (IOException | NumberFormatException | NullPointerException e) {
+        String zone = "/sys/class/thermal/thermal_zone0";
+        File[] zones = new File("/sys/class/thermal").listFiles((dir, name) -> name.startsWith("thermal_zone"));
+        if (zones != null) {
+            for (File z : zones) {
+                if ("mtktscpu".equals(readLine(z.getPath() + "/type"))) {
+                    zone = z.getPath();
+                    break;
+                }
+            }
+        }
+        try {
+            return String.format(Locale.US, "%.1f °C", Long.parseLong(readLine(zone + "/temp")) / 1000f);
+        } catch (NumberFormatException e) {
             return "";
         }
     }
@@ -487,7 +506,11 @@ public final class Commands extends BroadcastReceiver {
     }
 
     private static String privacyStatus() {
-        String state = readLine(PRIVACY_STATE);
+        String state = "";
+        for (String path : PRIVACY_STATES) {
+            state = readLine(path);
+            if (!state.isEmpty()) break;
+        }
         if (state.isEmpty()) return "no privacy button";
         return "1".equals(state) ? "on, microphones and camera off" : "off";
     }
@@ -504,21 +527,33 @@ public final class Commands extends BroadcastReceiver {
             case "menu":
                 Settings.Global.putInt(resolver, Settings.Global.POWER_BUTTON_LONG_PRESS, LONG_PRESS_POWER_MENU);
                 return buttonStatus(context);
+            case "press":
+                Settings.Global.putInt(resolver, Settings.Global.POWER_BUTTON_LONG_PRESS, LONG_PRESS_POWER_PRIVACY_HOLD);
+                return buttonStatus(context);
             default:
-                throw new UsageException("usage: button [status|screen|menu]");
+                throw new UsageException("usage: button [status|screen|press|menu]");
         }
     }
 
+    // What the button does: Android's part, then the privacy chip's, which
+    // turns privacy on and off on a short press on the Echo Show 5 and on a
+    // hold on the Echo Show 8 (ro.echo.privacy_hold).
     private static String buttonStatus(Context context) {
         int longPress = Settings.Global.getInt(context.getContentResolver(),
                 Settings.Global.POWER_BUTTON_LONG_PRESS, LONG_PRESS_POWER_MENU);
+        String android;
         if (longPress == LONG_PRESS_POWER_SCREEN) {
-            return "holding it " + SystemProperties.getLong("ro.config.long_press_power_screen_ms", 3200) / 1000f
-                    + " s turns the screen on and off, a short press turns privacy on and off";
+            android = "holding it " + SystemProperties.getLong("ro.config.long_press_power_screen_ms", 3200) / 1000f
+                    + " s turns the screen on and off, a short press does nothing in Android";
+        } else if (longPress == LONG_PRESS_POWER_PRIVACY_HOLD) {
+            android = "a short press turns the screen on and off, holding it does nothing in Android";
+        } else if (longPress == LONG_PRESS_POWER_MENU) {
+            android = "a short press turns the screen on and off, holding it opens the power menu";
+        } else {
+            android = "a short press turns the screen on and off, holding it does action " + longPress;
         }
-        return (longPress == LONG_PRESS_POWER_MENU ? "holding it opens the power menu"
-                : "holding it does action " + longPress)
-                + ", a short press turns the screen on and off and privacy on and off";
+        boolean hold = SystemProperties.getBoolean("ro.echo.privacy_hold", false);
+        return android + ". The privacy chip turns privacy on and off on " + (hold ? "a hold" : "a short press");
     }
 
     private static String readLine(String path) {

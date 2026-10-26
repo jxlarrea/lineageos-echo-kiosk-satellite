@@ -2,7 +2,7 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
-## Echo Dot (2nd gen) Unreleased
+## Echo Dot (2nd gen) 2026.10.12 - 2026-10-26
 
 ### Fixed
 - **Kiosk Satellite's File Manager could not open shared storage.** It said "Cannot read folder: Permission denied". The Dot keeps shared storage on sdcardfs instead of FUSE to save memory. Without FUSE, Android 11 only lets an app into shared storage with the legacy storage permission, which apps that target Android 11 or later never get. All files access only counts under FUSE, so Kiosk Satellite got an empty view although ks-install had given it all files access. An app with all files access now sees all of shared storage, as a legacy app with write access does (`patches/common/frameworks/base`). This fix applies to every Echo.

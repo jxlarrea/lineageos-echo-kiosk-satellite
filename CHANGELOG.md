@@ -5,7 +5,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ## Echo Dot (2nd gen) Unreleased
 
 ### Fixed
-- **The microphone check in the Echo Dot guide** ([#6](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/6)). It stopped Kiosk Satellite with `am force-stop` and ran `biscuit_mic_test` from a normal `adb shell`, as on CM14.1. On Android 11 neither works: a device owner cannot be force-stopped, and `adb shell` cannot open the microphones. The guide now turns off Voice Satellite in Kiosk Satellite and runs the test with `adb root`. The Echo Show 5 guide does the same with `echo_mic_test`.
+- **The microphone check in the Echo Dot guide** ([#6](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/6)). It stopped Kiosk Satellite with `am force-stop` and ran `biscuit_mic_test` from a normal `adb shell`, as on CM14.1. Neither works on Android 11. A device owner cannot be force-stopped and `adb shell` cannot open the microphones. The guide now turns off Voice Satellite in Kiosk Satellite and runs the test with `adb root`. The Echo Show 5 guide does the same with `echo_mic_test`.
 
 ## Echo Dot (2nd gen) 2026.10.12 - 2026-10-26
 

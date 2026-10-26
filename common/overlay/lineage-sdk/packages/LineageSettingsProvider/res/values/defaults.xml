@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- No Trust notifications on a kiosk (patches/common/lineage-sdk). Its
+         introduction counts as seen, so "Discover Trust" never shows, not
+         even on the first boot. Trust posts no security warnings: every
+         Echo image runs SELinux permissive and is signed with LineageOS's
+         public test keys, and a kiosk has nobody to read the warnings.
+         Settings > Trust can turn them back on. -->
+    <integer name="def_trust_warnings">0</integer>
+    <bool name="def_trust_interface_hinted">true</bool>
+</resources>

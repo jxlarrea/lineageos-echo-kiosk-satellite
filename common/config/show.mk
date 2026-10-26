@@ -54,17 +54,19 @@ endif
 PRODUCT_PACKAGES += \
     EchoNetworkStackOverlay
 
-# No setup wizard (EchoService overrides it), no lock screen and none of the
-# Bluetooth profiles a kiosk has nothing for (overlay/). Both are built into
-# their packages instead of runtime overlays: SettingsProvider needs its
-# defaults when it first creates its database, and Bluetooth's manifest
-# enables each profile's service from the same values.
+# No setup wizard (EchoService overrides it), no lock screen, no Trust
+# notifications and none of the Bluetooth profiles a kiosk has nothing for
+# (overlay/). They are built into their packages instead of runtime overlays:
+# SettingsProvider and LineageSettingsProvider need their defaults when they
+# first create their databases, and Bluetooth's manifest enables each
+# profile's service from the same values.
 DEVICE_PACKAGE_OVERLAYS += \
     $(LOCAL_PATH)/overlay
 
 PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
     $(LOCAL_PATH)/overlay/frameworks/base/core \
     $(LOCAL_PATH)/overlay/frameworks/base/packages/SettingsProvider \
+    $(LOCAL_PATH)/overlay/lineage-sdk/packages/LineageSettingsProvider \
     $(LOCAL_PATH)/overlay/packages/apps/Bluetooth
 
 # adb on USB from the first boot, so a Show can be set up without its

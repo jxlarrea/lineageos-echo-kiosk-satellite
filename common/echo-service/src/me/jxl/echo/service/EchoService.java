@@ -120,25 +120,40 @@ public class EchoService extends Service {
                 Settings.Secure.putInt(context.getContentResolver(), key, 0);
             }
         }
-        hideTrustOnboarding(context);
+        hideTrustNotifications(context);
         nameDevice(context);
     }
 
     // LineageOS's Trust interface posts "Discover Trust" at every boot until
-    // someone opens it, and dismissing it does not count. Nobody opens it on
-    // a kiosk. Its flag lives in LineageOS's own settings provider, reached
-    // through the provider's calls, as LineageSettings does.
-    private static void hideTrustOnboarding(Context context) {
+    // someone opens it, and dismissing it does not count, then a warning for
+    // SELinux not enforcing and one for the public test keys. Nobody reads
+    // them on a kiosk. A fresh install already has both settings from the
+    // image's defaults (overlay/lineage-sdk). This covers a settings database
+    // from before them: the introduction counts as seen, and the warnings go
+    // off only while unset, so turning them on in Settings > Trust stays. Both
+    // live in LineageOS's own settings provider, reached through its calls,
+    // as LineageSettings does.
+    private static void hideTrustNotifications(Context context) {
         final Uri lineageSettings = Uri.parse("content://lineagesettings");
-        final String key = "trust_interface_hinted";
         try {
-            Bundle current = context.getContentResolver().call(lineageSettings, "GET_system", key, null);
-            if (current != null && "1".equals(current.getString(Settings.NameValueTable.VALUE))) return;
-            Bundle value = new Bundle();
-            value.putString(Settings.NameValueTable.VALUE, "1");
-            context.getContentResolver().call(lineageSettings, "PUT_system", key, value);
+            Bundle hinted = context.getContentResolver().call(lineageSettings, "GET_system",
+                    "trust_interface_hinted", null);
+            if (hinted == null || !"1".equals(hinted.getString(Settings.NameValueTable.VALUE))) {
+                Bundle value = new Bundle();
+                value.putString(Settings.NameValueTable.VALUE, "1");
+                context.getContentResolver().call(lineageSettings, "PUT_system",
+                        "trust_interface_hinted", value);
+            }
+            Bundle warnings = context.getContentResolver().call(lineageSettings, "GET_secure",
+                    "trust_warnings", null);
+            if (warnings == null || warnings.getString(Settings.NameValueTable.VALUE) == null) {
+                Bundle value = new Bundle();
+                value.putString(Settings.NameValueTable.VALUE, "0");
+                context.getContentResolver().call(lineageSettings, "PUT_secure",
+                        "trust_warnings", value);
+            }
         } catch (RuntimeException e) {
-            Log.w(TAG, "cannot mark LineageOS's Trust interface as seen", e);
+            Log.w(TAG, "cannot turn off LineageOS's Trust notifications", e);
         }
     }
 

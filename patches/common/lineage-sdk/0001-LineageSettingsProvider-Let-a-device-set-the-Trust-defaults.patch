@@ -1,0 +1,56 @@
+LineageSettingsProvider: Let a device set the Trust defaults
+
+Trust posts a notification at every boot until the user opens its
+introduction, then one for each security warning it finds, such as
+SELinux not enforcing or a build signed with public keys. Neither can
+be turned off before the first boot, since both settings start unset.
+
+Load both into the database it creates with the other defaults, from
+resources a device can overlay: which warnings Trust posts and whether
+the introduction counts as seen. The defaults keep Trust as it was.
+
+diff --git a/packages/LineageSettingsProvider/res/values/defaults.xml b/packages/LineageSettingsProvider/res/values/defaults.xml
+index 489365a..a4bbed9 100644
+--- a/packages/LineageSettingsProvider/res/values/defaults.xml
++++ b/packages/LineageSettingsProvider/res/values/defaults.xml
+@@ -38,6 +38,16 @@
+     <!-- Default for LineageSettings.Secure.VOLUME_PANEL_ON_LEFT -->
+     <bool name="def_volume_panel_on_left">false</bool>
+ 
++    <!-- Default for LineageSettings.Secure.TRUST_WARNINGS: which security
++         warnings Trust posts, TrustInterface.TRUST_WARN_SELINUX (1) and
++         TrustInterface.TRUST_WARN_PUBLIC_KEY (4). Both by default. -->
++    <integer name="def_trust_warnings">5</integer>
++
++    <!-- Default for LineageSettings.System.TRUST_INTERFACE_HINTED: whether
++         the user has seen Trust's introduction. Until then, Trust posts it
++         at every boot instead of its warnings. -->
++    <bool name="def_trust_interface_hinted">false</bool>
++
+     <!-- Default for LineageSettings.System.STATUS_BAR_BATTERY_STYLE
+          * 0: Display the battery as icon in portrait mode
+          * 1: Display the battery as a circle
+diff --git a/packages/LineageSettingsProvider/src/org/lineageos/lineagesettings/LineageDatabaseHelper.java b/packages/LineageSettingsProvider/src/org/lineageos/lineagesettings/LineageDatabaseHelper.java
+index 24ce1e1..ba854a5 100644
+--- a/packages/LineageSettingsProvider/src/org/lineageos/lineagesettings/LineageDatabaseHelper.java
++++ b/packages/LineageSettingsProvider/src/org/lineageos/lineagesettings/LineageDatabaseHelper.java
+@@ -542,6 +542,9 @@ public class LineageDatabaseHelper extends SQLiteOpenHelper{
+             loadBooleanSetting(stmt, LineageSettings.Secure.VOLUME_PANEL_ON_LEFT,
+                     R.bool.def_volume_panel_on_left);
+ 
++            loadIntegerSetting(stmt, LineageSettings.Secure.TRUST_WARNINGS,
++                    R.integer.def_trust_warnings);
++
+             loadStringSetting(stmt,
+                     LineageSettings.Secure.PROTECTED_COMPONENT_MANAGERS,
+                     R.string.def_protected_component_managers);
+@@ -589,6 +592,9 @@ public class LineageDatabaseHelper extends SQLiteOpenHelper{
+             loadIntegerSetting(stmt, LineageSettings.System.STATUS_BAR_CLOCK,
+                     R.integer.def_clock_position);
+ 
++            loadBooleanSetting(stmt, LineageSettings.System.TRUST_INTERFACE_HINTED,
++                    R.bool.def_trust_interface_hinted);
++
+             if (mContext.getResources().getBoolean(R.bool.def_notification_pulse_custom_enable)) {
+                 loadStringSetting(stmt, LineageSettings.System.NOTIFICATION_LIGHT_PULSE_CUSTOM_VALUES,
+                         R.string.def_notification_pulse_custom_value);

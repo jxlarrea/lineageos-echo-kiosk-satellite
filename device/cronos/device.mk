@@ -19,8 +19,9 @@ PRODUCT_PROPERTY_OVERRIDES += \
     ro.vendor.amznaec.engine=2 \
     ro.vendor.amznaec.gain_db=20
 
-# Media volume 11 of 15, about 75%, on a fresh install: with Kiosk Satellite's
-# media player and assistant volumes at their default 100, the wake word over
-# music worked 9 times out of 10 at this level.
+# Media volume 10 of 15 on a fresh install, which Kiosk Satellite shows as
+# 70%. With Kiosk Satellite's media player and assistant volumes at their
+# default 100, the wake word over music worked 9 times out of 10 one step
+# higher, at 11 of 15 (75%).
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.config.media_vol_default=11
+    ro.config.media_vol_default=10

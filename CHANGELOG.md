@@ -2,6 +2,11 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Echo Dot (2nd gen) Unreleased
+
+### Changed
+- **Amazon's wake word engine is shared with the Echo Shows.** `biscuit-pryond`, Pryon and its models moved from the Dot's device tree to the layer every Echo gets, with the same files, the same service and the same `ro.biscuit.pryon`. `scripts/extract-biscuit-blobs.sh` writes Pryon to `pryon-vendor.mk` and the Dot's other Fire OS files to `biscuit-vendor.mk`. `make check` fails a Dot image without the engine.
+
 ## Echo Dot (2nd gen) 2026.10.11 - 2026-10-25
 
 ### Fixed
@@ -37,7 +42,8 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 - **No Bluetooth error at boot.** The Shows leave out the contacts and telephony providers, which Bluetooth's phone book profile needed, so Bluetooth crashed at every boot and Android said it stopped responding. The image now turns off the Bluetooth profiles a kiosk has nothing for: phone book and message access, file transfer, tethering and acting as a keyboard. Audio both ways, AVRCP, the Bluetooth proxy's GATT and Bluetooth keyboards and remotes stay.
 - **No "Discover Trust" notification.** LineageOS posted it at every boot until someone opened its Trust screen, and dismissing it did not count. A Show now counts as having seen it.
 - **No clock on a sleeping screen.** LineageOS's ambient display showed a clock while the screen was off. A sleeping Show's screen now stays dark. `echo_service screen ambient on` brings the clock back.
-- **The wake word over music on the Echo Show 5.** The microphones' FPGA also sends a copy of the speaker signal, which nothing used. The audio HAL now cleans the microphone with it before Android gets it: Speex's linear echo canceller below 1 kHz, and above it the Echo Dot's speaker removal across the two microphones, which also takes out the speaker's distortion a linear canceller cannot model, followed by 20 dB of gain. Amazon's own front end, which normalized the voice for Amazon's wake word engine and fought this canceller, is passed through. With music at 55%, vsWakeWord heard the wake word 10 times out of 10, against 3 with the stock audio path, and 9 times out of 10 at 75%. A fresh Show starts at 75% media volume (11 of 15), with Kiosk Satellite's media player and assistant volumes at their default 100. The canceller started from the one written for the Echo Show 8 in lineageos-echo-show and now reads the Echo Show 5's four channel stream too.
+- **The wake word over music on the Echo Show 5.** The microphones' FPGA also sends a copy of the speaker signal, which nothing used. The audio HAL now cleans the microphone with it before Android gets it: Speex's linear echo canceller below 1 kHz, and above it the Echo Dot's speaker removal across the two microphones, which also takes out the speaker's distortion a linear canceller cannot model, followed by 20 dB of gain. Amazon's own front end, which normalized the voice for Amazon's wake word engine and fought this canceller, is passed through. With music at 55%, vsWakeWord heard the wake word 10 times out of 10, against 3 with the stock audio path, and 9 times out of 10 at 75%. A fresh Show starts at 70% media volume (10 of 15), with Kiosk Satellite's media player and assistant volumes at their default 100. The canceller started from the one written for the Echo Show 8 in lineageos-echo-show and now reads the Echo Show 5's four channel stream too.
+- **Amazon's wake words on the Echo Shows.** The image includes Amazon's wake word engine with the same models for Alexa, Echo, Computer, Amazon and Ziggy as the Echo Dot image. `biscuit-pryond` and the files from the Echo Dot's Fire OS 6.5.7.4 and DAVS now go to every Echo, since they all share the MT8163's 32-bit userspace. The Echo Shows set `ro.echo.pryon`. Kiosk Satellite offers the engine on a Show once it supports it there. `make check` fails an image without the engine.
 - **`echo_mic_test`** prints the level of each channel of the microphone stream and can save it, to find a weak microphone.
 - **The screen stays on.** The screen timeout defaults to never, so only Kiosk Satellite decides when the screen dims or sleeps. `echo_service screen timeout` changes it.
 

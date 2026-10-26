@@ -1,0 +1,8 @@
+# Amazon's wake word engine for Kiosk Satellite on /dev/socket/biscuit-pryon.
+# It loads nothing until an app connects, so any app may: it hears only the
+# audio that app sends it.
+service biscuit-pryond /system/bin/biscuit-pryond
+    class main
+    user nobody
+    group nobody
+    socket biscuit-pryon stream 0666 system system

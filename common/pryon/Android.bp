@@ -3,10 +3,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-// Amazon's wake word engine as a service for Kiosk Satellite.
+// Amazon's wake word engine as a service for Kiosk Satellite, on every Echo.
+// It keeps the Echo Dot's name and socket, which Kiosk Satellite connects to.
 cc_binary {
     name: "biscuit-pryond",
     srcs: ["biscuit-pryond.cpp"],
+    init_rc: ["biscuit-pryond.rc"],
     cflags: ["-Wall", "-Werror"],
     shared_libs: [
         "libcutils",

@@ -41,7 +41,9 @@ docker logs -f lineage-18.1-biscuit-build
 
 `scripts/extract-biscuit-blobs.sh` downloads the Fire OS 6.5.7.4 OTA, unpacks its system image and copies every file `blobs/biscuit/*.txt` lists, after checking its size and checksum. It also applies the fixups the Fire OS audio libraries need on Android 11. Staging runs it.
 
-Amazon's wake word engine Pryon and the en-US Alexa model come from that OTA like the other files. The other wake words and locales come from Amazon's DAVS. DAVS hands them out only to an Echo registered to an Amazon account, so the build cannot download them. They live in the private [amazon-davs-models](https://github.com/jxlarrea/amazon-davs-models) repository, one folder per set. Check it out next to this repository or set `DAVS_MODELS` to where it is. The build checks every file against `blobs/biscuit/davs-models.manifest` before it installs them under `/system/etc/pryon`. `sources/device/amazon/biscuit/pryon/locales.txt` names the sets each locale listens with.
+Amazon's wake word engine Pryon and the en-US Alexa model come from that OTA like the other files. The other wake words and locales come from Amazon's DAVS. DAVS hands them out only to an Echo registered to an Amazon account, so the build cannot download them. They live in the private [amazon-davs-models](https://github.com/jxlarrea/amazon-davs-models) repository, one folder per set. Check it out next to this repository or set `DAVS_MODELS` to where it is. The build checks every file against `blobs/biscuit/davs-models.manifest` before it installs them under `/system/etc/pryon`. `common/pryon/locales.txt` names the sets each locale listens with.
+
+The extract script writes Pryon and its models to `pryon-vendor.mk` and the Dot's other files to `biscuit-vendor.mk`. Every Echo is an MT8163 with the same 32-bit userspace, so every image installs Pryon with `biscuit-pryond` (`common/pryon`, `common/config/common.mk`). Only the Dot's image gets the rest.
 
 ## WebView
 
@@ -49,24 +51,32 @@ The Echo Shows ship LineageOS's prebuilt Chromium WebView (`external/chromium-we
 
 ## Releases
 
-Each device has releases of its own, with a version of its own. The Echo Dot's are tagged `biscuit-` and the release, such as `biscuit-2026.10.6`. Their title is `Echo Dot (2nd gen) 2026.10.6`. A device's updater only looks at its own tags.
+Each device has releases of its own, with a version of its own, tagged with its codename and the release:
 
-The release a build is comes from `CHANGELOG.md`: the newest heading that names the device, such as `## Echo Dot (2nd gen) 2026.10.6 - 2026-10-25`. While a `## Unreleased` heading is above it, the build is that release with `-dev` after it. Before the device's first release it is `0.0.0-dev`. The image reports it as `ro.biscuit.release`. System updates compare it with the device's releases on GitHub. `device_name` in `scripts/build.sh` holds the name each device's headings and releases go by.
+| Device | Tag | Title |
+| --- | --- | --- |
+| Echo Dot (2nd gen) | `biscuit-2026.10.11` | `Echo Dot (2nd gen) 2026.10.11` |
+| Echo Show 5 (2nd gen) | `cronos-2026.10.1` | `Echo Show 5 (2nd gen) 2026.10.1` |
 
-To make a release of the Echo Dot:
+A device's updater only looks at its own tags.
 
-1. Rename `## Unreleased` in `CHANGELOG.md` to the release, for example `## Echo Dot (2nd gen) 2026.10.7 - 2026-11-02`. Then commit.
+The release a build is comes from `CHANGELOG.md`: the newest heading that names the device, such as `## Echo Dot (2nd gen) 2026.10.11 - 2026-10-25`. While a `## <device> Unreleased` heading is above it, such as `## Echo Dot (2nd gen) Unreleased`, the build is that release with `-dev` after it. Before the device's first release it is `0.0.0-dev`. The image reports it as `ro.biscuit.release` on the Echo Dot and `ro.echo.release` on the Echo Shows. System updates compare it with the device's releases on GitHub. `device_name` in `scripts/build.sh` holds the name each device's headings and releases go by.
+
+To make a release, here of the Echo Dot. For an Echo Show, use its codename and name instead, such as `cronos` and `Echo Show 5 (2nd gen)`:
+
+1. Rename the device's `Unreleased` heading in `CHANGELOG.md` to the release, for example `## Echo Dot (2nd gen) 2026.10.12 - 2026-11-02`. Then commit.
 2. Build it from a clean output folder with `CLEAN=1 make biscuit`. Without it, files from earlier builds that the image no longer installs, such as an app taken out, stay in the output folder and end up in the zip. Commit everything first: the build stages the working tree as it is, so a clean build refuses to start with uncommitted changes.
-3. Check the image with `make check DEVICE=biscuit`. It fails if the image misses one of its own device's parts, carries another device's, such as EchoService on the Dot or BiscuitService on a Show, or reports a release other than the one in `CHANGELOG.md`. Do not release an image that fails it.
-4. Copy the zip to a name with the release and the codename in it, such as `lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip`, then sign it. The Dot checks the signature before it installs an update:
+3. Check the image with `make check DEVICE=biscuit` and run `make test`. The check fails if the image misses one of its own device's parts or carries another device's, such as EchoService on the Dot or BiscuitService on a Show. It also fails if the image reports a release other than the one in `CHANGELOG.md`. Do not release an image that fails either one.
+4. Copy the zip to a name with the release and the codename in it, such as `lineageos-echo-kiosk-satellite-2026.10.12-biscuit.zip`, then sign it. The device checks the signature before it installs an update:
 
    ```sh
-   scripts/sign-release.sh lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip
-   sha256sum lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip > lineageos-echo-kiosk-satellite-2026.10.7-biscuit.zip.sha256
+   scripts/sign-release.sh lineageos-echo-kiosk-satellite-2026.10.12-biscuit.zip
+   sha256sum lineageos-echo-kiosk-satellite-2026.10.12-biscuit.zip > lineageos-echo-kiosk-satellite-2026.10.12-biscuit.zip.sha256
    ```
 
-   The private key stays outside the repository, in `~/.config/biscuit-ota/release-key.pem` unless `BISCUIT_OTA_KEY` says otherwise. The image ships the public half from `device/biscuit/ota/release-key.pem`.
+   The private key stays outside the repository, in `~/.config/biscuit-ota/release-key.pem` unless `BISCUIT_OTA_KEY` says otherwise. The Echo Dot image ships the public half from `device/biscuit/ota/release-key.pem` and the Echo Show images from `common/ota/release-key.pem`.
 
-5. Publish a GitHub release tagged `biscuit-2026.10.7` and titled `Echo Dot (2nd gen) 2026.10.7`. Attach the zip, its `.sig` and its `.sha256`.
+5. Test the signed zip as an update on a device first. Serve it with a releases list in GitHub's format from your computer and point the device at the list with `setprop persist.biscuit.ota.releases <url>` on the Echo Dot or `setprop persist.echo.ota.releases <url>` on an Echo Show. Set it back to `""` afterward.
+6. Publish a GitHub release tagged `biscuit-2026.10.12` and titled `Echo Dot (2nd gen) 2026.10.12`. Attach the zip, its `.sig` and its `.sha256`.
 
 A release without a signed zip can only be installed by hand.

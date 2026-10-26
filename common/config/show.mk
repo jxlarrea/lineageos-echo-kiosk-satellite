@@ -36,6 +36,11 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/ota/twrp-update.sh:$(TARGET_COPY_OUT_SYSTEM)/etc/echo-ota/twrp-update.sh \
     $(LOCAL_PATH)/ota/release-key.pem:$(TARGET_COPY_OUT_SYSTEM)/etc/echo-ota/release-key.pem
 
+# Kiosk Satellite offers Amazon's wake word engine where this is set
+# (biscuit-pryond, common.mk). The Echo Dot sets ro.biscuit.pryon instead.
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    ro.echo.pryon=1
+
 # In system/build.prop, where releasetools.py reads the release from.
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.echo.ota=1

@@ -29,6 +29,8 @@ RELEASE="$(release_version)"
 
 FILES="$(unzip -Z1 "$TARGET_FILES")"
 BUILD_PROP="$(unzip -p "$TARGET_FILES" SYSTEM/build.prop)"
+# The ramdisk's default.prop, where PRODUCT_SYSTEM_DEFAULT_PROPERTIES go.
+DEFAULT_PROP="$(unzip -p "$TARGET_FILES" ROOT/default.prop 2>/dev/null || true)"
 failures=0
 
 fail() {
@@ -56,8 +58,14 @@ prop() {
   sed -n "s/^$1=//p" <<<"$BUILD_PROP" | tail -n 1
 }
 
-# Every Echo.
-must_have "vendor/overlay/EchoWifiOverlay\.apk"
+default_prop() {
+  sed -n "s/^$1=//p" <<<"$DEFAULT_PROP" | tail -n 1
+}
+
+# Every Echo: the Wi-Fi overlay and Amazon's wake word engine with its
+# models (common.mk).
+must_have "vendor/overlay/EchoWifiOverlay\.apk" "bin/biscuit-pryond$" "etc/init/biscuit-pryond\.rc$" \
+  "lib/pryon/libpryon\.so$" "etc/pryon/locales\.txt$" "etc/pryon/alexa-en-US/"
 
 # Each device's own parts, and none of the other kind's. The Echo Dot has
 # BiscuitService and its own ks-install. The Echo Shows have EchoService.
@@ -82,7 +90,9 @@ if [[ "$DEVICE" == biscuit ]]; then
   RELEASE_PROP_NAME=ro.biscuit.release
   RELEASE_PROP_FILE=META-INF/com/amazon/biscuit/release.prop
   [[ "$(prop ro.biscuit.ota)" == 1 ]] || fail "ro.biscuit.ota is not 1"
+  [[ "$(default_prop ro.biscuit.pryon)" == 1 ]] || fail "ro.biscuit.pryon is not 1"
   grep -q '^ro\.echo\.' <<<"$BUILD_PROP" && fail "build.prop has ro.echo properties, which are the Echo Shows'"
+  grep -q '^ro\.echo\.' <<<"$DEFAULT_PROP" && fail "default.prop has ro.echo properties, which are the Echo Shows'"
   # A speaker without a screen ships none of these.
   must_not_have "app/webview/" "product/app/webview/" "system_ext/priv-app/SystemUI/"
 else
@@ -91,7 +101,9 @@ else
   RELEASE_PROP_NAME=ro.echo.release
   RELEASE_PROP_FILE=META-INF/com/kiosk-satellite/release.prop
   [[ "$(prop ro.echo.ota)" == 1 ]] || fail "ro.echo.ota is not 1"
+  [[ "$(default_prop ro.echo.pryon)" == 1 ]] || fail "ro.echo.pryon is not 1"
   grep -q '^ro\.biscuit\.' <<<"$BUILD_PROP" && fail "build.prop has ro.biscuit properties, which are the Echo Dot's"
+  grep -q '^ro\.biscuit\.' <<<"$DEFAULT_PROP" && fail "default.prop has ro.biscuit properties, which are the Echo Dot's"
   # The screen's parts, which the Dot leaves out.
   must_have "product/app/webview/" "system_ext/priv-app/SystemUI/"
   # What the Echo Shows leave out (common/Android.bp).

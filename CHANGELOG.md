@@ -2,7 +2,10 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
-## Echo Dot (2nd gen) Unreleased
+## Echo Dot (2nd gen) 2026.10.11 - 2026-10-25
+
+### Fixed
+- **Wi-Fi networks that offer WPA2 with SHA256** ([#5](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/5)). Android 11 adds WPA2's SHA256 key management (PSK-SHA256) to every saved WPA2 network, and picks it when the access point offers it too, as many WPA2/WPA3 networks do. The Dot's Wi-Fi driver cannot do it, so the Dot never joined such a network and logged "Association request to the driver failed". It now connects with plain WPA2, as the CM14 image did. This fix applies to every Echo. A network that requires protected management frames (PMF) still cannot be joined. The Echo Dot guide says so.
 
 ### Changed
 - **The real Wi-Fi MAC address in Home Assistant.** ks-install now makes Kiosk Satellite the device owner before anything starts it, so on a fresh install its first run can read the Dot's real Wi-Fi MAC address. From its release after 2026.10.40, Kiosk Satellite then turns on Use real Wi-Fi MAC address by itself, so its ESPHome device links with the one Home Assistant's network integrations already track. An existing install keeps its setting, since changing it creates a new ESPHome device in Home Assistant. Per-network MAC randomization was already off on every Echo, and the image now keeps it off for good. This applies to every Echo.

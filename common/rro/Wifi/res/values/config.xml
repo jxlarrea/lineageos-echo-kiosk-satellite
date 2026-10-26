@@ -11,6 +11,14 @@
          It now connects with WPA2, as the CM14 image did. -->
     <bool name="config_wifiSaeUpgradeEnabled">false</bool>
 
+    <!-- No WPA2 with SHA256 key management (PSK-SHA256). Android 11 adds it
+         to every saved WPA2 network, and wpa_supplicant picks it when the
+         access point offers it, as many WPA2/WPA3 transition and WPA2 with
+         protected management frames networks do. The Echo Dot's Wi-Fi
+         driver rejects it as an invalid auth mode, so the Dot never joined
+         such a network (issue #5). It now connects with plain WPA2. -->
+    <bool name="config_wifiSha256KeyManagementEnabled">false</bool>
+
     <!-- No per-network MAC randomization: the Echo joins every network with
          its factory address, the one Kiosk Satellite reports to Home
          Assistant as the real Wi-Fi MAC address, so the router, DHCP

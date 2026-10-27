@@ -111,6 +111,74 @@ else
     "system_ext/priv-app/Camera2/" "system_ext/priv-app/Gallery2/" "product/app/Eleven/"
 fi
 
+# What sets the two Echo Shows apart (device/<device>/device.mk and
+# patches/<device>), so one Show's settings never reach the other's image.
+# Each value is what the device sets, or empty where it sets none.
+expect() {
+  local where="$1" name="$2" want="$3" got
+  got="$("$where" "$name")"
+  [[ "$got" == "$want" ]] || fail "$name is '$got', $DEVICE should have '$want'"
+}
+
+# The ASR pipeline's state in asp.cfg: true for passthrough.
+asr_passthrough() {
+  unzip -p "$TARGET_FILES" SYSTEM/vendor/etc/audio-algorithms/asp.cfg |
+    grep -A1 '"ASR"' | grep -o 'true\|false'
+}
+
+# grep -c reads to the end, so unzip never stops early on a closed pipe.
+wrapper_has_asr_capture() {
+  (( $(unzip -p "$TARGET_FILES" SYSTEM/vendor/lib/hw/audio.primary.amazon_wrapper.so | grep -ac 'asr_capture') > 0 ))
+}
+
+# The boot animation for the device's screen height (show.mk), and the
+# wallpaper.
+boot_animation() {
+  [[ "$(unzip -p "$TARGET_FILES" SYSTEM/media/bootanimation.zip | sha256sum)" == \
+     "$(sha256sum <"$REPO_ROOT/common/media/bootanimation-$1.zip")" ]] ||
+    fail "media/bootanimation.zip is not bootanimation-$1.zip"
+  must_have "media/wallpaper\.png$"
+  expect default_prop ro.config.wallpaper /system/media/wallpaper.png
+}
+
+case "$DEVICE" in
+  crown)
+    expect default_prop ro.echo.hostname echo-show-8-ks
+    expect default_prop ro.echo.privacy_hold 1
+    expect default_prop persist.sys.audio.noise_suppression 0
+    expect prop ro.vendor.audio.asr_capture 1
+    expect prop ro.vendor.audio.asr_capture_gain_db 24
+    expect prop ro.vendor.amznaec.enable 0
+    expect prop ro.vendor.amznaec.engine 3
+    expect prop ro.config.media_vol_default 8
+    [[ "$(asr_passthrough)" == false ]] || fail "asp.cfg has the ASR pipeline in passthrough"
+    wrapper_has_asr_capture || fail "the audio HAL wrapper cannot send captures through the ASR pipeline"
+    boot_animation 800
+    ;;
+  cronos)
+    expect default_prop ro.echo.hostname echo-show-5-ks
+    expect default_prop ro.echo.privacy_hold ""
+    expect default_prop persist.sys.audio.noise_suppression ""
+    expect prop ro.vendor.audio.asr_capture ""
+    expect prop ro.vendor.audio.asr_capture_gain_db ""
+    expect prop ro.vendor.amznaec.enable ""
+    expect prop ro.vendor.amznaec.engine 2
+    expect prop ro.config.media_vol_default 10
+    [[ "$(asr_passthrough)" == true ]] || fail "asp.cfg has the ASR pipeline on, which is the Echo Show 8's"
+    wrapper_has_asr_capture && fail "the audio HAL wrapper has the Echo Show 8's ASR capture"
+    boot_animation 480
+    ;;
+  biscuit)
+    must_not_have "media/wallpaper\.png$"
+    expect default_prop ro.config.wallpaper ""
+    for height in 480 800; do
+      [[ "$(unzip -p "$TARGET_FILES" SYSTEM/media/bootanimation.zip | sha256sum)" != \
+         "$(sha256sum <"$REPO_ROOT/common/media/bootanimation-$height.zip")" ]] ||
+        fail "media/bootanimation.zip is the Echo Shows'"
+    done
+    ;;
+esac
+
 [[ "$(prop ro.product.device)" == "$DEVICE" || "$(prop ro.product.system.device)" == "$DEVICE" ]] ||
   fail "ro.product.device is not $DEVICE"
 [[ "$(prop "$RELEASE_PROP_NAME")" == "$RELEASE" ]] ||

@@ -40,7 +40,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Added
 - **adb root on the Dot.** LineageOS 18.1 only allows `adb root` after Rooted debugging is turned on in Developer options, which the Dot has no screen for. `biscuit_service adb root on` turns it on and `off` turns it off again. It stays off by default. The Echo Dot guide explains it.
 
-## Echo Show 8 (1st gen) Unreleased
+## Echo Show 8 (1st gen) 2026.10.1 - 2026-10-27
 
 ### Added
 - **Echo Show 8 (1st gen) on LineageOS 18.1.** The repository builds R0rt1z2's amazon-oss `crown` tree with the Kiosk Satellite Edition layer the Echo Show 5 has: EchoService, Kiosk Satellite on first boot, Amazon's wake words, the echo canceller, Bluetooth both ways, system updates and the same debloat. The model reads Echo Show 8 1st Gen (KS). EchoService names the Show `echo-show-8-ks` and the end of its serial on the network.
@@ -55,6 +55,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 - **Streaming stalled on Wi-Fi networks with several access points.** Android 11 looks for a better access point after every scan while a connection carries little traffic. The Echos' Wi-Fi drivers report no traffic at all. On a mesh network Android moved an Echo Show 8 between access points every 20 seconds, even in the middle of a voice conversation. Each move stalled audio and dropped Home Assistant. Android also ranked access points by a throughput estimate that these drivers get wrong, so it picked a weak mesh node over the router next to it. Android now keeps the access point it connected to and picks one by signal strength, preferring a 5 GHz network down to -50 dBm. This applies to every Echo.
 
 ### Changed
+- **Release images are checked against the other Echo Show.** `make check` now also fails an Echo Show 8 or Echo Show 5 image that carries the other Show's settings, audio pipeline, boot animation or hostname, and fails an Echo Dot image with the Shows' boot animation or wallpaper. `make test` fails if either Show inherits the other's device layer or a shared layer sets what each device sets.
 - **50% media volume on a fresh Show 8.** A fresh install starts at media volume 8 of 15, which Kiosk Satellite shows as 50%. The Show 8's speakers are much louder than the Echo Show 5's. At 70% a voice across the room ends up about 18 dB under music, where no setting caught more than 6 of 10 wake words.
 
 ## Echo Show 5 (2nd gen) Unreleased

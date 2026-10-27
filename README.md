@@ -9,6 +9,12 @@
 <p align="center">
 <img src="https://img.shields.io/github/stars/jxlarrea/lineageos-echo-kiosk-satellite?style=for-the-badge&label=Stars&color=d6a102" alt="Stars">
 <a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases"><img src="https://img.shields.io/github/downloads/jxlarrea/lineageos-echo-kiosk-satellite/total?style=for-the-badge&label=Downloads&color=3fbf5f" alt="Downloads"></a>
+<a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=cronos"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22cronos-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Cronos&style=for-the-badge&cacheSeconds=3600&color=18bcf2" alt="Echo Show 5 (2nd gen) release"></a>
+<a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=crown"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22crown-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Crown&style=for-the-badge&cacheSeconds=3600&color=e8604c" alt="Echo Show 8 (1st gen) release"></a>
+<a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=biscuit"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22biscuit-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Biscuit&style=for-the-badge&cacheSeconds=3600&color=5da3a6" alt="Echo Dot (2nd gen) release"></a>
+</p>
+
+<p align="center">
 <a href="https://buymeacoffee.com/jxlarrea"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
 </p>
 

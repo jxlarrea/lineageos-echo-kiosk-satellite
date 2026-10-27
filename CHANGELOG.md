@@ -2,7 +2,7 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
-## Echo Dot (2nd gen) Unreleased
+## Echo Dot (2nd gen) 2026.10.13 - 2026-10-27
 
 ### Fixed
 - **Streaming stalled on Wi-Fi networks with several access points.** Android 11 looks for a better access point after every scan while a connection carries little traffic. The Echos' Wi-Fi drivers report no traffic at all. On a mesh network Android moved an Echo Show 8 between access points every 20 seconds, even in the middle of a voice conversation. Each move stalled audio and dropped Home Assistant. Android also ranked access points by a throughput estimate that these drivers get wrong, so it picked a weak mesh node over the router next to it. Android now keeps the access point it connected to and picks one by signal strength, preferring a 5 GHz network down to -50 dBm. This applies to every Echo. On the Dot, a scan while connected stalled the link for up to half a second at a time, and the Echo Dot guide now describes the fix.

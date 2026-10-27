@@ -2,7 +2,7 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
-## Echo Dot (2nd gen) Unreleased
+## Echo Dot (2nd gen) 2026.10.14 - 2026-10-27
 
 ### Fixed
 - **A system update only installs from TWRP 3.7.0_9-0** ([#13](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/13)). The image needs amonet v2 and its TWRP 3.7.0_9-0, but an update runs in whatever TWRP the Dot has. On an Echo Show still on amonet 1 and its TWRP 3.2.3, an update left the system half written. The update step in TWRP now checks the TWRP version first. With anything else, such as amonet v1's 3.2.3 or 3.7.0_9-bboe2, it writes nothing to either slot and Android starts again, and BiscuitService reports why in Home Assistant and Kiosk Satellite. This applies to updates from this release on.
@@ -45,7 +45,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Added
 - **adb root on the Dot.** LineageOS 18.1 only allows `adb root` after Rooted debugging is turned on in Developer options, which the Dot has no screen for. `biscuit_service adb root on` turns it on and `off` turns it off again. It stays off by default. The Echo Dot guide explains it.
 
-## Echo Show 8 (1st gen) Unreleased
+## Echo Show 8 (1st gen) 2026.10.2 - 2026-10-27
 
 ### Fixed
 - **A system update from TWRP 3.2.3 could leave the Show in a boot loop** ([#13](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/13)). The image needs amonet 2 and its TWRP 3.7.0_9-0, but an update runs in whatever TWRP the Show has. On a Show still on amonet 1 and its TWRP 3.2.3, the update left the system half written. The update step in TWRP now checks the TWRP version first. With anything other than 3.7.0_9-0 it writes nothing and starts Android again, and EchoService reports why in Home Assistant and Kiosk Satellite. This applies to updates from this release on.
@@ -68,7 +68,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 - **Release images are checked against the other Echo Show.** `make check` now also fails an Echo Show 8 or Echo Show 5 image that carries the other Show's settings, audio pipeline, boot animation or hostname, and fails an Echo Dot image with the Shows' boot animation or wallpaper. `make test` fails if either Show inherits the other's device layer or a shared layer sets what each device sets.
 - **50% master volume on a fresh Show 8.** A fresh install starts at master volume 8 of 15, which Kiosk Satellite shows as 50%. The Show 8's speakers are much louder than the Echo Show 5's. At 70% a voice across the room ends up about 18 dB under music, where no setting caught more than 6 of 10 wake words.
 
-## Echo Show 5 (2nd gen) Unreleased
+## Echo Show 5 (2nd gen) 2026.10.3 - 2026-10-27
 
 ### Fixed
 - **A system update from TWRP 3.2.3 could leave the Show in a boot loop** ([#13](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/13)). The image needs amonet 2 and its TWRP 3.7.0_9-0, but an update runs in whatever TWRP the Show has. On a Show still on amonet 1 and its TWRP 3.2.3, the update left the system half written. The update step in TWRP now checks the TWRP version first. With anything other than 3.7.0_9-0 it writes nothing and starts Android again, and EchoService reports why in Home Assistant and Kiosk Satellite. This applies to updates from this release on.

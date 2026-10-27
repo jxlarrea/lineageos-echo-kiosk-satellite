@@ -16,6 +16,7 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 - **The line out jack.** With something plugged in, the image plays audio through the jack at full level and keeps the Dot's speaker off. When you unplug it, the image switches audio back to the speaker.
 - **Bluetooth both ways.** Phones can play to the Dot as a Bluetooth speaker. The Dot's audio can also go to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
 - **5 GHz Wi-Fi**, the DFS channels 52 to 144 included, with Wi-Fi power saving off. See [Network](#network).
+- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz.
 - **WPA2/WPA3 networks.** The image connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256. On stock LineageOS 18.1, Android tries WPA3 or WPA2 with SHA256 there, which the Dot's Wi-Fi cannot do, so the connection never succeeds.
 - **More free memory.** With Kiosk Satellite connected and Amazon's wake word engine listening, about 235 MB of the Dot's 480 MB stays available.
 

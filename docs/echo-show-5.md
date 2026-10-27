@@ -127,7 +127,7 @@ EchoService checks for a new release a minute after every boot. Kiosk Satellite 
 
 ### Volume
 
-Keep the Show's media volume at 70% and Kiosk Satellite's media player and assistant volumes at 100%. That fills a room. Over music, the wake word worked 9 times out of 10 even one step higher, at 75%. A fresh install sets these levels: media volume 10 of 15, which Kiosk Satellite shows as 70%, with Kiosk Satellite's own volumes at their defaults.
+Keep the Show's master volume at 70% and Kiosk Satellite's media player and assistant volumes at 100%. That fills a room. Over music, the wake word worked 9 times out of 10 even one step higher, at 75%. A fresh install sets these levels: master volume 10 of 15, which Kiosk Satellite shows as 70%, with Kiosk Satellite's own volumes at their defaults.
 
 ```sh
 adb shell echo_service volume

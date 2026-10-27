@@ -129,7 +129,7 @@ EchoService checks for a new release a minute after every boot. Kiosk Satellite 
 
 ### Volume
 
-Keep the Show's media volume at 50% and Kiosk Satellite's media player and assistant volumes at 100%. The Show 8's speakers are much louder than the Echo Show 5's. 50% already fills a room. Above it, music drowns out a voice from across the room and the wake word misses more often. A fresh install sets these levels: media volume 8 of 15, which Kiosk Satellite shows as 50%, with Kiosk Satellite's own volumes at their defaults.
+Keep the Show's master volume at 50% and Kiosk Satellite's media player and assistant volumes at 100%. The Show 8's speakers are much louder than the Echo Show 5's. 50% already fills a room. Above it, music drowns out a voice from across the room and the wake word misses more often. A fresh install sets these levels: master volume 8 of 15, which Kiosk Satellite shows as 50%, with Kiosk Satellite's own volumes at their defaults.
 
 ```sh
 adb shell echo_service volume

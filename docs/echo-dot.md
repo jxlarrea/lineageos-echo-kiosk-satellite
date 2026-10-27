@@ -162,7 +162,7 @@ BiscuitService checks for a new release a minute after every boot. Kiosk Satelli
 
 ### Volume
 
-Keep the Dot's media volume at 75% and Kiosk Satellite's media player and assistant volumes at 100%. A fresh install sets these levels: media volume 11 of 15, which Kiosk Satellite shows as 75%, with Kiosk Satellite's own volumes at their defaults. Turn music down in Kiosk Satellite or Music Assistant rather than with the Dot's media volume.
+Keep the Dot's master volume at 75% and Kiosk Satellite's media player and assistant volumes at 100%. A fresh install sets these levels: master volume 11 of 15, which Kiosk Satellite shows as 75%, with Kiosk Satellite's own volumes at their defaults. Turn music down in Kiosk Satellite or Music Assistant rather than with the Dot's master volume.
 
 ```sh
 adb shell biscuit_service volume set 11

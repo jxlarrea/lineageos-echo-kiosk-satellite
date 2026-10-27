@@ -1,4 +1,16 @@
-# LineageOS for Amazon Echo devices, Kiosk Satellite Edition
+<h1 align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/banners/ks_banner_dark.svg" />
+    <source media="(prefers-color-scheme: light)" srcset="assets/banners/ks_banner_light.svg" />
+    <img alt="Kiosk Satellite for Home Assistant" src="assets/banners/ks_banner_default.svg" width="650" />
+  </picture>
+</h1>
+
+<p align="center">
+<img src="https://img.shields.io/github/stars/jxlarrea/lineageos-echo-kiosk-satellite?style=for-the-badge&label=Stars&color=d6a102" alt="Stars">
+<a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases"><img src="https://img.shields.io/github/downloads/jxlarrea/lineageos-echo-kiosk-satellite/total?style=for-the-badge&label=Downloads&color=3fbf5f" alt="Downloads"></a>
+<a href="https://buymeacoffee.com/jxlarrea"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
+</p>
 
 LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) for Home Assistant. The Echo Shows run the full Kiosk Satellite experience on their screens. The Echo Dot has no screen, so it runs Kiosk Satellite headless as a voice satellite, intercom and speaker. Every image is built from one shared base, [R0rt1z2](https://github.com/R0rt1z2)'s LineageOS 18.1 port for the MT8163 Echos in [amazon-oss](https://github.com/amazon-oss), with a Kiosk Satellite Edition layer on top.
 
@@ -28,6 +40,14 @@ Once a device runs its image, the image installs new releases over the air. Home
 ## Building
 
 See [Building](docs/building.md). Builds run in Docker from one LineageOS 18.1 tree for every device.
+
+## Thank you for your support
+
+Thank you to everyone who supports my work through [Buy Me a Coffee](https://buymeacoffee.com/jxlarrea). I test everything on real hardware, which means buying devices to reproduce issues and check changes across different manufacturers and Android flavors. Your contributions help cover those purchases and make that testing possible.
+
+<p align="center">
+<a href="https://buymeacoffee.com/jxlarrea"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
+</p
 
 ## Credits
 

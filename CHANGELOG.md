@@ -49,7 +49,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 
 ### Fixed
 - **A system update from TWRP 3.2.3 could leave the Show in a boot loop** ([#13](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/13)). The image needs amonet 2 and its TWRP 3.7.0_9-0, but an update runs in whatever TWRP the Show has. On a Show still on amonet 1 and its TWRP 3.2.3, the update left the system half written. The update step in TWRP now checks the TWRP version first. With anything other than 3.7.0_9-0 it writes nothing and starts Android again, and EchoService reports why in Home Assistant and Kiosk Satellite. This applies to updates from this release on.
-
+- **Camera streams and videos in High profile H.264 fell back to software decoding** ([#15](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/15)). MediaTek's hardware decoder told Android it handles High profile only at its lowest level, although it decodes High up to level 4.1 at 1080p at about 150 frames a second. Its size limit also read as at most 1088 pixels high, which ruled out portrait video. Kiosk Satellite's WebView and players such as ExoPlayer then used Android's software decoder, which is about four times slower on the Show and stalled camera streams. Android now lists High profile up to the same level as Main for this decoder and accepts portrait video up to 1080x1920, so these streams play on the hardware decoder.
 ## Echo Show 8 (1st gen) 2026.10.1 - 2026-10-27
 
 ### Added
@@ -72,7 +72,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 
 ### Fixed
 - **A system update from TWRP 3.2.3 could leave the Show in a boot loop** ([#13](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/13)). The image needs amonet 2 and its TWRP 3.7.0_9-0, but an update runs in whatever TWRP the Show has. On a Show still on amonet 1 and its TWRP 3.2.3, the update left the system half written. The update step in TWRP now checks the TWRP version first. With anything other than 3.7.0_9-0 it writes nothing and starts Android again, and EchoService reports why in Home Assistant and Kiosk Satellite. This applies to updates from this release on.
-
+- **Camera streams and videos in High profile H.264 fell back to software decoding** ([#15](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/15)). MediaTek's hardware decoder told Android it handles High profile only at its lowest level, although it decodes High up to level 4.1 at 1080p at about 150 frames a second. Its size limit also read as at most 1088 pixels high, which ruled out portrait video. Kiosk Satellite's WebView and players such as ExoPlayer then used Android's software decoder, which is about four times slower on the Show and stalled camera streams. Android now lists High profile up to the same level as Main for this decoder and accepts portrait video up to 1080x1920, so these streams play on the hardware decoder.
 ## Echo Show 5 (2nd gen) 2026.10.2 - 2026-10-27
 
 ### Fixed

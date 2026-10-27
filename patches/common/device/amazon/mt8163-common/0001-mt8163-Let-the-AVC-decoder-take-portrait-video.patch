@@ -1,0 +1,32 @@
+mt8163: Let the AVC decoder take portrait video
+
+A size limit of 1920x1088 reads as at most 1088 pixels high, so Android
+refused portrait video such as 720x1280 or 1080x1920 from phones and
+doorbell cameras, which the decoder plays as well as landscape. Allow
+either orientation up to 1920 and keep the total to 1920x1088 with a block
+count.
+
+diff --git a/configs/media/media_codecs_mediatek_video.xml b/configs/media/media_codecs_mediatek_video.xml
+index 449e192..ea8410a 100644
+--- a/configs/media/media_codecs_mediatek_video.xml
++++ b/configs/media/media_codecs_mediatek_video.xml
+@@ -113,7 +113,8 @@ Only the three quirks included above are recognized at this point:
+             <Feature name="adaptive-playback"/>
+         </MediaCodec>
+         <MediaCodec name="OMX.MTK.VIDEO.DECODER.AVC" type="video/avc" >
+-            <Limit name="size" min="64x64" max="1920x1088" />
++            <Limit name="size" min="64x64" max="1920x1920" />
++            <Limit name="block-count" range="1-8160" />
+             <Quirk name="wants-NAL-fragments" />
+             <Quirk name="requires-allocate-on-input-ports" />
+             <Quirk name="requires-allocate-on-output-ports" />
+@@ -121,7 +122,8 @@ Only the three quirks included above are recognized at this point:
+             <Feature name="adaptive-playback"/>
+         </MediaCodec>
+         <MediaCodec name="OMX.MTK.VIDEO.DECODER.AVC.secure" type="video/avc" >
+-            <Limit name="size" min="64x64" max="1920x1088" />
++            <Limit name="size" min="64x64" max="1920x1920" />
++            <Limit name="block-count" range="1-8160" />
+             <Quirk name="requires-allocate-on-input-ports" />
+             <Feature name="secure-playback" required="true" />
+             <Limit name="concurrent-instances" max="2" />

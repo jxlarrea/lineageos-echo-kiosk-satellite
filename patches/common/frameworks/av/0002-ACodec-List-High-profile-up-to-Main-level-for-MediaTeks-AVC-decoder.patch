@@ -1,0 +1,53 @@
+ACodec: List High profile up to Main's level for MediaTek's AVC decoder
+
+MediaTek's OMX AVC decoder lists Baseline and Main up to level 4.1 but High
+only at level 1. It decodes High as far as Main: on an Echo Show's MT8163 it
+decodes High 4.1 1080p at about 150 fps. Apps that check the profile level,
+as Chromium and ExoPlayer do, skipped it for every real High stream and
+used the software decoder, which is too slow on these devices and stalled
+camera streams in a WebView.
+
+List High and Constrained High at each level the component lists for Main.
+
+diff --git a/media/libstagefright/ACodec.cpp b/media/libstagefright/ACodec.cpp
+index 4a3b32f..87a286b 100644
+--- a/media/libstagefright/ACodec.cpp
++++ b/media/libstagefright/ACodec.cpp
+@@ -8893,6 +8893,7 @@ status_t ACodec::queryCapabilities(
+         OMX_VIDEO_PARAM_PROFILELEVELTYPE param;
+         InitOMXParams(&param);
+         param.nPortIndex = isEncoder ? kPortIndexOutput : kPortIndexInput;
++        Vector<OMX_U32> mainLevels;
+ 
+         for (OMX_U32 index = 0; index <= kMaxIndicesToCheck; ++index) {
+             param.nProfileIndex = index;
+@@ -8903,6 +8904,9 @@ status_t ACodec::queryCapabilities(
+                 break;
+             }
+             caps->addProfileLevel(param.eProfile, param.eLevel);
++            if (param.eProfile == OMX_VIDEO_AVCProfileMain) {
++                mainLevels.push_back(param.eLevel);
++            }
+ 
+             // AVC components may not list the constrained profiles explicitly, but
+             // decoders that support a profile also support its constrained version.
+@@ -8922,6 +8926,19 @@ status_t ACodec::queryCapabilities(
+             }
+         }
+ 
++        // MediaTek's AVC decoder lists High only at level 1, although it
++        // decodes High as far as Main, up to level 4.1 at 1080p on the
++        // MT8163. Apps then skipped it for every real High stream and fell
++        // back to the software decoder, which is too slow on these devices.
++        if (!isEncoder && strcasecmp(mime, MEDIA_MIMETYPE_VIDEO_AVC) == 0
++                && strncmp(name, "OMX.MTK.VIDEO.DECODER.AVC",
++                        strlen("OMX.MTK.VIDEO.DECODER.AVC")) == 0) {
++            for (OMX_U32 level : mainLevels) {
++                caps->addProfileLevel(OMX_VIDEO_AVCProfileHigh, level);
++                caps->addProfileLevel(OMX_VIDEO_AVCProfileConstrainedHigh, level);
++            }
++        }
++
+         // Color format query
+         // return colors in the order reported by the OMX component
+         // prefix "flexible" standard ones with the flexible equivalent

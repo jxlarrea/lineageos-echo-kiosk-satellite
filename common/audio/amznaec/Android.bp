@@ -7,13 +7,13 @@
 // audio HAL (init.kiosk-satellite.audio.rc). It links against the WebRTC
 // audio processing library the image already ships in /vendor/lib. Speex
 // (speexdsp/, BSD) is the optional second engine.
-cc_library_shared {
-    name: "libamznaec_shim",
+cc_defaults {
+    name: "amznaec_defaults",
     vendor: true,
     compile_multilib: "32",
     srcs: [
-        "amznaec_shim.cpp",
         "mic_pattern.cpp",
+        "speaker_null.cpp",
         "speexdsp/libspeexdsp/mdf.c",
         "speexdsp/libspeexdsp/preprocess.c",
         "speexdsp/libspeexdsp/filterbank.c",
@@ -48,6 +48,20 @@ cc_library_shared {
         "-Wno-sign-compare",
         "-Wno-implicit-fallthrough",
     ],
+}
+
+cc_library_shared {
+    name: "libamznaec_shim",
+    defaults: ["amznaec_defaults"],
+    srcs: ["amznaec_shim.cpp"],
+}
+
+// Runs the shim's processing on a recording, to compare settings on
+// identical audio (amznaec_offline.cpp). Not in the image.
+cc_binary {
+    name: "amznaec_offline",
+    defaults: ["amznaec_defaults"],
+    srcs: ["amznaec_offline.cpp"],
 }
 
 prebuilt_etc {

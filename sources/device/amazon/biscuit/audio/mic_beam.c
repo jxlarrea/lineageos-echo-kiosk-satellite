@@ -30,6 +30,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -98,6 +99,11 @@ struct mic_beam {
     float level_mic;
     float level_out;
     int level_hops;
+    /* persist.biscuit.mic_beam_dump, a path prefix: the raw array frames go
+     * to <prefix>.in.raw and the output to <prefix>.out.raw, for the audio
+     * tests (scripts/audio-test.sh). */
+    FILE* dump_in;
+    FILE* dump_out;
 };
 
 static float window[BEAM_N];
@@ -408,6 +414,16 @@ struct mic_beam* mic_beam_open(struct mic_beam_model* model, int out_mic) {
     beam->model = model;
     beam->out_pos = BEAM_HOP;
     beam->log_levels = property_get_bool("persist.biscuit.audio_levels", false);
+    char dump[PROPERTY_VALUE_MAX];
+    if (property_get("persist.biscuit.mic_beam_dump", dump, "") > 0) {
+        char path[PROPERTY_VALUE_MAX + 16];
+        snprintf(path, sizeof(path), "%s.in.raw", dump);
+        beam->dump_in = fopen(path, "wb");
+        snprintf(path, sizeof(path), "%s.out.raw", dump);
+        beam->dump_out = fopen(path, "wb");
+        ALOGW("dumping to %s.{in,out}.raw: %s", dump,
+              beam->dump_in && beam->dump_out ? "ok" : "open failed");
+    }
     return beam;
 }
 
@@ -421,7 +437,9 @@ ssize_t mic_beam_read(struct mic_beam* beam, int16_t* out, size_t frames) {
                 ALOGE("microphone PCM read failed: %s", pcm_get_error(beam->pcm));
                 return -EIO;
             }
+            if (beam->dump_in) fwrite(beam->raw, 1, sizeof(beam->raw), beam->dump_in);
             beam_hop(beam);
+            if (beam->dump_out) fwrite(beam->out, sizeof(int16_t), BEAM_HOP, beam->dump_out);
         }
         n = BEAM_HOP - beam->out_pos;
         if (n > frames - done) n = frames - done;
@@ -435,5 +453,7 @@ ssize_t mic_beam_read(struct mic_beam* beam, int16_t* out, size_t frames) {
 void mic_beam_close(struct mic_beam* beam) {
     if (!beam) return;
     pcm_close(beam->pcm);
+    if (beam->dump_in) fclose(beam->dump_in);
+    if (beam->dump_out) fclose(beam->dump_out);
     free(beam);
 }

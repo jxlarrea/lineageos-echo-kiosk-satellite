@@ -94,3 +94,21 @@ cc_binary {
     shared_libs: ["libtinyalsa"],
     cflags: ["-Wall", "-Werror"],
 }
+
+// Records the microphone through Android the way an app does while it plays
+// noise through the speaker, and prints the recorded level, to test what
+// apps get from the audio HAL. Not in the image.
+cc_binary {
+    name: "echo_audio_harness",
+    srcs: ["tools/echo_audio_harness.cpp"],
+    shared_libs: [
+        "libaudioclient",
+        "libbinder",
+        "libutils",
+    ],
+    header_libs: [
+        "libmedia_headers",
+        "libmediametrics_headers",
+    ],
+    cflags: ["-Wall", "-Werror"],
+}

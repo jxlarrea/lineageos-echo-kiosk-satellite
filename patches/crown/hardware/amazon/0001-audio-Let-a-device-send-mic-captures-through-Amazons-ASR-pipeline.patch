@@ -1,0 +1,137 @@
+audio: Let a device send mic captures through Amazon's ASR pipeline
+
+ro.vendor.audio.asr_capture=1 hands plain MIC and CAMCORDER captures to
+Amazon's ASR pipeline, the far-field front end Amazon's own wake word listens
+to: its echo canceller, beamformer and residual echo suppression over every
+microphone and the speaker reference. ro.vendor.audio.asr_capture_gain_db
+raises its output, which comes out about 25 dB quieter than a plain capture,
+bending into a soft limit above three quarters of full scale.
+
+On an Echo Show 8 (1st gen) with vsWakeWord, 40 held-out voices from 2.5 m
+at 50% volume: 14 of 40 wake words over music instead of 5 with the Kiosk
+Satellite Edition's own echo canceller on microphone 0, and 17 of 40 over
+the assistant's voice instead of 11, as many as in a quiet room.
+
+diff --git a/audio/hal/asp.cpp b/audio/hal/asp.cpp
+index 5039197..63d6ec7 100644
+--- a/audio/hal/asp.cpp
++++ b/audio/hal/asp.cpp
+@@ -7,8 +7,11 @@
+ #include <errno.h>
+ #include <string.h>
+ 
++#include <math.h>
++
+ #include <atomic>
+ 
++#include <cutils/properties.h>
+ #include <cutils/str_parms.h>
+ 
+ #include "asp.h"
+@@ -50,11 +53,31 @@ void asp_set_parameters(const char* kv_pairs) {
+     str_parms_destroy(parms);
+ }
+ 
++bool asr_capture() {
++    static const bool on = property_get_bool("ro.vendor.audio.asr_capture", false);
++    return on;
++}
++
++float asr_capture_gain() {
++    static const float gain =
++            powf(10.f, property_get_int32("ro.vendor.audio.asr_capture_gain_db", 0) / 20.f);
++    return gain;
++}
++
+ /*
+  * The HAL only runs Amazon's capture processing for voice sources, there is
+  * no pipeline for plain mic captures. Use the voice one, it has AGC and NR.
++ *
++ * ro.vendor.audio.asr_capture=1 sends plain mic captures through Amazon's
++ * ASR pipeline instead, the far-field front end Amazon's own wake word
++ * listens to: its echo canceller, beamformer and residual echo suppression
++ * over every microphone and the speaker reference.
+  */
+ audio_source_t remap_input_source(audio_source_t source) {
++    if (asr_capture() && get_asp_command() &&
++        (source == AUDIO_SOURCE_MIC || source == AUDIO_SOURCE_CAMCORDER))
++        return AUDIO_SOURCE_VOICE_RECOGNITION;
++
+     if (!noise_suppression || !get_asp_command())
+         return source;
+ 
+diff --git a/audio/hal/asp.h b/audio/hal/asp.h
+index 078f75a..f7bd1d0 100644
+--- a/audio/hal/asp.h
++++ b/audio/hal/asp.h
+@@ -18,3 +18,8 @@
+ int asp_send_command(int code, int value);
+ void asp_set_parameters(const char* kv_pairs);
+ audio_source_t remap_input_source(audio_source_t source);
++
++/* ro.vendor.audio.asr_capture and the linear gain of
++ * ro.vendor.audio.asr_capture_gain_db, see asp.cpp. */
++bool asr_capture();
++float asr_capture_gain();
+diff --git a/audio/hal/legacy/audio_amazon.h b/audio/hal/legacy/audio_amazon.h
+index 6901f29..b9a70d7 100644
+--- a/audio/hal/legacy/audio_amazon.h
++++ b/audio/hal/legacy/audio_amazon.h
+@@ -279,6 +279,12 @@ struct audio_stream_in_ext {
+      */
+     bool mic_capture;
+     bool capture_started;
++
++    /**
++     * Gain for a mic capture on the ASR pipeline, whose output comes out
++     * quieter than a plain capture (ro.vendor.audio.asr_capture_gain_db).
++     */
++    float gain;
+ };
+ 
+ /**
+diff --git a/audio/hal/legacy/audio_hw.cpp b/audio/hal/legacy/audio_hw.cpp
+index 77d8fb2..fdea338 100644
+--- a/audio/hal/legacy/audio_hw.cpp
++++ b/audio/hal/legacy/audio_hw.cpp
+@@ -196,6 +196,9 @@ static int adev_open_input_stream(struct audio_hw_device* dev, audio_io_handle_t
+     if (amazon_source == AUDIO_SOURCE_VOICE_COMMUNICATION)
+         asp_send_command(ASP_CMD_SET_VOLUME, ASP_VOLUME_MAX);
+     stream_in_ext->mic_capture = amazon_source != source;
++    stream_in_ext->gain = stream_in_ext->mic_capture && amazon_source == AUDIO_SOURCE_VOICE_RECOGNITION
++                                  ? asr_capture_gain()
++                                  : 1.0f;
+ 
+     /* legacy_in is now pointing to the HAL's allocated legacy_audio_stream_in */
+     stream_in_ext->legacy_stream = (struct legacy_audio_stream_in*)legacy_in;
+diff --git a/audio/hal/legacy/audio_stream.cpp b/audio/hal/legacy/audio_stream.cpp
+index d33e9d6..8a2ee8b 100644
+--- a/audio/hal/legacy/audio_stream.cpp
++++ b/audio/hal/legacy/audio_stream.cpp
+@@ -7,6 +7,7 @@
+ 
+ #include <errno.h>
+ #include <malloc.h>
++#include <math.h>
+ #include <pthread.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+@@ -188,6 +189,18 @@ static ssize_t stream_in_ext_read(struct audio_stream_in* stream, void* buffer,
+         asp_send_command(ASP_CMD_SET_VOIP_MODE, 0);
+         stream_in_ext->capture_started = true;
+     }
++    if (ret > 0 && stream_in_ext->gain != 1.0f &&
++        stream->common.get_format(&stream->common) == AUDIO_FORMAT_PCM_16_BIT) {
++        /* Above three quarters of full scale the gain bends into a soft
++         * limit instead of clipping. */
++        int16_t* samples = static_cast<int16_t*>(buffer);
++        for (ssize_t i = 0; i < ret / 2; i++) {
++            float v = samples[i] * stream_in_ext->gain / 32768.f;
++            float a = fabsf(v);
++            if (a > 0.75f) v = copysignf(0.75f + 0.25f * tanhf((a - 0.75f) / 0.25f), v);
++            samples[i] = (int16_t)(v * 32767.f);
++        }
++    }
+     if (ret > 0)
+         stream_in_ext->frames_read += ret / audio_stream_in_frame_size(stream);
+ 

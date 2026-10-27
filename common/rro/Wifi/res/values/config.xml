@@ -25,4 +25,29 @@
          reservations and Home Assistant all see the same device. Android 11
          already defaults to this. It is pinned here so it stays that way. -->
     <bool name="config_wifi_connected_mac_randomization_supported">false</bool>
+
+    <!-- No switching networks or access points while connected. Android 11
+         looks for a better network after every scan while the connection
+         carries little traffic, and the Echos' Wi-Fi drivers report no
+         traffic at all, so on a mesh network the Echo Show 8 moved between
+         nodes every 20 seconds, even at -25 dBm and in the middle of a voice
+         conversation. Each move is a full reassociation on these drivers,
+         which stalled audio and dropped Home Assistant. Android still picks
+         the best access point when it connects and after a disconnect. This
+         also ends the scans every 20 seconds while connected. -->
+    <bool name="config_wifi_framework_enable_associated_network_selection">false</bool>
+
+    <!-- Pick the access point by signal strength and band, not by Android's
+         predicted throughput. The prediction reads capabilities these
+         drivers do not report in their scan results: it gave a 5 GHz network
+         at -44 dBm 27 Mbps and a mesh node at -56 dBm 53 Mbps, so an Echo
+         Show 8 joined that 2.4 GHz node instead of the router next to it at
+         -31 dBm, and streaming audio stalled. Without the throughput bonus
+         the score follows the signal up to the "good" level below: 5 GHz
+         counts up to -30 dBm and 2.4 GHz up to -50 dBm, so a 5 GHz network
+         wins down to -50 dBm and otherwise the strongest access point wins.
+         Only network selection reads these levels. -->
+    <integer name="config_wifiFrameworkThroughputBonusLimit">0</integer>
+    <integer name="config_wifi_framework_wifi_score_good_rssi_threshold_5GHz">-30</integer>
+    <integer name="config_wifi_framework_wifi_score_good_rssi_threshold_24GHz">-50</integer>
 </resources>

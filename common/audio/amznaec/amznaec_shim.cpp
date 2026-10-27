@@ -22,13 +22,16 @@
  * adds one block (10 ms) of latency to capture.
  *
  * Properties (read when the PCM is opened):
- *   persist.vendor.amznaec.enable     1   master switch (0 = pass through)
+ *   persist.vendor.amznaec.enable     ro.vendor.amznaec.enable, else 1
+ *                                         master switch (0 = pass through)
  *   persist.vendor.amznaec.aec        1   echo cancellation
- *   persist.vendor.amznaec.aec_level  0   0 low, 1 moderate, 2 high suppression. Low keeps
+ *   persist.vendor.amznaec.aec_level  ro.vendor.amznaec.aec_level, else 0
+ *                                         0 low, 1 moderate, 2 high suppression. Low keeps
  *                                         the near end usable during playback (a wake word
  *                                         loses 10 dB instead of 19 dB at high), high gives
  *                                         the cleanest recording
- *   persist.vendor.amznaec.ns         1   noise suppression
+ *   persist.vendor.amznaec.ns         ro.vendor.amznaec.ns, else 1
+ *                                         noise suppression
  *   persist.vendor.amznaec.ns_level   0   0 low, 1 moderate, 2 high, 3 very high
  *   persist.vendor.amznaec.hpf        1   high pass filter
  *   persist.vendor.amznaec.delay_ms   0   reported stream delay hint
@@ -54,7 +57,12 @@
  *                                         near end untouched, residual echo higher),
  *                                         2 = Speex below the split and the Echo Dot's
  *                                         pattern removal across the microphones above
- *                                         it (mic_pattern.h), needs two microphones
+ *                                         it (mic_pattern.h), needs two microphones,
+ *                                         3 = Speex's linear filter, then WebRTC's
+ *                                         suppression and noise reduction on what it
+ *                                         leaves. The linear stage keeps the near end,
+ *                                         WebRTC removes the echo of a speaker the
+ *                                         loopback only partly predicts (Echo Show 8)
  *   persist.vendor.amznaec.split_hz   1000  engine 2: where the output turns from
  *                                         Speex to the pattern removal
  *   persist.vendor.amznaec.spx_stereo 1   Speex models the two loopback channels as
@@ -64,7 +72,8 @@
  *                                         when its input nears full scale
  *   persist.vendor.amznaec.spx_filter_ms   64  Speex filter length in ms
  *   persist.vendor.amznaec.spx_echo_suppress        0  Speex residual echo suppression
- *                                         in dB (0 disables the preprocessor entirely)
+ *                                         in dB (0 disables the preprocessor entirely).
+ *                                         Speex applies it only with spx_denoise 1
  *   persist.vendor.amznaec.spx_echo_suppress_active 0  same, while the near end is active
  *   persist.vendor.amznaec.spx_denoise    0   Speex noise suppression on/off
  *   persist.vendor.amznaec.spx_noise_suppress -15  Speex noise suppression in dB
@@ -78,7 +87,15 @@
  *   persist.vendor.amznaec.ref_clip   0   experimental: hard clip the loopback reference at
  *                                         this fraction of full scale (x1000, e.g. 250) so
  *                                         the filter can model an amplifier that clips
- *   persist.vendor.amznaec.log        0   1 = log levels every 5 s
+ *   persist.vendor.amznaec.null       ro.vendor.amznaec.null, else ""
+ *                                         path of a speaker null calibration
+ *                                         (speaker_null.h). When set, microphone 0
+ *                                         loses the speakers' directions across the
+ *                                         microphones before the echo canceller,
+ *                                         while the speaker plays
+ *   persist.vendor.amznaec.log        0   1 = log levels every 5 s, with the longest gap
+ *                                         between the HAL's reads and the longest
+ *                                         processing time
  *   persist.vendor.amznaec.replay     ""  debug: path of a raw S24_3LE file in the stream's shape
  *                                         whose frames replace the captured ones
  *                                         (looped), so settings can be compared on
@@ -97,6 +114,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include <string>
 #include <vector>
@@ -111,6 +129,7 @@
 #include "speex/speex_preprocess.h"
 
 #include "mic_pattern.h"
+#include "speaker_null.h"
 
 namespace {
 
@@ -134,6 +153,7 @@ struct Settings {
     char geom[PROPERTY_VALUE_MAX];
     char replay[PROPERTY_VALUE_MAX];
     char dump[PROPERTY_VALUE_MAX];
+    char null_path[PROPERTY_VALUE_MAX];
 };
 
 struct State {
@@ -152,6 +172,8 @@ struct State {
     SpeexEchoState* spx = nullptr;          /* engine 1 */
     SpeexPreprocessState* spx_pp = nullptr;
     MicPattern* pattern = nullptr;          /* engine 2 */
+    SpeakerNull* null = nullptr;            /* ahead of any engine, see speaker_null.h */
+    float null_out[kBlock];
     float linear[kBlock];
     float hpf_x1 = 0, hpf_y1 = 0;           /* engine 1 high pass state */
     FILE* replay = nullptr;    /* debug replay source, see the header */
@@ -167,6 +189,9 @@ struct State {
     /* stats */
     double e_ref = 0, e_in = 0, e_out = 0;
     unsigned blocks = 0;
+    /* read timing, to tell a stalled HAL from a stalled app */
+    int64_t last_read_ns = 0;
+    double max_gap_ms = 0, max_proc_ms = 0;
 };
 
 State g;
@@ -193,12 +218,15 @@ void resolve() {
 
 Settings read_settings() {
     Settings s;
-    s.enable = property_get_bool("persist.vendor.amznaec.enable", true);
+    s.enable = property_get_bool("persist.vendor.amznaec.enable",
+                                 property_get_bool("ro.vendor.amznaec.enable", true));
     s.aec = property_get_bool("persist.vendor.amznaec.aec", true);
-    s.ns = property_get_bool("persist.vendor.amznaec.ns", true);
+    s.ns = property_get_bool("persist.vendor.amznaec.ns",
+                             property_get_bool("ro.vendor.amznaec.ns", true));
     s.hpf = property_get_bool("persist.vendor.amznaec.hpf", true);
     s.log = property_get_bool("persist.vendor.amznaec.log", false);
-    s.aec_level = property_get_int32("persist.vendor.amznaec.aec_level", 0);
+    s.aec_level = property_get_int32("persist.vendor.amznaec.aec_level",
+                                     property_get_int32("ro.vendor.amznaec.aec_level", 0));
     s.ns_level = property_get_int32("persist.vendor.amznaec.ns_level", 0);
     s.delay_ms = property_get_int32("persist.vendor.amznaec.delay_ms", 0);
     s.extended = property_get_bool("persist.vendor.amznaec.extended", true);
@@ -210,6 +238,9 @@ Settings read_settings() {
     property_get("persist.vendor.amznaec.geom", s.geom, "");
     property_get("persist.vendor.amznaec.replay", s.replay, "");
     property_get("persist.vendor.amznaec.dump", s.dump, "");
+    char null_default[PROPERTY_VALUE_MAX];
+    property_get("ro.vendor.amznaec.null", null_default, "");
+    property_get("persist.vendor.amznaec.null", s.null_path, null_default);
     s.engine = property_get_int32("persist.vendor.amznaec.engine",
                                   property_get_int32("ro.vendor.amznaec.engine", 0));
     s.split_hz = property_get_int32("persist.vendor.amznaec.split_hz", 1000);
@@ -277,6 +308,7 @@ void teardown_l() {
     if (g.spx_pp) { speex_preprocess_state_destroy(g.spx_pp); g.spx_pp = nullptr; }
     if (g.spx) { speex_echo_state_destroy(g.spx); g.spx = nullptr; }
     if (g.pattern) { mic_pattern_free(g.pattern); g.pattern = nullptr; }
+    if (g.null) { speaker_null_free(g.null); g.null = nullptr; }
     g.hpf_x1 = g.hpf_y1 = 0;
     g.in.clear();
     g.out.clear();
@@ -284,6 +316,12 @@ void teardown_l() {
     if (g.replay) { fclose(g.replay); g.replay = nullptr; }
     if (g.dump_in) { fclose(g.dump_in); g.dump_in = nullptr; }
     if (g.dump_out) { fclose(g.dump_out); g.dump_out = nullptr; }
+}
+
+int64_t now_ns() {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000000000LL + ts.tv_nsec;
 }
 
 inline int32_t s24(const uint8_t* p) {
@@ -418,7 +456,20 @@ void process_block_l(uint8_t* frames) {
         e_in += (double)g.near_[g.sel[0]][f] * g.near_[g.sel[0]][f];
     }
 
-    if (g.spx && g.pattern && g.mode == 0) {
+    if (g.null) {
+        const float* mics[kMics];
+        for (int m = 0; m < g.mics; m++) mics[m] = g.near_[m];
+        speaker_null_process(g.null, mics, g.ref, g.null_out);
+        memcpy(g.near_[0], g.null_out, sizeof(g.null_out));
+    }
+
+    if (g.spx && g.apm[g.sel[0]] && g.mode == 0) {
+        /* engine 3: Speex's linear filter, then WebRTC on what it leaves */
+        run_speex(g.near_[g.sel[0]], g.linear);
+        const float* src[1] = {g.linear};
+        run_apm(g.apm[g.sel[0]], src, 1, g.outbuf);
+        memcpy(g.near_[g.sel[0]], g.outbuf, sizeof(g.outbuf));
+    } else if (g.spx && g.pattern && g.mode == 0) {
         const float* mics[kMics];
         for (int m = 0; m < g.mics; m++) mics[m] = g.near_[m];
         run_speex(g.near_[0], g.linear);
@@ -482,12 +533,14 @@ void process_block_l(uint8_t* frames) {
         double n = 500.0 * kBlock;
         auto dbf = [n](double e) { return e > 0 ? 10.0 * log10(e / n) : -120.0; };
         webrtc::AudioProcessing* a0 = (g.mode == 0) ? g.apm[g.sel[0]] : g.apm[0];
-        ALOGI("5s: ref %.1f dBFS, mic in %.1f dBFS, out %.1f dBFS, echo %s, mode %d, engine %s, pattern %.2f",
+        ALOGI("5s: ref %.1f dBFS, mic in %.1f dBFS, out %.1f dBFS, echo %s, mode %d, engine %s, pattern %.2f, "
+              "longest read gap %.0f ms, longest processing %.1f ms",
               dbf(g.e_ref), dbf(g.e_in), dbf(g.e_out),
               a0 ? (a0->echo_cancellation()->stream_has_echo() ? "yes" : "no") : "n/a", g.mode,
-              g.pattern ? "speex+pattern" : g.spx ? "speex" : "webrtc",
-              g.pattern ? mic_pattern_mix(g.pattern) : 0.0f);
+              g.pattern ? "speex+pattern" : g.spx && a0 ? "speex+webrtc" : g.spx ? "speex" : "webrtc",
+              g.pattern ? mic_pattern_mix(g.pattern) : 0.0f, g.max_gap_ms, g.max_proc_ms);
         g.e_ref = g.e_in = g.e_out = 0;
+        g.max_gap_ms = g.max_proc_ms = 0;
     }
 }
 
@@ -527,7 +580,13 @@ extern "C" struct pcm* pcm_open(unsigned int card, unsigned int device, unsigned
     if (g.mode < 0 || g.mode > 2 || (g.mode != 0 && g.nsel < 2)) g.mode = 0;
     build_geometry(g.s);
     bool ok = true;
-    if ((g.s.engine == 1 || g.s.engine == 2) && g.mode != 2) {
+    if (g.s.engine == 3 && g.mode == 0) {
+        ok = make_speex(g.s);
+        if (ok) {
+            g.apm[g.sel[0]] = make_apm(g.s, 1, false);
+            ok = g.apm[g.sel[0]] != nullptr;
+        }
+    } else if ((g.s.engine == 1 || g.s.engine == 2) && g.mode != 2) {
         ok = make_speex(g.s);
         /* The pattern removal needs microphone 0 as the output and a second
          * microphone. Without them this is engine 1. */
@@ -543,6 +602,12 @@ extern "C" struct pcm* pcm_open(unsigned int card, unsigned int device, unsigned
     } else {
         g.apm[0] = make_apm(g.s, g.mode == 2 ? g.nsel : 1, g.mode == 2);
         ok = g.apm[0] != nullptr;
+    }
+    if (ok && g.s.null_path[0]) {
+        /* The null replaces microphone 0, so it needs microphone 0 as the
+         * output and the others to compare with. */
+        if (g.mics >= 2 && g.sel[0] == 0) g.null = speaker_null_load(g.s.null_path, g.mics);
+        if (!g.null) ALOGW("no speaker null from %s, running without it", g.s.null_path);
     }
     if (!ok) {
         ALOGE("could not create the audio processors, passing audio through");
@@ -569,12 +634,14 @@ extern "C" struct pcm* pcm_open(unsigned int card, unsigned int device, unsigned
         }
         ALOGI("mic PCM %u:%u opened: %u ch %u Hz period %u; aec=%d(level %d) ns=%d(level %d) "
               "hpf=%d delay=%dms extended=%d agnostic=%d mics=0x%x mute=0x%x array=%d target=%d "
-              "geometry %s; engine %s (filter %d ms, echo suppress %d/%d dB, denoise %d/%d dB, stereo %d); gain %d dB",
+              "geometry %s; engine %s (filter %d ms, echo suppress %d/%d dB, denoise %d/%d dB, stereo %d); gain %d dB; "
+              "speaker null %s",
               card, device, config->channels, config->rate, config->period_size,
               g.s.aec, g.s.aec_level, g.s.ns, g.s.ns_level, g.s.hpf, g.s.delay_ms,
               g.s.extended, g.s.agnostic, g.s.mics, g.s.mute, g.mode, g.s.target_deg, geom.c_str(),
-              g.pattern ? "speex+pattern" : g.spx ? "speex" : "webrtc", g.s.spx_filter_ms, g.s.spx_echo_suppress,
-              g.s.spx_echo_suppress_active, g.s.spx_denoise, g.s.spx_noise_suppress, g.s.spx_stereo, g.s.gain_db);
+              g.pattern ? "speex+pattern" : g.spx && g.apm[g.sel[0]] ? "speex+webrtc" : g.spx ? "speex" : "webrtc", g.s.spx_filter_ms, g.s.spx_echo_suppress,
+              g.s.spx_echo_suppress_active, g.s.spx_denoise, g.s.spx_noise_suppress, g.s.spx_stereo, g.s.gain_db,
+              g.null ? g.s.null_path : "off");
     }
     pthread_mutex_unlock(&g.lock);
     return pcm;
@@ -582,11 +649,19 @@ extern "C" struct pcm* pcm_open(unsigned int card, unsigned int device, unsigned
 
 extern "C" int pcm_read(struct pcm* pcm, void* data, unsigned int count) {
     resolve();
+    int64_t start = now_ns();
     int rc = real_pcm_read(pcm, data, count);
     if (rc != 0 || pcm != g.pcm || count == 0 || (count % g.frame_bytes) != 0) return rc;
 
     pthread_mutex_lock(&g.lock);
     if (pcm == g.pcm) {
+        int64_t read = now_ns();
+        if (g.last_read_ns) {
+            double gap = (start - g.last_read_ns) / 1e6;
+            if (gap > g.max_gap_ms) g.max_gap_ms = gap;
+            if (gap > 250) ALOGW("the HAL did not read the microphones for %.0f ms", gap);
+        }
+        g.last_read_ns = start;
         uint8_t* buf = (uint8_t*)data;
         if (g.replay) {
             size_t got = fread(buf, 1, count, g.replay);
@@ -610,6 +685,8 @@ extern "C" int pcm_read(struct pcm* pcm, void* data, unsigned int count) {
         } else {
             ALOGW("output underrun (%zu < %u), returning unprocessed audio", g.out.size(), count);
         }
+        double proc = (now_ns() - read) / 1e6;
+        if (proc > g.max_proc_ms) g.max_proc_ms = proc;
     }
     pthread_mutex_unlock(&g.lock);
     return rc;
@@ -622,6 +699,7 @@ extern "C" int pcm_close(struct pcm* pcm) {
         ALOGI("mic PCM closed after %u blocks", g.blocks);
         teardown_l();
         g.blocks = 0;
+        g.last_read_ns = 0;
     }
     pthread_mutex_unlock(&g.lock);
     return real_pcm_close(pcm);

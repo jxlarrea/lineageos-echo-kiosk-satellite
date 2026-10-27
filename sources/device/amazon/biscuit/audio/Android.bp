@@ -70,3 +70,15 @@ cc_library_shared {
     shared_libs: ["liblog"],
     cflags: ["-Wall", "-Werror"],
 }
+
+// Runs mic_beam.c on a recording, to compare changes on identical audio
+// (tools/mic_beam_offline.c, used by scripts/audio-test.sh). Not in the
+// image.
+cc_binary {
+    name: "mic_beam_offline",
+    vendor: true,
+    srcs: ["tools/mic_beam_offline.c"],
+    static_libs: ["libbiscuit_mic_beam", "libbiscuit_pcm"],
+    shared_libs: ["libcutils", "liblog", "libtinyalsa"],
+    cflags: ["-Wall", "-Werror"],
+}

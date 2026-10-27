@@ -1,0 +1,21 @@
+crown: Pass the microphones through Amazon's Voice pipeline
+
+Amazon's Voice pipeline, which the HAL runs for VoIP captures, has an AGC
+that turned the level down by up to 25 dB after a loud sound and kept it
+there. In passthrough it leaves captures alone. Amazon's ASR pipeline, its
+far-field front end for the wake word, stays on: the Kiosk Satellite
+Edition sends plain mic captures through it (ro.vendor.audio.asr_capture).
+
+diff --git a/proprietary/vendor/etc/audio-algorithms/asp.cfg b/proprietary/vendor/etc/audio-algorithms/asp.cfg
+index 896bd06..17c92ba 100644
+--- a/proprietary/vendor/etc/audio-algorithms/asp.cfg
++++ b/proprietary/vendor/etc/audio-algorithms/asp.cfg
+@@ -73,7 +73,7 @@
+         },
+ 
+         "Voice": {
+-            "Passthrough": false,
++            "Passthrough": true,
+             "Frame length" : 128,
+             "Input": {
+                 "Sample rate" : 16000,

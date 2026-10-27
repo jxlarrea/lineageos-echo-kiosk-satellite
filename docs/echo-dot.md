@@ -7,7 +7,7 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 ## What the image does
 
 - **Wake words over loud music.** The Dot has seven microphones. The image uses all of them to remove the speaker's own sound from what Kiosk Satellite hears, about 18 to 20 dB less music, so the wake word works with music at full volume. See [Volume](#volume) for the levels that work best.
-- **Amazon's wake words.** The image includes the wake word engine the Dot shipped with, with its models for Alexa, Echo, Computer, Amazon and Ziggy in 17 locales. Choose **Amazon** as the wake word engine in Kiosk Satellite. It runs on the Dot and sends nothing to Amazon. A plain "stop" also stops a ringing timer or a reply.
+- **Stock wake words.** Kiosk Satellite hears the Show through the stock processing used on Fire OS: echo cancellation and a beamformer over all four microphones, with the Dot's own copy of the speaker signal. Wake word detection holds up over loud music and over the assistant's own voice.
 - **A louder microphone and speaker.** The microphone preamp is 36 dB instead of Fire OS's 20, so voices and intercom calls come through at a normal level. The image drives the speaker 3 dB louder than the Fire OS drivers alone, without distortion at full volume.
 - **Kiosk Satellite on first boot.** Once the Dot is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. No adb grants needed.
 - **System updates.** BiscuitService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.

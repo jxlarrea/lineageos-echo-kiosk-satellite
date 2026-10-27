@@ -14,7 +14,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
 - **Privacy and the screen on separate presses.** Press the button briefly to turn the screen on or off. Hold it for about a second and a half to turn privacy on or off. See [The button](#the-button).
 - **Bluetooth both ways.** Phones can play to the Show as a Bluetooth speaker. The Show's audio can also go to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
 - **System updates.** EchoService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
-- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes. It picks one by signal strength, preferring 5 GHz. The image also connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256.
+- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz. The image also connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256.
 - **More free memory.** With Kiosk Satellite on screen for over an hour, about 1.1 GB of the Show's 2 GB stays available.
 
 ## Before you start

@@ -20,6 +20,8 @@
 DIR=${ECHO_OTA_DIR:-/data/system/echo-ota}
 TMP=${ECHO_OTA_TMP:-/tmp}
 REBOOT=${ECHO_OTA_REBOOT:-/sbin/reboot}
+GETPROP=${ECHO_OTA_GETPROP:-getprop}
+TWRP_VERSION=3.7.0_9-0
 UPDATER=$TMP/echo-ota-updater
 
 # TWRP mounts /data when it starts. This is in case it did not.
@@ -33,6 +35,17 @@ finish() {
     echo "$*" >"$DIR/result"
     sync
 }
+
+# Only TWRP 3.7.0_9-0, the recovery amonet 2 installs, is known to install
+# this image. An update from TWRP 3.2.3, amonet 1's recovery, left a Show in a
+# boot loop (issue #13). With any other TWRP this writes nothing and goes back
+# to Android, where EchoService reports why.
+twrp=$($GETPROP ro.twrp.version 2>/dev/null)
+if [ "$twrp" != "$TWRP_VERSION" ]; then
+    finish "failed TWRP ${twrp:-of unknown version} cannot install this image, update to amonet 2 and TWRP $TWRP_VERSION"
+    "$REBOOT"
+    exit 0
+fi
 
 if [ ! -f "$DIR/update.zip" ]; then
     finish "failed update.zip is missing"

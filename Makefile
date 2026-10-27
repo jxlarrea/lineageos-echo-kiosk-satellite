@@ -20,4 +20,5 @@ check:
 test:
 	bash tests/test-stage-tree.sh
 	bash tests/test-biscuit-system-update.sh
+	bash tests/test-echo-system-update.sh
 	bash tests/test-device-layers.sh

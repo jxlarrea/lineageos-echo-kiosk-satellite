@@ -25,6 +25,8 @@ LINKS=${BISCUIT_OTA_LINKS:-/dev/block}
 TMP=${BISCUIT_OTA_TMP:-/tmp}
 UPDATER=$TMP/biscuit-ota-updater
 HAS_IMAGE=${BISCUIT_OTA_HAS_IMAGE:-has_image}
+GETPROP=${BISCUIT_OTA_GETPROP:-getprop}
+TWRP_VERSION=3.7.0_9-0
 
 exec >>"$DIR/twrp.log" 2>&1
 echo "=== $(date) slot $(cat "$DIR/slot" 2>/dev/null)"
@@ -66,6 +68,14 @@ case "$slot" in
     a|b) ;;
     *) finish "failed $slot no slot to install into" ;;
 esac
+
+# Only TWRP 3.7.0_9-0, the recovery amonet v2 installs, is known to install
+# this image. An update from TWRP 3.2.3, amonet 1's recovery, left an Echo
+# Show in a boot loop (issue #13). With any other TWRP this writes nothing and
+# Android starts again, where BiscuitService reports why.
+twrp=$($GETPROP ro.twrp.version 2>/dev/null)
+[ "$twrp" = "$TWRP_VERSION" ] ||
+    finish "failed $slot TWRP ${twrp:-of unknown version} cannot install this image, update to amonet v2 and TWRP $TWRP_VERSION"
 
 [ -f "$DIR/update.zip" ] || finish "failed $slot update.zip is missing"
 cp "$DIR/update-binary" "$UPDATER" && chmod 0755 "$UPDATER" ||

@@ -2,6 +2,11 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Echo Dot (2nd gen) Unreleased
+
+### Fixed
+- **A system update only installs from TWRP 3.7.0_9-0** ([#13](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/13)). The image needs amonet v2 and its TWRP 3.7.0_9-0, but an update runs in whatever TWRP the Dot has. On an Echo Show still on amonet 1 and its TWRP 3.2.3, an update left the system half written. The update step in TWRP now checks the TWRP version first. With anything else, such as amonet v1's 3.2.3 or 3.7.0_9-bboe2, it writes nothing to either slot and Android starts again, and BiscuitService reports why in Home Assistant and Kiosk Satellite. This applies to updates from this release on.
+
 ## Echo Dot (2nd gen) 2026.10.13 - 2026-10-27
 
 ### Fixed

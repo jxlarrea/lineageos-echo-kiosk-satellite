@@ -49,6 +49,8 @@ run() {
     echo "active=$3" >"$case_dir/bcb"
     printf '#!/bin/sh\n[ "$1" = b ] && [ "%s" = 1 ]\n' "$4" >"$case_dir/has-image"
     chmod +x "$case_dir/has-image"
+    printf '#!/bin/sh\n[ "$1" = ro.twrp.version ] && echo "%s"\n' "${TWRP:-3.7.0_9-0}" >"$case_dir/getprop"
+    chmod +x "$case_dir/getprop"
     [ -n "${NO_ZIP:-}" ] || : >"$case_dir/cache/update.zip"
     [ -n "${NO_UPDATER:-}" ] || cp "$TMPDIR/updater" "$case_dir/cache/update-binary"
     [ -n "$1" ] && echo "$1" >"$case_dir/cache/slot"
@@ -56,7 +58,7 @@ run() {
         BISCUIT_OTA_DIR="$case_dir/cache" BISCUIT_OTA_BCB="$case_dir/bcbtool" \
         BISCUIT_OTA_BY_NAME="$case_dir/by-name" BISCUIT_OTA_LINKS="$case_dir/links" \
         BISCUIT_OTA_TMP="$case_dir/tmp" FAIL_SET_ACTIVE="${FAIL_SET_ACTIVE:-}" \
-        BISCUIT_OTA_HAS_IMAGE="$case_dir/has-image" \
+        BISCUIT_OTA_HAS_IMAGE="$case_dir/has-image" BISCUIT_OTA_GETPROP="$case_dir/getprop" \
         sh "$OTA/twrp-update.sh"
     RESULT=$(cat "$case_dir/cache/result")
     . "$case_dir/bcb"
@@ -81,6 +83,11 @@ run "" ok a 1; expect "failed  no slot to install into" a ""
 FAIL_SET_ACTIVE=b run b ok a 1; expect "failed b could not switch to slot b" a ""
 NO_ZIP=1 run a ok b 1; expect "failed a update.zip is missing" b ""
 NO_UPDATER=1 run a ok b 1; expect "failed a update-binary is missing" b ""
+# Any other TWRP writes nothing and leaves the slots as they were (issue #13).
+TWRP=3.2.3 run a ok b 1
+expect "failed a TWRP 3.2.3 cannot install this image, update to amonet v2 and TWRP 3.7.0_9-0" b ""
+TWRP=3.7.0_9-bboe2 run b ok a 1
+expect "failed b TWRP 3.7.0_9-bboe2 cannot install this image, update to amonet v2 and TWRP 3.7.0_9-0" a ""
 
 # The build ships the script and key, stamps the release and puts it in the
 # zip.

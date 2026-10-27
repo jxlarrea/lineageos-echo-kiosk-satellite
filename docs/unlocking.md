@@ -74,13 +74,30 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5
 
 `fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. If it says the bootloader is already unlocked, the Show is on amonet 2 already. On the Echo Show 5 it writes TWRP itself and restarts into it, so the package's `fastboot-step.sh` is not needed. If the Show is in TWRP when `fastbrick` ends, skip that step.
 
-### A Show on amonet 1
+### Updating from amonet 1
 
 A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not support. Run `fastbrick` the same way to update from amonet 1 to amonet 2. The system that was on the Show does not boot on amonet 2, so install the image right after.
 
 ## Echo Show 8 (1st gen)
 
-Its image is not ready yet. This section comes with it.
+Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 8 (1st gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/). It unlocks the Show over USB the same way as on the Echo Show 5 and writes TWRP 3.7.0_9-0, which is what the image needs.
+
+### What you need
+
+- The Echo Show 8 (1st gen), its power adapter and a USB cable that carries data.
+- A computer with Linux, macOS or Windows. The package brings its own `fastboot`.
+
+### Run fastbrick
+
+1. Download R0rt1z2's package for the Echo Show 8 (1st gen) from the XDA thread and extract it.
+2. Put the Show in fastboot mode. Unplug its power, then hold **Volume Down**, **Volume Up** and the **privacy button** together, plug the power back in and keep holding until the fastboot screen shows. Connect the Show to your computer.
+3. From the extracted folder, run `./fastbrick.sh` on Linux and macOS. On Windows, run `fastbrick.bat`.
+
+`fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. If it says the bootloader is already unlocked, the Show is on amonet 2 already. If the Show is not in TWRP when `fastbrick` ends, follow the next step in the package's instructions on the XDA thread.
+
+### Updating from amonet 1
+
+A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not support. Run `fastbrick` the same way to update from amonet 1 to amonet 2. The system that was on the Show does not boot on amonet 2, so install the image right after.
 
 ## Next
 

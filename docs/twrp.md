@@ -1,6 +1,6 @@
 # Getting into TWRP
 
-Every image installs from the TWRP that comes with the device's amonet. [Unlocking](unlocking.md) installs both. This page covers the Echo Dot (2nd gen) and the Echo Show 5 (2nd gen).
+Every image installs from the TWRP that comes with the device's amonet. [Unlocking](unlocking.md) installs both. This page covers the Echo Dot (2nd gen), the Echo Show 5 (2nd gen) and the Echo Show 8 (1st gen).
 
 ## Echo Dot (2nd gen)
 
@@ -73,9 +73,36 @@ If the Show does not boot, R0rt1z2's amonet package has a `boot-recovery.sh` tha
 adb shell getprop ro.twrp.version
 ```
 
-It must print `3.7.0_9-0`. A Show that prints `3.2.3-0` is still on amonet 1. [A Show on amonet 1](unlocking.md#a-show-on-amonet-1) covers the update.
+It must print `3.7.0_9-0`. A Show that prints `3.2.3-0` is still on amonet 1. [Updating from amonet 1](unlocking.md#updating-from-amonet-1) covers the update.
 
 ### One slot
 
 The Show has one copy of each partition, with no slots. An install replaces the system that was there, so if it fails, only TWRP starts until an install succeeds. TWRP's `wipe data` keeps the internal storage in `/sdcard`.
 
+## Echo Show 8 (1st gen)
+
+The image installs from TWRP 3.7.0_9-0, the recovery that comes with amonet 2.
+
+### Starting TWRP
+
+If the Show is running, connect it over USB and run:
+
+```sh
+adb reboot recovery
+```
+
+Within about half a minute, `adb devices -l` lists the Show as `recovery`. TWRP has a touch screen on the Show, but the guide runs everything over `adb shell`. The `twrp` command does what its buttons do, such as `twrp install` and `twrp wipe`. TWRP has no adb over Wi-Fi, so connect the Show over USB even if you use adb over Wi-Fi in Android.
+
+If the Show does not boot, R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/) covers starting TWRP and unbricking it over USB.
+
+### Checking the version
+
+```sh
+adb shell getprop ro.twrp.version
+```
+
+It must print `3.7.0_9-0`. A Show that prints `3.2.3-0` is still on amonet 1. [Updating from amonet 1](unlocking.md#updating-from-amonet-1-1) covers the update.
+
+### One slot
+
+The Show has one copy of each partition, with no slots. An install replaces the system that was there, so if it fails, only TWRP starts until an install succeeds. TWRP's `wipe data` keeps the internal storage in `/sdcard`.

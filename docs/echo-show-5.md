@@ -113,7 +113,7 @@ To move a Show from R0rt1z2's LineageOS 18.1 image to this one, install it by ha
 3. **Set the time, join Wi-Fi and wait for Kiosk Satellite** as in [After installing](#after-installing).
 4. **Restore the backup.** In the setup wizard, choose **Restore from configuration file** and pick the file you exported.
 
-A Show that was unlocked with amonet 1 needs amonet 2 first. [Unlocking the Echo Show 5](unlocking.md#echo-show-5-2nd-gen) covers it.
+A Show that was unlocked with amonet 1 needs amonet 2 first. [Updating from amonet 1](unlocking.md#updating-from-amonet-1) covers it.
 
 ## Updating
 

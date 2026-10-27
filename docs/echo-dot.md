@@ -11,12 +11,11 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 - **A louder microphone and speaker.** The microphone preamp is 36 dB instead of Fire OS's 20, so voices and intercom calls come through at a normal level. The image drives the speaker 3 dB louder than the Fire OS drivers alone, without distortion at full volume.
 - **Kiosk Satellite on first boot.** Once the Dot is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. No adb grants needed.
 - **System updates.** BiscuitService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
-- **The buttons.** BiscuitService sends Action button presses to Kiosk Satellite as a broadcast, even while the Dot is asleep, with no accessibility service. Kiosk Satellite can take over the volume buttons for a Music Assistant group or a player it follows.
-- **The light ring.** The image plays Kiosk Satellite's animations on the light ring without flickering and returns to them after the volume overlay.
-- **The line out jack.** With something plugged in, the image plays audio through the jack at full level and keeps the Dot's speaker off. When you unplug it, the image switches audio back to the speaker.
+- **Functional buttons.** BiscuitService sends Action button presses to Kiosk Satellite as a broadcast, even while the Dot is asleep, with no accessibility service. Kiosk Satellite can take over the volume buttons for a Music Assistant group or a player it follows.
+- **Functional light ring.** The image plays Kiosk Satellite's animations on the light ring without flickering and returns to them after the volume overlay.
+- **Functional line out jack.** With something plugged in, the image plays audio through the jack at full level and keeps the Dot's speaker off. When you unplug it, the image switches audio back to the speaker.
 - **Bluetooth both ways.** Phones can play to the Dot as a Bluetooth speaker. The Dot's audio can also go to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
-- **5 GHz Wi-Fi**, the DFS channels 52 to 144 included, with Wi-Fi power saving off. See [Network](#network).
-- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz.
+- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz. DFS channels 52 to 144 included, with Wi-Fi power saving off. See [Network](#network).
 - **WPA2/WPA3 networks.** The image connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256. On stock LineageOS 18.1, Android tries WPA3 or WPA2 with SHA256 there, which the Dot's Wi-Fi cannot do, so the connection never succeeds.
 - **More free memory.** With Kiosk Satellite connected and Amazon's wake word engine listening, about 235 MB of the Dot's 480 MB stays available.
 

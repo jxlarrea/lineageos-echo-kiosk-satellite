@@ -96,6 +96,20 @@ PRODUCT_PRODUCT_PROPERTIES += \
     dalvik.vm.heaptargetutilization=0.9 \
     dalvik.vm.heapmaxfree=4m
 
+# The Kiosk Satellite mark as the boot animation, in place of LineageOS's
+# (media/, scripts/make-bootanimation.py). Its bars bounce while Android
+# boots, then settle and the house fades in around them. There is one zip
+# for each Show's screen height, which the device sets.
+TARGET_BOOTANIMATION = vendor/kiosk-satellite/media/bootanimation-$(TARGET_SCREEN_HEIGHT).zip
+
+# A plain #444444 wallpaper on a fresh install. WallpaperManager opens the
+# file ro.config.wallpaper names before the framework's default wallpaper.
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/media/wallpaper.png:$(TARGET_COPY_OUT_SYSTEM)/media/wallpaper.png
+
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    ro.config.wallpaper=/system/media/wallpaper.png
+
 # Features the Shows never use, which keeps their services out of
 # system_server (permissions/).
 PRODUCT_COPY_FILES += \

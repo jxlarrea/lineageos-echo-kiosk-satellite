@@ -58,7 +58,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 - **Release images are checked against the other Echo Show.** `make check` now also fails an Echo Show 8 or Echo Show 5 image that carries the other Show's settings, audio pipeline, boot animation or hostname, and fails an Echo Dot image with the Shows' boot animation or wallpaper. `make test` fails if either Show inherits the other's device layer or a shared layer sets what each device sets.
 - **50% master volume on a fresh Show 8.** A fresh install starts at master volume 8 of 15, which Kiosk Satellite shows as 50%. The Show 8's speakers are much louder than the Echo Show 5's. At 70% a voice across the room ends up about 18 dB under music, where no setting caught more than 6 of 10 wake words.
 
-## Echo Show 5 (2nd gen) Unreleased
+## Echo Show 5 (2nd gen) 2026.10.2 - 2026-10-27
 
 ### Fixed
 - **Streaming stalled on Wi-Fi networks with several access points.** Android 11 looks for a better access point after every scan while a connection carries little traffic. The Echos' Wi-Fi drivers report no traffic at all. On a mesh network Android moved an Echo Show 8 between access points every 20 seconds, even in the middle of a voice conversation. Each move stalled audio and dropped Home Assistant. Android also ranked access points by a throughput estimate that these drivers get wrong, so it picked a weak mesh node over the router next to it. Android now keeps the access point it connected to and picks one by signal strength, preferring a 5 GHz network down to -50 dBm. This applies to every Echo. On the Echo Show 5, a scan while connected stalled the link in bursts of up to half a second, and the Echo Show 5 guide now describes the fix.

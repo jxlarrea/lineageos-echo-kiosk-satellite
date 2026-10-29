@@ -5,6 +5,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ## Echo Dot (2nd gen) Unreleased
 
 ### Fixed
+- **The speaker popped when a sound played after a few seconds of silence** ([#21](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/21)). Android put the speaker output into standby after 3 seconds without sound, and every standby switched the amplifier off. The next sound, such as the wake chime or the answer after a long thinking phase, popped when the amplifier came back on. The speaker output now stays on, so the amplifier is never switched off between sounds. Bluetooth headphones and speakers still go idle 3 seconds after the last sound.
 - **The Dot rebooted if it ever suspended.** The image keeps the Dot awake on power and Kiosk Satellite holds it awake too, so it does not suspend in normal use. If it did, the kernel crashed and the Dot rebooted: the sleep code reads registers of the MT8163's MD32 processor, and the Dot's device tree left MD32 off, so they were never mapped. MD32 is now on, as on the Echo Shows, and a forced suspend completes and resumes. Thanks to meiser79 for pointing it out.
 
 ## Echo Dot (2nd gen) 2026.10.14 - 2026-10-27

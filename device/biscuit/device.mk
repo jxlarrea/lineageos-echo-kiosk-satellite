@@ -55,6 +55,14 @@ endif
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.config.media_vol_default=11
 
+# The speaker output never goes to standby (issue #21). Every standby
+# switches the amplifier off, so a wake chime after a few seconds of silence
+# popped when it came back on. This is the longest delay AudioFlinger takes,
+# about 49 days of silence. Bluetooth outputs still idle after the usual 3
+# seconds (patches/biscuit/frameworks/av).
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.audio.flinger_standbytime_ms=4294967295
+
 # WebView is left out, but its loader and platform support libraries stay:
 # public.libraries.txt lists them, and no app can start without them.
 PRODUCT_PACKAGES += \

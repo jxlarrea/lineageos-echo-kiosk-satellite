@@ -1,0 +1,62 @@
+AudioFlinger: Let Bluetooth outputs idle after the usual delay
+
+The Echo Dot keeps its speaker output out of standby with a long
+ro.audio.flinger_standbytime_ms, since every standby switches its
+amplifier off and the next sound pops when it comes back on. The same
+delay applied to Bluetooth outputs, which then streamed silence to
+headphones and speakers for as long as they stayed connected.
+
+Give A2DP outputs the default standby delay whatever the property says.
+A thread caches its delay when its loop starts, before its first audio
+patch sets the device, so work the delay out again whenever a patch
+changes a mixer thread's device.
+
+diff --git a/services/audioflinger/Threads.cpp b/services/audioflinger/Threads.cpp
+--- a/services/audioflinger/Threads.cpp
++++ b/services/audioflinger/Threads.cpp
+@@ -3211,11 +3211,18 @@
+ 
+     // make sure standby delay is not too short when connected to an A2DP sink to avoid
+     // truncating audio when going to standby.
++    updateStandbyDelay_l();
++}
++
++void AudioFlinger::PlaybackThread::updateStandbyDelay_l()
++{
+     mStandbyDelayNs = AudioFlinger::mStandbyTimeInNsecs;
+     if (!Intersection(outDeviceTypes(),  getAudioDeviceOutAllA2dpSet()).empty()) {
+-        if (mStandbyDelayNs < kDefaultStandbyTimeInNsecs) {
+-            mStandbyDelayNs = kDefaultStandbyTimeInNsecs;
+-        }
++        // A device that keeps its speaker out of standby with a long
++        // ro.audio.flinger_standbytime_ms still lets Bluetooth headphones
++        // and speakers idle after the usual delay, instead of streaming
++        // silence to them for as long as they stay connected.
++        mStandbyDelayNs = kDefaultStandbyTimeInNsecs;
+     }
+ }
+ 
+@@ -4242,6 +4249,12 @@
+                          (mPatch.sinks[0].id != sinkPortId);
+     mPatch = *patch;
+     mOutDeviceTypeAddrs = deviceTypeAddrs;
++    // The thread cached its standby delay before its first patch set the
++    // device, so a Bluetooth output kept the delay of any other output.
++    // Direct and offload threads set their own delays.
++    if (mType == MIXER) {
++        updateStandbyDelay_l();
++    }
+     checkSilentMode_l();
+ 
+     if (mOutput->audioHwDev->supportsAudioPatches()) {
+diff --git a/services/audioflinger/Threads.h b/services/audioflinger/Threads.h
+--- a/services/audioflinger/Threads.h
++++ b/services/audioflinger/Threads.h
+@@ -1049,6 +1049,7 @@
+ 
+     // Cache various calculated values, at threadLoop() entry and after a parameter change
+     virtual     void        cacheParameters_l();
++                void        updateStandbyDelay_l();
+ 
+     virtual     uint32_t    correctLatency_l(uint32_t latency) const;
+ 

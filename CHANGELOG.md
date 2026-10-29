@@ -51,6 +51,11 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Added
 - **adb root on the Dot.** LineageOS 18.1 only allows `adb root` after Rooted debugging is turned on in Developer options, which the Dot has no screen for. `biscuit_service adb root on` turns it on and `off` turns it off again. It stays off by default. The Echo Dot guide explains it.
 
+## Echo Show 8 (1st gen) Unreleased
+
+### Fixed
+- **Music sounded tinny and warbled while Kiosk Satellite listened** ([#20](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/20)). Amazon's audio driver moves playback onto its call path whenever a microphone capture starts. That path is made for calls: it filters out the bass and turns playback down while it hears the microphones. The audio HAL only took playback back off it for the captures it sends through Amazon's ASR pipeline itself. With Capture mode set to Voice communication in Kiosk Satellite, or after Kiosk Satellite fell back to that source by itself, music stayed tinny and warbling for as long as the microphones were open. Playback now leaves the call path at the start of every capture unless Android is in a call.
+
 ## Echo Show 8 (1st gen) 2026.10.2 - 2026-10-27
 
 ### Fixed
@@ -73,6 +78,11 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Changed
 - **Release images are checked against the other Echo Show.** `make check` now also fails an Echo Show 8 or Echo Show 5 image that carries the other Show's settings, audio pipeline, boot animation or hostname, and fails an Echo Dot image with the Shows' boot animation or wallpaper. `make test` fails if either Show inherits the other's device layer or a shared layer sets what each device sets.
 - **50% master volume on a fresh Show 8.** A fresh install starts at master volume 8 of 15, which Kiosk Satellite shows as 50%. The Show 8's speakers are much louder than the Echo Show 5's. At 70% a voice across the room ends up about 18 dB under music, where no setting caught more than 6 of 10 wake words.
+
+## Echo Show 5 (2nd gen) Unreleased
+
+### Fixed
+- **Music could sound tinny and warble while Kiosk Satellite listened** ([#20](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/20)). Amazon's audio driver moves playback onto its call path whenever a microphone capture starts. That path is made for calls: it filters out the bass and turns playback down while it hears the microphones. The audio HAL only took playback back off it for the microphone captures it reroutes itself. With Capture mode set to Voice communication in Kiosk Satellite, or after Kiosk Satellite fell back to that source by itself, music stayed on the call path for as long as the microphones were open. Playback now leaves the call path at the start of every capture unless Android is in a call.
 
 ## Echo Show 5 (2nd gen) 2026.10.3 - 2026-10-27
 

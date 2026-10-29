@@ -1,0 +1,120 @@
+audio: Keep the VoIP playback path for calls only
+
+Amazon's HAL moves playback to its VoIP path whenever a capture starts.
+That path is made for calls: it filters out the bass and turns playback
+down while it hears the mics. The wrapper only took playback back off it
+for the mic captures it remaps, so an app recording on
+VOICE_COMMUNICATION itself, such as Kiosk Satellite with Capture mode set
+to Voice communication, made music tinny and warbling for as long as the
+mics stayed open.
+
+Track the audio mode and take playback off the VoIP path at the start of
+every capture outside a call (AUDIO_MODE_IN_CALL or
+AUDIO_MODE_IN_COMMUNICATION).
+
+diff --git a/audio/hal/asp.cpp b/audio/hal/asp.cpp
+index 5039197..c068ec3 100644
+--- a/audio/hal/asp.cpp
++++ b/audio/hal/asp.cpp
+@@ -14,6 +14,7 @@
+ #include "asp.h"
+ 
+ static std::atomic<bool> noise_suppression(true);
++static std::atomic<audio_mode_t> audio_mode(AUDIO_MODE_NORMAL);
+ 
+ typedef int (*asp_command_t)(void* pipeline, int code, int size, void* data, void* reply,
+                              int* reply_size);
+@@ -66,3 +67,18 @@ audio_source_t remap_input_source(audio_source_t source) {
+             return source;
+     }
+ }
++
++void asp_set_mode(audio_mode_t mode) {
++    audio_mode = mode;
++}
++
++/*
++ * Every capture pipeline moves playback to the VoIP path when the capture
++ * starts. That path is made for calls: it filters out the bass and turns
++ * playback down while it hears the mics. Keep it for calls only.
++ */
++bool asp_in_call() {
++    audio_mode_t mode = audio_mode;
++
++    return mode == AUDIO_MODE_IN_CALL || mode == AUDIO_MODE_IN_COMMUNICATION;
++}
+diff --git a/audio/hal/asp.h b/audio/hal/asp.h
+index 078f75a..6650e86 100644
+--- a/audio/hal/asp.h
++++ b/audio/hal/asp.h
+@@ -17,4 +17,6 @@
+ 
+ int asp_send_command(int code, int value);
+ void asp_set_parameters(const char* kv_pairs);
++void asp_set_mode(audio_mode_t mode);
++bool asp_in_call();
+ audio_source_t remap_input_source(audio_source_t source);
+diff --git a/audio/hal/legacy/audio_amazon.h b/audio/hal/legacy/audio_amazon.h
+index 6901f29..6d53931 100644
+--- a/audio/hal/legacy/audio_amazon.h
++++ b/audio/hal/legacy/audio_amazon.h
+@@ -275,7 +275,8 @@ struct audio_stream_in_ext {
+ 
+     /**
+      * Mic captures run on the voice pipeline, which moves playback to the
+-     * VoIP path whenever the capture starts.
++     * VoIP path whenever the capture starts. Any other capture outside a
++     * call does the same (asp_in_call).
+      */
+     bool mic_capture;
+     bool capture_started;
+diff --git a/audio/hal/legacy/audio_hw.cpp b/audio/hal/legacy/audio_hw.cpp
+index 77d8fb2..7dd977b 100644
+--- a/audio/hal/legacy/audio_hw.cpp
++++ b/audio/hal/legacy/audio_hw.cpp
+@@ -141,6 +141,7 @@ static int adev_get_master_mute(struct audio_hw_device* dev __unused, bool* mute
+ static int adev_set_mode(struct audio_hw_device* dev, audio_mode_t mode) {
+     amazon_wrapper_audio_device* ctx = reinterpret_cast<amazon_wrapper_audio_device*>(dev);
+ 
++    asp_set_mode(mode);
+     return ctx->amazon_device->set_mode(ctx->amazon_device, mode);
+ }
+ 
+diff --git a/audio/hal/legacy/audio_stream.cpp b/audio/hal/legacy/audio_stream.cpp
+index d33e9d6..6b6bb37 100644
+--- a/audio/hal/legacy/audio_stream.cpp
++++ b/audio/hal/legacy/audio_stream.cpp
+@@ -183,7 +183,7 @@ static ssize_t stream_in_ext_read(struct audio_stream_in* stream, void* buffer,
+         return -ENOSYS;
+ 
+     ssize_t ret = legacy_stream->read(legacy_stream, buffer, bytes);
+-    if (stream_in_ext->mic_capture && !stream_in_ext->capture_started) {
++    if ((stream_in_ext->mic_capture || !asp_in_call()) && !stream_in_ext->capture_started) {
+         /* Keep the VoIP playback path for calls only. */
+         asp_send_command(ASP_CMD_SET_VOIP_MODE, 0);
+         stream_in_ext->capture_started = true;
+diff --git a/audio/hal/v28/audio_hw.cpp b/audio/hal/v28/audio_hw.cpp
+index fb07293..7f7cf44 100644
+--- a/audio/hal/v28/audio_hw.cpp
++++ b/audio/hal/v28/audio_hw.cpp
+@@ -68,6 +68,7 @@ static int adev_get_master_volume(struct v28_audio_hw_device* dev, float* volume
+ static int adev_set_mode(struct v28_audio_hw_device* dev, audio_mode_t mode) {
+     struct v28_audio_hw_device* adev = to_amazon(dev);
+ 
++    asp_set_mode(mode);
+     return adev->set_mode(adev, mode);
+ }
+ 
+diff --git a/audio/hal/v28/audio_stream.cpp b/audio/hal/v28/audio_stream.cpp
+index 8b65339..22de93a 100644
+--- a/audio/hal/v28/audio_stream.cpp
++++ b/audio/hal/v28/audio_stream.cpp
+@@ -124,7 +124,7 @@ static ssize_t in_read(struct v28_audio_stream_in* stream, void* buffer, size_t
+     struct v28_audio_stream_in_ext* in = reinterpret_cast<struct v28_audio_stream_in_ext*>(stream);
+     ssize_t ret = in->amazon_stream->read(in->amazon_stream, buffer, bytes);
+ 
+-    if (in->mic_capture && !in->capture_started) {
++    if ((in->mic_capture || !asp_in_call()) && !in->capture_started) {
+         asp_send_command(ASP_CMD_SET_VOIP_MODE, 0);
+         in->capture_started = true;
+     }

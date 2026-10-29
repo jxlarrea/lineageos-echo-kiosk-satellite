@@ -13,7 +13,7 @@ Satellite Edition's own echo canceller on microphone 0, and 17 of 40 over
 the assistant's voice instead of 11, as many as in a quiet room.
 
 diff --git a/audio/hal/asp.cpp b/audio/hal/asp.cpp
-index 5039197..63d6ec7 100644
+index c068ec3..a88f482 100644
 --- a/audio/hal/asp.cpp
 +++ b/audio/hal/asp.cpp
 @@ -7,8 +7,11 @@
@@ -28,7 +28,7 @@ index 5039197..63d6ec7 100644
  #include <cutils/str_parms.h>
  
  #include "asp.h"
-@@ -50,11 +53,31 @@ void asp_set_parameters(const char* kv_pairs) {
+@@ -51,11 +54,31 @@ void asp_set_parameters(const char* kv_pairs) {
      str_parms_destroy(parms);
  }
  
@@ -61,12 +61,12 @@ index 5039197..63d6ec7 100644
          return source;
  
 diff --git a/audio/hal/asp.h b/audio/hal/asp.h
-index 078f75a..f7bd1d0 100644
+index 6650e86..63a0d33 100644
 --- a/audio/hal/asp.h
 +++ b/audio/hal/asp.h
-@@ -18,3 +18,8 @@
- int asp_send_command(int code, int value);
- void asp_set_parameters(const char* kv_pairs);
+@@ -20,3 +20,8 @@ void asp_set_parameters(const char* kv_pairs);
+ void asp_set_mode(audio_mode_t mode);
+ bool asp_in_call();
  audio_source_t remap_input_source(audio_source_t source);
 +
 +/* ro.vendor.audio.asr_capture and the linear gain of
@@ -74,10 +74,10 @@ index 078f75a..f7bd1d0 100644
 +bool asr_capture();
 +float asr_capture_gain();
 diff --git a/audio/hal/legacy/audio_amazon.h b/audio/hal/legacy/audio_amazon.h
-index 6901f29..b9a70d7 100644
+index 6d53931..bbb757f 100644
 --- a/audio/hal/legacy/audio_amazon.h
 +++ b/audio/hal/legacy/audio_amazon.h
-@@ -279,6 +279,12 @@ struct audio_stream_in_ext {
+@@ -280,6 +280,12 @@ struct audio_stream_in_ext {
       */
      bool mic_capture;
      bool capture_started;
@@ -91,10 +91,10 @@ index 6901f29..b9a70d7 100644
  
  /**
 diff --git a/audio/hal/legacy/audio_hw.cpp b/audio/hal/legacy/audio_hw.cpp
-index 77d8fb2..fdea338 100644
+index 7dd977b..1b3f917 100644
 --- a/audio/hal/legacy/audio_hw.cpp
 +++ b/audio/hal/legacy/audio_hw.cpp
-@@ -196,6 +196,9 @@ static int adev_open_input_stream(struct audio_hw_device* dev, audio_io_handle_t
+@@ -197,6 +197,9 @@ static int adev_open_input_stream(struct audio_hw_device* dev, audio_io_handle_t
      if (amazon_source == AUDIO_SOURCE_VOICE_COMMUNICATION)
          asp_send_command(ASP_CMD_SET_VOLUME, ASP_VOLUME_MAX);
      stream_in_ext->mic_capture = amazon_source != source;
@@ -105,7 +105,7 @@ index 77d8fb2..fdea338 100644
      /* legacy_in is now pointing to the HAL's allocated legacy_audio_stream_in */
      stream_in_ext->legacy_stream = (struct legacy_audio_stream_in*)legacy_in;
 diff --git a/audio/hal/legacy/audio_stream.cpp b/audio/hal/legacy/audio_stream.cpp
-index d33e9d6..8a2ee8b 100644
+index 6b6bb37..ab86c00 100644
 --- a/audio/hal/legacy/audio_stream.cpp
 +++ b/audio/hal/legacy/audio_stream.cpp
 @@ -7,6 +7,7 @@

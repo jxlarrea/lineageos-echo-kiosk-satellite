@@ -1,0 +1,35 @@
+adb: Let a device require a key without ro.adb.secure
+
+auth_required starts true and is only relaxed to ro.adb.secure on a
+debuggable or unlocked device, which is why an Echo Dot ends up with no key
+at all: the property is unset and the build is userdebug. ro. properties
+are read-only, so nothing can turn that back on afterwards.
+
+An Echo Dot has no screen, so it cannot show the prompt an unknown key
+needs. It can still accept a key that is already in adb_keys, which is all
+adbd looks at once auth is on. Read persist.echo.adb_secure as well, so a
+Dot can be handed a key over the open connection it boots with and then
+require one. It can only add the requirement, so an Echo Show, which
+already asks for a key, is unaffected, and a device that never sets the
+property is untouched.
+
+diff --git a/adb/daemon/main.cpp b/adb/daemon/main.cpp
+index 1e33128..cfa83ca 100644
+--- a/adb/daemon/main.cpp
++++ b/adb/daemon/main.cpp
+@@ -217,6 +217,15 @@ int adbd_main(int server_port) {
+     if (__android_log_is_debuggable() || device_unlocked) {
+         auth_required = android::base::GetBoolProperty("ro.adb.secure", false);
+     }
++    // Kiosk Satellite Edition: an Echo has no screen to show the prompt an
++    // unknown key needs, so a device can be handed a key over the open
++    // connection it boots with and then require one. It can only add the
++    // requirement, never take one away, so a device that already asks for a
++    // key keeps asking, and a device that never sets the property is
++    // untouched.
++    if (android::base::GetBoolProperty("persist.echo.adb_secure", false)) {
++        auth_required = true;
++    }
+ #if defined(__ANDROID_RECOVERY__)
+     if (android::base::GetProperty("ro.build.type", "") == "userdebug") {
+         auth_required = auth_required &&

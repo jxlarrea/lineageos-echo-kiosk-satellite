@@ -40,10 +40,17 @@ Time:
     Windows: adb shell echo_service time sync ([DateTimeOffset]::UtcNow.ToUnixTimeSeconds()) "'\$((Get-TimeZone).Id)'"
 
 adb:
-  adb [status]                   USB, Wi-Fi and key expiry
+  adb [status]                   USB, Wi-Fi, key expiry and whether a key is
+                                 required
   adb wifi on|off                adb over Wi-Fi on port 5555, restarts adb
   adb root on|off                allow adb root (LineageOS's Rooted debugging)
   adb keys expire on|off         whether allowed computers expire after 7 days
+  adb key add <base64-key>       install a computer's key, the first word of its
+                                 adbkey.pub, so it can still reach the Echo once
+                                 keys are required
+  adb secure on|off              whether adb requires one of those keys. An Echo
+                                 has no screen to accept a new key on, so it
+                                 takes one over the open connection first
 
 Lock screen, privacy, language and screen:
   lockscreen [status]|on|off     the swipe lock screen

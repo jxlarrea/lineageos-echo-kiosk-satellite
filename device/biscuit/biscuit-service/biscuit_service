@@ -45,6 +45,12 @@ adb:
   adb root                   whether adb root is allowed
   adb root on|off            allow adb root (LineageOS's Rooted debugging),
                              then run adb root from the computer
+  adb key add <base64-key>   install a computer's key, the first word of its
+                             adbkey.pub, so it can still reach the Dot once
+                             keys are required
+  adb secure on|off          whether adb requires one of those keys. A Dot has
+                             no screen to accept a new key on, so it takes one
+                             over the open connection first
 
 System update:
   update status              show the installed and newest release
@@ -147,10 +153,17 @@ case "$1" in
         case "$2 $3" in
             "root on"|"root off")
                 [ "$3" = on ] && enabled=true || enabled=false
-                out=$(am broadcast -a "$PKG.ADB_ROOT" -n "$PKG/.AdbRootReceiver" --ez enabled "$enabled")
+                out=$(am broadcast -a "$PKG.ADB_ROOT" -n "$PKG/.AdbReceiver" --ez enabled "$enabled")
                 ;;
             "root ")
-                out=$(am broadcast -a "$PKG.ADB_ROOT" -n "$PKG/.AdbRootReceiver")
+                out=$(am broadcast -a "$PKG.ADB_ROOT" -n "$PKG/.AdbReceiver")
+                ;;
+            "secure on"|"secure off")
+                [ "$3" = on ] && enabled=true || enabled=false
+                out=$(am broadcast -a "$PKG.ADB_SECURE" -n "$PKG/.AdbReceiver" --ez enabled "$enabled")
+                ;;
+            "key add")
+                out=$(am broadcast -a "$PKG.ADB_KEY" -n "$PKG/.AdbReceiver" --es key "$4")
                 ;;
             *)
                 usage >&2
@@ -158,9 +171,10 @@ case "$1" in
                 ;;
         esac
         printf '%s\n' "$out" | sed -n 's/^Broadcast completed: .*data="\(.*\)"$/\1/p'
+        code=$(printf '%s\n' "$out" | sed -n 's/^Broadcast completed: result=\(-\{0,1\}[0-9]*\).*/\1/p')
         # Every other command ends in exec. This one returns, and anything
         # that reaches the end of the script is a usage error.
-        exit 0
+        exit "${code:-1}"
         ;;
     update)
         case "$2" in

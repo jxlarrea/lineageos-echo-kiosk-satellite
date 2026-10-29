@@ -248,7 +248,7 @@ Switching between the two restarts Bluetooth, which drops what was connected. `a
 - **5 GHz.** The image connects to networks on every 5 GHz channel the US allows, the DFS channels 52 to 144 included, since a Dot has no SIM to learn its country from. It uses the 20 MHz primary channel of a wider network.
 - **WPA2/WPA3.** The image connects to a network in WPA2/WPA3 transition mode with WPA2. Its Wi-Fi cannot do WPA3, so it cannot join a network that only offers WPA3. Use WPA2 or WPA2/WPA3 for the Dot's network.
 - **Protected management frames.** The Dot's Wi-Fi cannot do protected management frames (PMF, 802.11w), so it cannot join a network that requires them. Set PMF to optional or off for the Dot's network. Most routers keep it optional in WPA2/WPA3 transition mode.
-- **adb works over Wi-Fi** on port 5555 without a password, so a Dot without a screen can always be reached. Anyone on your network can control the Dot this way, so keep it on a network you trust.
+- **adb works over Wi-Fi** on port 5555 without a password, so a Dot without a screen can always be reached. Anyone on your network can control the Dot this way, so keep it on a network you trust, or install your computer's key and require one: [adb keys](adb-keys.md).
 - **adb root is off,** as LineageOS 18.1 ships it. Nothing in this guide needs it: `biscuit_service` and the other commands run from a normal `adb shell`. To use `adb root`, allow it first. LineageOS keeps this switch in Developer options, which the Dot has no screen for, so `biscuit_service` sets it:
 
   ```sh

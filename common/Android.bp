@@ -68,6 +68,14 @@ android_app {
     ],
 }
 
+// The key authentication both services share (echo-service/AdbKeys.java).
+// EchoService takes it in through its own srcs glob; the Dot's BiscuitService
+// names this filegroup, since it lives in another package.
+filegroup {
+    name: "echo-adb-keys",
+    srcs: ["echo-service/src/me/jxl/echo/service/AdbKeys.java"],
+}
+
 sh_binary {
     name: "echo_service",
     src: "echo-service/echo_service",

@@ -51,14 +51,17 @@
             </intent-filter>
         </receiver>
 
-        <!-- biscuit_service adb root on|off. Only senders holding
-             WRITE_SECURE_SETTINGS get through: adb, root and the system. -->
+        <!-- biscuit_service adb root on|off, adb key add and adb secure
+             on|off. Only senders holding WRITE_SECURE_SETTINGS get through:
+             adb, root and the system. -->
         <receiver
-            android:name=".AdbRootReceiver"
+            android:name=".AdbReceiver"
             android:exported="true"
             android:permission="android.permission.WRITE_SECURE_SETTINGS">
             <intent-filter>
                 <action android:name="com.amazon.biscuit.service.ADB_ROOT" />
+                <action android:name="com.amazon.biscuit.service.ADB_KEY" />
+                <action android:name="com.amazon.biscuit.service.ADB_SECURE" />
             </intent-filter>
         </receiver>
 

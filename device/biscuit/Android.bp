@@ -181,6 +181,9 @@ prebuilt_etc {
 android_app {
     name: "BiscuitService",
     srcs: [
+        // AdbKeys, which both services share (common/, staged to
+        // vendor/kiosk-satellite).
+        "//vendor/kiosk-satellite:echo-adb-keys",
         "biscuit-service/src/**/*.java",
         "biscuit-service/src/**/*.aidl",
     ],

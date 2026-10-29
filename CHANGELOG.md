@@ -2,6 +2,11 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Unreleased
+
+### Added
+- **Key authentication for adb on the Echo Dot.** The Dot runs adb over Wi-Fi on port 5555 with no password, so a Dot without a screen can always be reached, and so can anything else on the network. Android shows a prompt the first time an unknown computer connects, which a Dot has no screen for, so the image asks for no key at all. `biscuit_service adb key add` installs a computer's key over that open connection and `biscuit_service adb secure on` requires one from then on: adbd restarts and accepts only a key in `adb_keys`. `adb secure on` is refused with no key installed, since it would leave the Dot unreachable with no way back but recovery, and `adb status` reports which way the switch is. The property can only add the requirement, so the Echo Shows, which already ask for a key on their screens, keep asking, and they can use `echo_service adb key add` to allow a computer without a tap. `patches/common/system/core` reads `persist.echo.adb_secure`, and with it unset every Echo behaves exactly as before.
+
 ## Echo Dot (2nd gen) 2026.10.14 - 2026-10-27
 
 ### Fixed

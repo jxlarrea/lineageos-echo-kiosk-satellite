@@ -448,8 +448,32 @@ public final class Commands extends BroadcastReceiver {
                         Settings.Global.ADB_ALLOWED_CONNECTION_TIME, expire ? ADB_KEY_DEFAULT_MS : 0);
                 return expire ? "adb keys expire after 7 days unused" : "adb keys never expire";
             }
+            case "key": {
+                // The key an Echo cannot be handed through the authorization
+                // prompt, which has no screen to appear on. Installed over the
+                // open connection, then required by `adb secure on`.
+                if (!"add".equals(arg(args, 1))) {
+                    throw new UsageException("usage: adb key add <base64-key>");
+                }
+                try {
+                    return AdbKeys.add(arg(args, 2));
+                } catch (IllegalArgumentException | IllegalStateException e) {
+                    throw new UsageException(e.getMessage());
+                }
+            }
+            case "secure": {
+                if (args.length < 2) return adbStatus(context);
+                boolean on = onOff(args[1]);
+                try {
+                    return AdbKeys.secure(on);
+                } catch (IllegalStateException e) {
+                    throw new UsageException(e.getMessage());
+                }
+            }
             default:
-                throw new UsageException("usage: adb [status|wifi on|off|root on|off|keys expire on|off]");
+                throw new UsageException(
+                        "usage: adb [status|wifi on|off|root on|off|keys expire on|off"
+                                + "|key add <base64-key>|secure on|off]");
         }
     }
 
@@ -460,7 +484,8 @@ public final class Commands extends BroadcastReceiver {
         long keys = Settings.Global.getLong(resolver, Settings.Global.ADB_ALLOWED_CONNECTION_TIME, ADB_KEY_DEFAULT_MS);
         return "USB " + (usb ? "on" : "off") + ", Wi-Fi " + (port > 0 ? "on, port " + port : "off")
                 + ", root " + (new ADBRootService().getEnabled() ? "allowed" : "not allowed")
-                + ", keys " + (keys == 0 ? "never expire" : "expire after " + keys / 86400000 + " days unused");
+                + ", keys " + (keys == 0 ? "never expire" : "expire after " + keys / 86400000 + " days unused")
+                + ", key required " + (AdbKeys.isSecure() ? "yes, " + AdbKeys.count() + " installed" : "no");
     }
 
     // Lock screen

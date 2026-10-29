@@ -206,6 +206,8 @@ Switching between the two restarts Bluetooth, which drops what was connected. `a
   adb shell echo_service adb wifi on
   ```
 
+- **Keys can also be installed without a tap.** `echo_service adb key add` writes a computer's key into the same list the screen fills, so a second computer needs no trip to the Show: [adb keys](adb-keys.md).
+
 - **Allowed computers do not expire.** Android otherwise forgets a computer after 7 days without a connection, which would need a tap on the screen again. `echo_service adb keys expire on` brings the 7 days back.
 - **adb root is off,** as LineageOS 18.1 ships it. To use `adb root`, allow it first:
 

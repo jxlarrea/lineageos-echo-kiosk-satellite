@@ -1,0 +1,32 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Thu, 29 Oct 2026 15:07:15 -0500
+Subject: [PATCH] arm64: dts: mediatek: biscuit: Enable MD32 for suspend
+
+The MT8163 sleep code reads MD32 configuration registers each time the
+system suspends, and the MD32 driver only maps them when its node is
+enabled. With it disabled, a suspend panicked in read_md32_cfgreg and the
+Dot rebooted. Enable it as the Echo Shows do. The driver loads no firmware
+until userspace writes md32_boot.
+---
+ arch/arm64/boot/dts/mediatek/biscuit.dtsi | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/arch/arm64/boot/dts/mediatek/biscuit.dtsi b/arch/arm64/boot/dts/mediatek/biscuit.dtsi
+index 9bb682a6..4a98e2c1 100644
+--- a/arch/arm64/boot/dts/mediatek/biscuit.dtsi
++++ b/arch/arm64/boot/dts/mediatek/biscuit.dtsi
+@@ -509,6 +509,13 @@
+ 	mediatek,kpd-show-hw-keycode = <0>;
+ };
+ 
++/* The sleep code reads MD32 registers on every suspend (slp_suspend_ops_enter), and
++ * the driver only maps them for an enabled node. Without it a suspend panics in
++ * read_md32_cfgreg. No firmware is loaded until userspace asks for it. */
++&md32 {
++	status = "okay";
++};
++
+ &mmc0 {
+ 	pinctrl-names = "default", "state_uhs";
+ 	pinctrl-0 = <&mmc0_pins_default>;

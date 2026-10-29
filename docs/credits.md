@@ -34,6 +34,7 @@ The Echo Show 5 (2nd gen) image is R0rt1z2's `cronos` port in amazon-oss and the
 | Bluetooth speaker (`sources/device/amazon/biscuit/bluetooth`, `device/biscuit/biscuit-service`) | That a Dot playing what phones send should present itself as a loudspeaker with no input or output. That BiscuitService has to answer the pairing requests a headless Dot gets |
 | Audio: speaker amplifier (`sources/device/amazon/biscuit/audio`) | That the amplifier has to come on only after the first write has powered up the codec. Otherwise the first playback after boot crackles |
 | Kernel: mic array FPGA | The 4.9 FPGA reset and programming delays are 2 ms against 100 ms on the Dot's 3.18 kernel |
+| Kernel: suspend (`patches/biscuit/kernel/amazon/mt8163-4.9/0014`) | That the Dot panics when it suspends without the MD32 node. We reproduced the panic in `read_md32_cfgreg` and enabled the node as the Echo Shows' device trees do |
 
 ## Unlocking
 

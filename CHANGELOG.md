@@ -2,6 +2,11 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Echo Dot (2nd gen) Unreleased
+
+### Fixed
+- **The Dot rebooted if it ever suspended.** The image keeps the Dot awake on power and Kiosk Satellite holds it awake too, so it does not suspend in normal use. If it did, the kernel crashed and the Dot rebooted: the sleep code reads registers of the MT8163's MD32 processor, and the Dot's device tree left MD32 off, so they were never mapped. MD32 is now on, as on the Echo Shows, and a forced suspend completes and resumes. Thanks to meiser79 for pointing it out.
+
 ## Echo Dot (2nd gen) 2026.10.14 - 2026-10-27
 
 ### Fixed

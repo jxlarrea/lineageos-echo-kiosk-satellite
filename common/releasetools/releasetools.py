@@ -39,6 +39,8 @@ def FullOTA_InstallEnd(info):
     if not release:
         print("No ro.echo.release, so the package cannot be a system update")
         return
+    # Android 11's system build.prop has no ro.product.device, only
+    # ro.product.system.device.
     common.ZipWriteStr(info.output_zip, _RELEASE_PROP,
                        "ro.product.device=%s\nro.echo.release=%s\n"
-                       % (build_prop.GetProp("ro.product.device"), release))
+                       % (build_prop.GetProp("ro.product.system.device"), release))

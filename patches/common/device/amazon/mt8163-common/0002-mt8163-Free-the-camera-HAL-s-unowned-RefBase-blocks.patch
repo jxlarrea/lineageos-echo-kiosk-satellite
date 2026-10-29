@@ -1,0 +1,56 @@
+mt8163: Free the camera HAL's unowned RefBase blocks
+
+The camera HAL was built for Android 9, whose RefBase destructor freed the
+weak reference block of an object that never had a strong reference.
+Android 11 logs the object and leaks the block. AppStreamMgr builds two such
+objects on the stack for every capture request, so camerahalserver grows by
+about 35 bytes a frame for as long as the camera stays open. Kiosk
+Satellite's motion detection keeps it open for days, which fills the 1 GB
+Echo Shows' swap until the low memory killer takes Kiosk Satellite down.
+
+Interpose RefBase's destructor in the shim camerahalserver preloads and free
+the block when no strong or weak reference is left, as Android 9 did.
+
+diff --git a/libshims/libcamsensormeta_shim.cpp b/libshims/libcamsensormeta_shim.cpp
+index 3e8278d..13e03df 100644
+--- a/libshims/libcamsensormeta_shim.cpp
++++ b/libshims/libcamsensormeta_shim.cpp
+@@ -5,6 +5,9 @@
+  */
+ 
+ #include <dlfcn.h>
++#include <stdint.h>
++
++#include <new>
+ 
+ namespace {
+ 
+@@ -138,3 +141,28 @@ ALIAS(constructCustStaticMetadata_DEVICE_SCALER_SENSOR_DRVNAME_GC0312_RAW, kMeta
+       constructCustStaticMetadata_DEVICE_SCALER_SENSOR_DRVNAME_GC030A_MIPI_RAW)
+ ALIAS(constructCustRequestMetadata_SENSOR_DRVNAME_GC0312_RAW, kMetadataProvider,
+       constructCustRequestMetadata_SENSOR_DRVNAME_GC030A_MIPI_RAW)
++
++// The HAL was built for Android 9, whose RefBase destructor freed the weak
++// reference block of an object that never had a strong reference. Android 11
++// logs the object and leaks the block instead. AppStreamMgr builds such
++// objects on the stack for every capture request, so a camera left open loses
++// a few dozen bytes per frame until the low memory killer steps in. Free the
++// block the way Android 9 did when nothing else can hold it.
++extern "C" void _ZN7android7RefBaseD2Ev(void* self) {
++    using Dtor = void (*)(void*);
++    static auto original = reinterpret_cast<Dtor>(dlsym(RTLD_NEXT, "_ZN7android7RefBaseD2Ev"));
++
++    // RefBase is a vtable pointer and mRefs. weakref_impl starts with the
++    // strong and weak counts.
++    constexpr int32_t kInitialStrongValue = 1 << 28;
++    int32_t* refs = reinterpret_cast<int32_t**>(self)[1];
++    if (__atomic_load_n(&refs[0], __ATOMIC_RELAXED) == kInitialStrongValue &&
++        __atomic_load_n(&refs[1], __ATOMIC_RELAXED) == 0) {
++        ::operator delete(refs);
++        reinterpret_cast<int32_t**>(self)[1] = nullptr;
++        return;
++    }
++    if (original != nullptr) {
++        original(self);
++    }
++}

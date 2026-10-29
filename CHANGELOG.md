@@ -2,7 +2,7 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
-## Echo Dot (2nd gen) Unreleased
+## Echo Dot (2nd gen) 2026.10.15 - 2026-10-29
 
 ### Fixed
 - **The speaker popped when a sound played after a few seconds of silence** ([#21](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/21)). Android put the speaker output into standby after 3 seconds without sound, and every standby switched the amplifier off. The next sound, such as the wake chime or the answer after a long thinking phase, popped when the amplifier came back on. The speaker output now stays on, so the amplifier is never switched off between sounds. Bluetooth headphones and speakers still go idle 3 seconds after the last sound.
@@ -51,7 +51,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Added
 - **adb root on the Dot.** LineageOS 18.1 only allows `adb root` after Rooted debugging is turned on in Developer options, which the Dot has no screen for. `biscuit_service adb root on` turns it on and `off` turns it off again. It stays off by default. The Echo Dot guide explains it.
 
-## Echo Show 8 (1st gen) Unreleased
+## Echo Show 8 (1st gen) 2026.10.3 - 2026-10-29
 
 ### Fixed
 - **The camera HAL ran the Show 8 out of memory when the camera stayed open** ([kiosk-satellite#1209](https://github.com/jxlarrea/kiosk-satellite/issues/1209)). MediaTek's camera HAL was built for Android 9. For every frame it creates two objects that Android 11 no longer frees completely, so `camerahalserver` grew by about 35 bytes a frame and logged six lines a frame while the camera was open. With Kiosk Satellite's motion detection on, that came to up to 3 MB an hour. After about 10 days the swap filled and the low memory killer started closing apps, Kiosk Satellite included. The shim the camera HAL loads now frees those objects as Android 9 did, and its memory stays flat.
@@ -62,6 +62,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 ### Fixed
 - **A system update from TWRP 3.2.3 could leave the Show in a boot loop** ([#13](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/13)). The image needs amonet 2 and its TWRP 3.7.0_9-0, but an update runs in whatever TWRP the Show has. On a Show still on amonet 1 and its TWRP 3.2.3, the update left the system half written. The update step in TWRP now checks the TWRP version first. With anything other than 3.7.0_9-0 it writes nothing and starts Android again, and EchoService reports why in Home Assistant and Kiosk Satellite. This applies to updates from this release on.
 - **Camera streams and videos in High profile H.264 fell back to software decoding** ([#15](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/15)). MediaTek's hardware decoder told Android it handles High profile only at its lowest level, although it decodes High up to level 4.1 at 1080p at about 150 frames a second. Its size limit also read as at most 1088 pixels high, which ruled out portrait video. Kiosk Satellite's WebView and players such as ExoPlayer then used Android's software decoder, which is about four times slower on the Show and stalled camera streams. Android now lists High profile up to the same level as Main for this decoder and accepts portrait video up to 1080x1920, so these streams play on the hardware decoder.
+
 ## Echo Show 8 (1st gen) 2026.10.1 - 2026-10-27
 
 ### Added
@@ -80,7 +81,7 @@ All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Editio
 - **Release images are checked against the other Echo Show.** `make check` now also fails an Echo Show 8 or Echo Show 5 image that carries the other Show's settings, audio pipeline, boot animation or hostname, and fails an Echo Dot image with the Shows' boot animation or wallpaper. `make test` fails if either Show inherits the other's device layer or a shared layer sets what each device sets.
 - **50% master volume on a fresh Show 8.** A fresh install starts at master volume 8 of 15, which Kiosk Satellite shows as 50%. The Show 8's speakers are much louder than the Echo Show 5's. At 70% a voice across the room ends up about 18 dB under music, where no setting caught more than 6 of 10 wake words.
 
-## Echo Show 5 (2nd gen) Unreleased
+## Echo Show 5 (2nd gen) 2026.10.4 - 2026-10-29
 
 ### Fixed
 - **The camera HAL ran the Show 5 out of memory when the camera stayed open** ([kiosk-satellite#1209](https://github.com/jxlarrea/kiosk-satellite/issues/1209)). MediaTek's camera HAL was built for Android 9. For every frame it creates two objects that Android 11 no longer frees completely, so `camerahalserver` grew by about 35 bytes a frame and logged six lines a frame while the camera was open. With Kiosk Satellite's motion detection on, that came to up to 3 MB an hour. After about 10 days the swap filled and the low memory killer started closing apps, Kiosk Satellite included. The shim the camera HAL loads now frees those objects as Android 9 did, and its memory stays flat.

@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md) and [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) have their own.
 
+## Unreleased
+
+### Fixed
+- **The Echo stopped rejoining a Wi-Fi network without Internet access** ([kiosk-satellite#1009](https://github.com/jxlarrea/kiosk-satellite/discussions/1009)). When a network the Echo was connected to by hand failed Android's Internet check, Android turned auto-join off for that network for good, while the Echo stayed connected. After the next restart or Wi-Fi drop the Echo never rejoined, which hit Echos on a VLAN that only reaches Home Assistant. Android now keeps auto-join on for such a network. A network a previous release disabled this way is enabled again when the update starts. This fix applies to every Echo.
+
 ## 2026.10.4 - 2026-10-30
 
 ### Added

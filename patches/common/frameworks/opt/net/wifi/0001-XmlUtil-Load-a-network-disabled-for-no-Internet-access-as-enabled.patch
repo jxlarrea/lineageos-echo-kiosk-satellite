@@ -1,0 +1,26 @@
+XmlUtil: Load a network disabled for no Internet access as enabled
+
+Releases before this one disabled an Echo's network for good when it had
+no Internet access (NETWORK_SELECTION_DISABLED_NO_INTERNET_PERMANENT), and
+the disable is saved in WifiConfigStore.xml. Restore it as enabled when
+the store loads, as a temporary disable already is, so those Echos rejoin
+their network after the update.
+
+diff --git a/service/java/com/android/server/wifi/util/XmlUtil.java b/service/java/com/android/server/wifi/util/XmlUtil.java
+index eb204e7..0546946 100644
+--- a/service/java/com/android/server/wifi/util/XmlUtil.java
++++ b/service/java/com/android/server/wifi/util/XmlUtil.java
+@@ -1076,8 +1076,12 @@ public class XmlUtil {
+             // If either of the above codes are invalid or if the network was temporarily disabled
+             // (blacklisted), restore the status as enabled. We don't want to persist blacklists
+             // across reboots.
++            // Kiosk Satellite Edition: a network disabled for having no Internet access is
++            // enabled again too. Releases before this one disabled it for good on an Echo's
++            // network without Internet access. Nothing on the Echo turns it back on.
+             if (status == -1 || disableReason == -1 ||
+-                    status == NetworkSelectionStatus.NETWORK_SELECTION_TEMPORARY_DISABLED) {
++                    status == NetworkSelectionStatus.NETWORK_SELECTION_TEMPORARY_DISABLED
++                    || disableReason == NetworkSelectionStatus.DISABLED_NO_INTERNET_PERMANENT) {
+                 status = NetworkSelectionStatus.NETWORK_SELECTION_ENABLED;
+                 disableReason = NetworkSelectionStatus.DISABLED_NONE;
+             }

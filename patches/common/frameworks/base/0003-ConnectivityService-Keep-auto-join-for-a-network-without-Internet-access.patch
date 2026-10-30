@@ -1,0 +1,29 @@
+ConnectivityService: Keep auto-join for a network without Internet access
+
+When a network the user picked failed validation, handlePromptUnvalidated()
+told its transport never to reconnect to it automatically. Wi-Fi turns
+that into NETWORK_SELECTION_DISABLED_NO_INTERNET_PERMANENT, saved with the
+network. An Echo on a network without Internet access, such as a VLAN
+that only reaches Home Assistant, stayed connected until the next reboot
+or drop and then never rejoined, since it has no screen or nobody at it
+to turn auto-join back on. Keep the prompt, but not the disable.
+
+diff --git a/services/core/java/com/android/server/ConnectivityService.java b/services/core/java/com/android/server/ConnectivityService.java
+index 6a34fc73..d604609b 100644
+--- a/services/core/java/com/android/server/ConnectivityService.java
++++ b/services/core/java/com/android/server/ConnectivityService.java
+@@ -4196,11 +4196,9 @@ public class ConnectivityService extends IConnectivityManager.Stub
+             return;
+         }
+ 
+-        // Stop automatically reconnecting to this network in the future. Automatically connecting
+-        // to a network that provides no or limited connectivity is not useful, because the user
+-        // cannot use that network except through the notification shown by this method, and the
+-        // notification is only shown if the network is explicitly selected by the user.
+-        nai.asyncChannel.sendMessage(NetworkAgent.CMD_PREVENT_AUTOMATIC_RECONNECT);
++        // Kiosk Satellite Edition: keep reconnecting to it. An Echo on a network without Internet
++        // access, such as a VLAN that only reaches Home Assistant, still does all its work there.
++        // It has no screen or nobody at it to turn auto-join back on.
+ 
+         // TODO: Evaluate if it's needed to wait 8 seconds for triggering notification when
+         // NetworkMonitor detects the network is partial connectivity. Need to change the design to

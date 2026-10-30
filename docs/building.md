@@ -35,6 +35,8 @@ docker logs -f lineage-18.1-biscuit-build
 
 `make stage DEVICE=biscuit` only stages the tree, which is useful before building a single module by hand. `BUILD_TARGET=<module> DEVICE=biscuit scripts/build.sh` builds one module in the container.
 
+The build container gets half of the host's CPUs and half of its memory without swap, but never more memory than is free when it starts minus 4 GB. It runs at a low priority and starts one job for every 5 GB of its memory, but no more than it has CPUs. The metalava steps in `frameworks/base` take several GB each, and 10 jobs in 21 GB ran out of memory there. This keeps the host usable while it builds. Without limits the build took every core and the whole host stalled until it finished. `BUILD_CPUS`, `BUILD_MEMORY` and `BUILD_JOBS` change them, for example `BUILD_JOBS=6 BUILD_MEMORY=20g make biscuit`. If a build runs out of its memory, it fails with a killed process instead of freezing the host. Run it again with fewer jobs or more memory.
+
 `make test` runs the host checks. `tests/test-biscuit-system-update.sh` checks the Echo Dot's system update script against a fake TWRP.
 
 ## The Echo Dot's proprietary files

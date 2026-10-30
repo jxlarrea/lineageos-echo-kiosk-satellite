@@ -12,6 +12,7 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 - **The README lists the Echos in progress.** The devices table now lists the Echo Dot (3rd gen) as `donut`, the Echo Show 5 (1st gen) as `checkers` and the Echo Show 8 (2nd gen) as `athena`, all as work in progress.
 - **One changelog for each device.** `CHANGELOG.md` is now `CHANGELOG-biscuit.md`, `CHANGELOG-cronos.md` and `CHANGELOG-crown.md`, with release headings such as `## 2026.10.15 - 2026-10-29`. A build takes its release from its own device's changelog, so an Unreleased section for one Echo never touches another's builds.
 - **Setting the time server and the time zone.** The Echo Dot guide has a new Time section. It covers using your own NTP server instead of `time.android.com` and setting the time zone from adb, since the Dot starts on GMT. Android 11 ignores an NTP server the router hands out over DHCP ([#25](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/25)).
+- **Builds leave the rest of the host usable.** A build used to take every CPU and stall the whole host until it finished. The build container now gets half the CPUs at the lowest priority and half the memory without swap, with one job for every 5 GB. `BUILD_CPUS`, `BUILD_MEMORY` and `BUILD_JOBS` change the limits. [Building](docs/building.md) covers them.
 
 ## 2026.10.15 - 2026-10-29
 

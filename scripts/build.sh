@@ -23,7 +23,29 @@ if [[ "$CLEAN" == 1 && -n "$(git -C "$REPO_ROOT" status --porcelain)" ]]; then
   git -C "$REPO_ROOT" status --short >&2
   exit 1
 fi
-BUILD_JOBS="${BUILD_JOBS:-$(nproc)}"
+# The build gets part of the host, so the rest of it keeps running. Without
+# limits it took every core and the whole host stalled until it finished.
+# BUILD_CPUS defaults to half the cores. BUILD_MEMORY defaults to half the
+# memory, but never more than what is free when the build starts minus 4 GB.
+# The build gets no swap. A build that needs more fails with killed processes
+# instead of freezing the host: lower BUILD_JOBS or free memory and run it
+# again.
+HOST_MEMORY_GB=$(( $(awk '/^MemTotal:/ {print $2}' /proc/meminfo) / 1048576 ))
+FREE_MEMORY_GB=$(( $(awk '/^MemAvailable:/ {print $2}' /proc/meminfo) / 1048576 ))
+DEFAULT_MEMORY_GB=$(( HOST_MEMORY_GB / 2 ))
+(( FREE_MEMORY_GB - 4 < DEFAULT_MEMORY_GB )) && DEFAULT_MEMORY_GB=$(( FREE_MEMORY_GB - 4 ))
+(( DEFAULT_MEMORY_GB < 4 )) && DEFAULT_MEMORY_GB=4
+BUILD_CPUS="${BUILD_CPUS:-$(( $(nproc) > 1 ? $(nproc) / 2 : 1 ))}"
+BUILD_MEMORY="${BUILD_MEMORY:-${DEFAULT_MEMORY_GB}g}"
+if [[ "$BUILD_MEMORY" =~ ^([0-9]+)g$ ]] && (( BASH_REMATCH[1] < 16 )); then
+  echo "WARNING: the build gets $BUILD_MEMORY of memory (${FREE_MEMORY_GB} GB free). A full build may run out." >&2
+  echo "         Free some memory or set BUILD_MEMORY and lower BUILD_JOBS." >&2
+fi
+# About 5 GB a job: frameworks/base's metalava steps each take several GB, and
+# 10 jobs in 21 GB ran out of memory there.
+MEMORY_JOBS=1
+[[ "$BUILD_MEMORY" =~ ^([0-9]+)g$ ]] && MEMORY_JOBS=$(( BASH_REMATCH[1] / 5 > 1 ? BASH_REMATCH[1] / 5 : 1 ))
+BUILD_JOBS="${BUILD_JOBS:-$(( MEMORY_JOBS < BUILD_CPUS ? MEMORY_JOBS : BUILD_CPUS ))}"
 CCACHE_DIR="${CCACHE_DIR:-$WORKSPACE_DIR/ccache}"
 CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-50G}"
 LUNCH_TARGET="lineage_$DEVICE-userdebug"
@@ -70,12 +92,20 @@ docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
 # output and in error messages match the host's.
 docker run -d \
   --name "$CONTAINER" \
+  --cpus "$BUILD_CPUS" \
+  --cpu-shares 256 \
+  --memory "$BUILD_MEMORY" \
+  --memory-swap "$BUILD_MEMORY" \
+  --oom-score-adj 500 \
   -v "$REPO_ROOT:$REPO_ROOT" \
   -v "$WORKSPACE_DIR:$WORKSPACE_DIR" \
   -w "$TREE" \
   "$IMAGE" \
   bash -lc "
     set -e
+    # Lowest CPU priority for the shell and everything the build starts, so
+    # the host's own work, such as an SSH session, runs first.
+    renice -n 19 -p \$\$ >/dev/null
     source build/envsetup.sh >/dev/null
     export BISCUIT_RELEASE='$BISCUIT_RELEASE'
     export USE_CCACHE=1
@@ -92,4 +122,5 @@ docker run -d \
   "
 
 echo "Started $CONTAINER ($BUILD_TARGET, $LUNCH_TARGET, release $BISCUIT_RELEASE$([[ $CLEAN = 1 ]] && echo ", clean"))."
+echo "Limits: $BUILD_CPUS CPUs, $BUILD_MEMORY memory without swap, $BUILD_JOBS jobs."
 echo "Monitor: docker logs -f $CONTAINER"

@@ -59,7 +59,6 @@ uvx firebreak@latest unlock
 The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 
 </details>
-
 <details>
 <summary><h2 id="echo-show-5-2nd-gen">Echo Show 5 (2nd gen)</h2></summary>
 
@@ -94,7 +93,6 @@ A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not s
 The system that was on the Show does not boot on amonet 2, so install the image right after.
 
 </details>
-
 <details>
 <summary><h2 id="echo-show-8-1st-gen">Echo Show 8 (1st gen)</h2></summary>
 
@@ -130,7 +128,6 @@ A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not s
 The system that was on the Show does not boot on amonet 2, so install the image right after.
 
 </details>
-
 ## Next
 
 The device is ready for its image. [Getting into TWRP](twrp.md) covers starting TWRP and checking its version. The installation is in the device's guide, such as the [Echo Dot guide](echo-dot.md#installing).

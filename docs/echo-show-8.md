@@ -116,6 +116,8 @@ To move a Show from R0rt1z2's LineageOS 18.1 image to this one, install it by ha
 3. **Set the time, join Wi-Fi and wait for Kiosk Satellite** as in [After installing](#after-installing).
 4. **Restore the backup.** In the setup wizard, choose **Restore from configuration file** and pick the file you exported.
 
+Nothing from R0rt1z2's image carries over. GApps, Magisk and anything else it installed through `addon.d` are gone after the install, so there is no need to wipe the system partition first. Releases before 2026.10.4 brought them back after the install. If your Show still has GApps or Magisk from such an install, the update to 2026.10.4 or later takes them off the system partition. Google apps that updated themselves from the Play Store stay installed as normal apps, along with their accounts, until you uninstall them or install the image again with `twrp wipe data`.
+
 A Show that was unlocked with amonet 1 needs amonet 2 first. [Updating from amonet 1](unlocking.md#updating-from-amonet-1-1) covers it.
 
 ## Updating
@@ -125,6 +127,14 @@ EchoService installs new releases of this image. Home Assistant shows a new rele
 EchoService downloads the release and checks it against GitHub's checksum and the release signature. Then it restarts the Show into TWRP, which installs the release and starts Android again. The Show has one copy of the system, so this takes it offline for a few minutes, once. Kiosk Satellite and its settings stay.
 
 EchoService checks for a new release a minute after every boot. Kiosk Satellite asks it to check again twice a day. [System updates](#system-updates) covers the same from adb.
+
+If installing an update from Home Assistant or Kiosk Satellite does nothing, check that Kiosk Satellite is the device owner. EchoService only takes an update from the device owner:
+
+```sh
+adb shell echo_service status
+```
+
+The Kiosk Satellite line must end in `device owner`. Android only makes an app the device owner while the Show has no accounts, so a Google account, for example from GApps, keeps it from happening. Remove the account and restart the Show. The [Kiosk Satellite installer](#kiosk-satellite-installer) makes Kiosk Satellite the device owner at the next boot.
 
 ## Settings
 

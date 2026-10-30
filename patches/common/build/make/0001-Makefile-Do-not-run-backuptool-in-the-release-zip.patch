@@ -1,0 +1,25 @@
+Makefile: Do not run backuptool in the release zip
+
+LineageOS runs backuptool.sh in every non-user build's zip. It saves what
+/system/addon.d lists before the zip writes system and puts it back
+after. The Echo images are userdebug, so GApps and Magisk from another
+image, such as R0rt1z2's, survived an install of this one, wiped data or
+not (issue #27). Leave backuptool out, so an install writes exactly this
+image.
+
+diff --git a/core/Makefile b/core/Makefile
+index 027df58..476d8cf 100644
+--- a/core/Makefile
++++ b/core/Makefile
+@@ -5001,7 +5001,10 @@ ifeq ($(TARGET_BUILD_VARIANT),user)
+     $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
+ else
+ ifneq ($(LINEAGE_BUILD),)
+-    $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := true
++    # Kiosk Satellite Edition: an install writes exactly this image, so what
++    # another image left in /system/addon.d, such as GApps or Magisk, does not
++    # come back after it.
++    $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
+ else
+     $(INTERNAL_OTA_PACKAGE_TARGET): backuptool := false
+ endif

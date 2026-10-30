@@ -187,6 +187,10 @@ unzip -p "$OTA" "$RELEASE_PROP_FILE" 2>/dev/null | grep -qx "$RELEASE_PROP_NAME=
   fail "the OTA zip's release.prop does not say $RELEASE_PROP_NAME=$RELEASE"
 unzip -p "$OTA" "$RELEASE_PROP_FILE" 2>/dev/null | grep -qx "ro.product.device=$DEVICE" ||
   fail "the OTA zip's release.prop does not say ro.product.device=$DEVICE"
+# An install writes exactly this image: no backuptool, which would bring
+# back what another image left in /system/addon.d, such as GApps or Magisk.
+unzip -p "$OTA" META-INF/com/google/android/updater-script 2>/dev/null | grep -q backuptool &&
+  fail "the OTA zip runs backuptool, so another image's addon.d survives an install"
 
 if (( failures > 0 )); then
   echo "$DEVICE $RELEASE: $failures problem(s) in $(basename "$OTA")"

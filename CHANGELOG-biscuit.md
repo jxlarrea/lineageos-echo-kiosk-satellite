@@ -5,6 +5,7 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 ## 2026.10.16 - 2026-10-30
 
 ### Fixed
+- **GApps and Magisk survived an install of this image** ([#27](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/27)). LineageOS runs its backup tool in every zip it builds for testing, which the Echo images are. It saves what `/system/addon.d` lists before the zip writes the system partition and puts it back after. Moving from another image with GApps or Magisk, such as R0rt1z2's, kept them, even with the data wiped. An account GApps added could then keep Kiosk Satellite from becoming the device owner. The Echo Shows' EchoService only takes an update from the device owner. The zip no longer runs the backup tool, so an install writes exactly this image. `make check` fails a zip that runs it. This fix applies to every Echo.
 - **Apps crashed when a filled-in text field became visible** ([#24](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/24)). The image leaves out Android's autofill service to save memory, but Android's autofill code still called it when a text field that already had text and no focus came into view. The app crashed with a NullPointerException, for example YouTube Morphe on saving its settings to a file. Android now skips autofill when the service is not there. This fix applies to every Echo.
 
 ### Changed

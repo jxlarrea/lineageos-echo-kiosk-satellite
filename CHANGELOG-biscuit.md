@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.10.16 - 2026-10-30
 
 ### Fixed
 - **Apps crashed when a filled-in text field became visible** ([#24](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/24)). The image leaves out Android's autofill service to save memory, but Android's autofill code still called it when a text field that already had text and no focus came into view. The app crashed with a NullPointerException, for example YouTube Morphe on saving its settings to a file. Android now skips autofill when the service is not there. This fix applies to every Echo.

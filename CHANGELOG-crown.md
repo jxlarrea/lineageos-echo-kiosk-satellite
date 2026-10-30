@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md) and [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) have their own.
 
-## Unreleased
+## 2026.10.4 - 2026-10-30
 
 ### Added
 - **Double tap to wake** ([#25](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/25)). Android offered a Double tap to wake setting, but it did nothing. When the screen turned off, the touch driver put the touch chip to sleep and cut its power, so no tap could reach Android. The chip now keeps scanning while the screen is off. The driver now turns the screen on when two touches start within 400 ms of each other. No other touch reaches Android while the screen is off. Android's Double tap to wake setting turns it on and off. It is on by default.

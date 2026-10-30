@@ -60,13 +60,13 @@ Each device has releases of its own, with a version of its own, tagged with its 
 
 A device's updater only looks at its own tags.
 
-The release a build is comes from `CHANGELOG.md`: the newest heading that names the device, such as `## Echo Dot (2nd gen) 2026.10.11 - 2026-10-25`. While a `## <device> Unreleased` heading is above it, such as `## Echo Dot (2nd gen) Unreleased`, the build is that release with `-dev` after it. Before the device's first release it is `0.0.0-dev`. The image reports it as `ro.biscuit.release` on the Echo Dot and `ro.echo.release` on the Echo Shows. System updates compare it with the device's releases on GitHub. `device_name` in `scripts/build.sh` holds the name each device's headings and releases go by.
+Each device has its own changelog: [CHANGELOG-biscuit.md](../CHANGELOG-biscuit.md), [CHANGELOG-cronos.md](../CHANGELOG-cronos.md) and [CHANGELOG-crown.md](../CHANGELOG-crown.md). The release a build is comes from the newest release heading in the device's changelog, such as `## 2026.10.11 - 2026-10-25`. While a `## Unreleased` heading is above it, the build is that release with `-dev` after it. Before the device's first release it is `0.0.0-dev`. The image reports it as `ro.biscuit.release` on the Echo Dot and `ro.echo.release` on the Echo Shows. System updates compare it with the device's releases on GitHub. `device_name` in `scripts/build.sh` holds the name each device's releases go by on GitHub.
 
 To make a release, here of the Echo Dot. For an Echo Show, use its codename and name instead, such as `cronos` and `Echo Show 5 (2nd gen)`:
 
-1. Rename the device's `Unreleased` heading in `CHANGELOG.md` to the release, for example `## Echo Dot (2nd gen) 2026.10.12 - 2026-11-02`. Then commit.
+1. Rename the `Unreleased` heading in the device's changelog, here `CHANGELOG-biscuit.md`, to the release, for example `## 2026.10.12 - 2026-11-02`. Then commit.
 2. Build it from a clean output folder with `CLEAN=1 make biscuit`. Without it, files from earlier builds that the image no longer installs, such as an app taken out, stay in the output folder and end up in the zip. Commit everything first: the build stages the working tree as it is, so a clean build refuses to start with uncommitted changes.
-3. Check the image with `make check DEVICE=biscuit` and run `make test`. The check fails if the image misses one of its own device's parts or carries another device's, such as EchoService on the Dot or BiscuitService on a Show. It also fails if the image reports a release other than the one in `CHANGELOG.md`. Do not release an image that fails either one.
+3. Check the image with `make check DEVICE=biscuit` and run `make test`. The check fails if the image misses one of its own device's parts or carries another device's, such as EchoService on the Dot or BiscuitService on a Show. It also fails if the image reports a release other than the one in the device's changelog. Do not release an image that fails either one.
 4. Copy the zip to a name with the release and the codename in it, such as `lineageos-echo-kiosk-satellite-2026.10.12-biscuit.zip`, then sign it. The device checks the signature before it installs an update:
 
    ```sh

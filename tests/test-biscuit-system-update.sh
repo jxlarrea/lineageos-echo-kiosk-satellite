@@ -103,23 +103,19 @@ grep -Fq "export BISCUIT_RELEASE='\$BISCUIT_RELEASE'" "$REPO_ROOT/scripts/build.
 eval "$(sed -n '/^device_name()/,/^}/p;/^release_version()/,/^}/p' "$REPO_ROOT/scripts/build.sh")"
 REPO_ROOT="$TMPDIR"
 DEVICE=biscuit
-printf '# Changelog\n\n## Unreleased\n\n### Fixed\n- x\n\n## Echo Dot (2nd gen) 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG.md"
+printf '# Changelog\n\n## Unreleased\n\n### Fixed\n- x\n\n## 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG-biscuit.md"
 [[ "$(release_version)" == 2026.10.3-dev ]]
-printf '# Changelog\n\n## Echo Dot (2nd gen) 2026.10.4 - 2026-10-24\n\n## Echo Dot (2nd gen) 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG.md"
+printf '# Changelog\n\n## 2026.10.4 - 2026-10-24\n\n## 2026.10.3 - 2026-10-21\n' >"$TMPDIR/CHANGELOG-biscuit.md"
 [[ "$(release_version)" == 2026.10.4 ]]
-# Another device's release is not the Dot's.
-printf '# Changelog\n\n## Echo Show 8 (1st gen) 2026.11.1 - 2026-11-02\n\n## Echo Dot (2nd gen) 2026.10.4 - 2026-10-24\n' >"$TMPDIR/CHANGELOG.md"
-[[ "$(release_version)" == 2026.10.4 ]]
-DEVICE=crown
-[[ "$(release_version)" == 2026.11.1 ]]
-DEVICE=biscuit
-printf '# Changelog\n\n## Unreleased\n\n### Added\n- x\n' >"$TMPDIR/CHANGELOG.md"
+printf '# Changelog\n\n## Unreleased\n\n### Added\n- x\n' >"$TMPDIR/CHANGELOG-biscuit.md"
 [[ "$(release_version)" == 0.0.0-dev ]]
-# Another device's Unreleased heading leaves the Dot's release alone.
-printf '# Changelog\n\n## Echo Show 5 (2nd gen) Unreleased\n\n### Added\n- x\n\n## Echo Dot (2nd gen) 2026.10.7 - 2026-10-25\n' >"$TMPDIR/CHANGELOG.md"
+# Each device reads its own file: another device's release or Unreleased
+# heading leaves the Dot's alone.
+printf '# Changelog\n\n## 2026.10.7 - 2026-10-25\n' >"$TMPDIR/CHANGELOG-biscuit.md"
+printf '# Changelog\n\n## Unreleased\n\n### Added\n- x\n\n## 2026.11.1 - 2026-11-02\n' >"$TMPDIR/CHANGELOG-crown.md"
 [[ "$(release_version)" == 2026.10.7 ]]
-DEVICE=cronos
-[[ "$(release_version)" == 0.0.0-dev ]]
+DEVICE=crown
+[[ "$(release_version)" == 2026.11.1-dev ]]
 DEVICE=biscuit
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 

@@ -35,8 +35,8 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
 
 # System updates from this repository's GitHub releases through BiscuitService
 # and TWRP (biscuit-service/SystemUpdate.java, ota/). scripts/build.sh sets
-# BISCUIT_RELEASE from the newest CHANGELOG.md heading, with -dev after it
-# while that heading is Unreleased.
+# BISCUIT_RELEASE from the newest release heading in CHANGELOG-biscuit.md,
+# with -dev after it while an Unreleased heading is above it.
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/ota/twrp-update.sh:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/twrp-update.sh \
     $(LOCAL_PATH)/ota/release-key.pem:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/release-key.pem

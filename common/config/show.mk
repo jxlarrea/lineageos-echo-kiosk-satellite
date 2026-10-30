@@ -30,8 +30,9 @@ PRODUCT_PACKAGES += \
 
 # System updates from this repository's GitHub releases through EchoService
 # and TWRP (echo-service/SystemUpdate.java, ota/, releasetools/).
-# scripts/build.sh sets BISCUIT_RELEASE from the newest CHANGELOG.md heading
-# for the device, with -dev after it while that heading is Unreleased.
+# scripts/build.sh sets BISCUIT_RELEASE from the newest release heading in
+# the device's CHANGELOG-<device>.md, with -dev after it while an Unreleased
+# heading is above it.
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/ota/twrp-update.sh:$(TARGET_COPY_OUT_SYSTEM)/etc/echo-ota/twrp-update.sh \
     $(LOCAL_PATH)/ota/release-key.pem:$(TARGET_COPY_OUT_SYSTEM)/etc/echo-ota/release-key.pem

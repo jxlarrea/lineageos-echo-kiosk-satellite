@@ -28,8 +28,7 @@ CCACHE_DIR="${CCACHE_DIR:-$WORKSPACE_DIR/ccache}"
 CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-50G}"
 LUNCH_TARGET="lineage_$DEVICE-userdebug"
 
-# The name each device's releases go by, in CHANGELOG.md headings and on
-# GitHub.
+# The name each device's releases go by on GitHub.
 device_name() {
   case "$1" in
     biscuit) echo "Echo Dot (2nd gen)" ;;
@@ -39,23 +38,20 @@ device_name() {
 }
 
 # The release this build is, for ro.biscuit.release and ro.echo.release: the
-# newest CHANGELOG.md heading for this device, such as "## Echo Dot (2nd gen)
-# 2026.10.6". While an Unreleased heading is above it, either a bare one for
-# every device or one for this device such as "## Echo Show 5 (2nd gen)
-# Unreleased", it is that release with -dev after it, or 0.0.0-dev before
-# the device's first release. System updates compare it with the device's
-# GitHub releases.
+# newest release heading in the device's CHANGELOG-<device>.md, such as
+# "## 2026.10.6 - 2026-10-25". While an "## Unreleased" heading is above it,
+# it is that release with -dev after it, or 0.0.0-dev before the device's
+# first release. System updates compare it with the device's GitHub releases.
 release_version() {
-  awk -v name="$(device_name "$DEVICE")" '/^## / {
+  awk '/^## / {
     heading = substr($0, 4)
-    if (heading == "Unreleased" || heading == name " Unreleased") { dev = 1; next }
-    if (name != "" && index(heading, name " ") == 1) {
-      split(substr(heading, length(name) + 2), words, " ")
-      print words[1] (dev ? "-dev" : ""); found = 1; exit
-    }
+    if (heading == "Unreleased") { dev = 1; next }
+    split(heading, words, " ")
+    print words[1] (dev ? "-dev" : ""); found = 1; exit
   }
-  END { if (!found) print "0.0.0" (dev ? "-dev" : "") }' "$REPO_ROOT/CHANGELOG.md"
+  END { if (!found) print "0.0.0" (dev ? "-dev" : "") }' "$REPO_ROOT/CHANGELOG-$DEVICE.md"
 }
+
 BISCUIT_RELEASE="${BISCUIT_RELEASE:-$(release_version)}"
 
 DEVICE="$DEVICE" "$REPO_ROOT/scripts/stage-tree.sh"

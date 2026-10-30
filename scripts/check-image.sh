@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Check a built image before it is released: that it carries its own device's
 # Kiosk Satellite Edition parts, none of another device's and the release
-# CHANGELOG.md gives it. It reads the target files the OTA zip is made from
+# its CHANGELOG-<device>.md gives it. It reads the target files the OTA zip is made from
 # and the OTA zip itself.
 #
 # usage: DEVICE=biscuit scripts/check-image.sh [target-files.zip [ota.zip]]
@@ -182,7 +182,7 @@ esac
 [[ "$(prop ro.product.device)" == "$DEVICE" || "$(prop ro.product.system.device)" == "$DEVICE" ]] ||
   fail "ro.product.device is not $DEVICE"
 [[ "$(prop "$RELEASE_PROP_NAME")" == "$RELEASE" ]] ||
-  fail "$RELEASE_PROP_NAME is '$(prop "$RELEASE_PROP_NAME")', CHANGELOG.md says $RELEASE"
+  fail "$RELEASE_PROP_NAME is '$(prop "$RELEASE_PROP_NAME")', CHANGELOG-$DEVICE.md says $RELEASE"
 unzip -p "$OTA" "$RELEASE_PROP_FILE" 2>/dev/null | grep -qx "$RELEASE_PROP_NAME=$RELEASE" ||
   fail "the OTA zip's release.prop does not say $RELEASE_PROP_NAME=$RELEASE"
 unzip -p "$OTA" "$RELEASE_PROP_FILE" 2>/dev/null | grep -qx "ro.product.device=$DEVICE" ||

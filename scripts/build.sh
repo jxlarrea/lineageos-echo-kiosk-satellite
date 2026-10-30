@@ -46,6 +46,12 @@ fi
 MEMORY_JOBS=1
 [[ "$BUILD_MEMORY" =~ ^([0-9]+)g$ ]] && MEMORY_JOBS=$(( BASH_REMATCH[1] / 5 > 1 ? BASH_REMATCH[1] / 5 : 1 ))
 BUILD_JOBS="${BUILD_JOBS:-$(( MEMORY_JOBS < BUILD_CPUS ? MEMORY_JOBS : BUILD_CPUS ))}"
+# Soong runs metalava in its highmem pool and sizes that pool at 8 GB a job
+# of the host's memory, not the container's, so every job could be metalava
+# at once. Size it from BUILD_MEMORY instead, less 4 GB for Soong itself.
+HIGHMEM_JOBS=1
+[[ "$BUILD_MEMORY" =~ ^([0-9]+)g$ ]] && HIGHMEM_JOBS=$(( (BASH_REMATCH[1] - 4) / 8 > 1 ? (BASH_REMATCH[1] - 4) / 8 : 1 ))
+BUILD_HIGHMEM_JOBS="${BUILD_HIGHMEM_JOBS:-$HIGHMEM_JOBS}"
 CCACHE_DIR="${CCACHE_DIR:-$WORKSPACE_DIR/ccache}"
 CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-50G}"
 LUNCH_TARGET="lineage_$DEVICE-userdebug"
@@ -108,6 +114,7 @@ docker run -d \
     renice -n 19 -p \$\$ >/dev/null
     source build/envsetup.sh >/dev/null
     export BISCUIT_RELEASE='$BISCUIT_RELEASE'
+    export NINJA_HIGHMEM_NUM_JOBS='$BUILD_HIGHMEM_JOBS'
     export USE_CCACHE=1
     export CCACHE_EXEC=/usr/bin/ccache
     export CCACHE_DIR='$CCACHE_DIR'
@@ -122,5 +129,5 @@ docker run -d \
   "
 
 echo "Started $CONTAINER ($BUILD_TARGET, $LUNCH_TARGET, release $BISCUIT_RELEASE$([[ $CLEAN = 1 ]] && echo ", clean"))."
-echo "Limits: $BUILD_CPUS CPUs, $BUILD_MEMORY memory without swap, $BUILD_JOBS jobs."
+echo "Limits: $BUILD_CPUS CPUs, $BUILD_MEMORY memory without swap, $BUILD_JOBS jobs, $BUILD_HIGHMEM_JOBS for metalava."
 echo "Monitor: docker logs -f $CONTAINER"

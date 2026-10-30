@@ -141,7 +141,7 @@ BiscuitService installs new releases of this image. Home Assistant shows a new r
 
 BiscuitService downloads the release and checks it against GitHub's checksum and the release signature. Then it has TWRP install it into slot A and, once slot A boots, into slot B. Each install restarts the Dot and takes it offline for about a minute. Kiosk Satellite and its settings stay.
 
-BiscuitService checks for a new release a minute after every boot. Kiosk Satellite asks it to check again twice a day. [Device commands](#device-commands) covers the same from adb.
+BiscuitService checks for a new release a minute after every boot. Kiosk Satellite asks it to check again twice a day. [Updates from your own server](offline-updates.md) covers a Dot on a network without Internet access. [Device commands](#device-commands) covers the same from adb.
 
 If an update fails with `TWRP did not run the update`, check the Dot's power first. On a USB hub, the bootloader started Android instead of TWRP every time, so TWRP never installed the update. Plug the Dot into its own power adapter or a computer's USB port. Then install the update again. `adb shell svc power reboot recovery` shows whether the restart into TWRP works: on a good supply the Dot stays in TWRP and drops off the network. Unplug it and plug it back in to start Android again.
 

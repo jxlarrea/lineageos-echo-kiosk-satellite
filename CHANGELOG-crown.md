@@ -7,6 +7,7 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 ### Changed
 - **Updating from amonet 1 installs the amonet package from TWRP** ([#29](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/29)). Unlocking said to run `fastbrick` again on a Show unlocked with amonet 1, but `fastbrick` does not run on a Show that is already unlocked. It now says to install R0rt1z2's amonet package from TWRP, as the XDA thread does. When `fastbrick` says the bootloader is already unlocked, Unlocking now says to check the TWRP version instead of taking the Show as on amonet 2.
 - **Unlocking shows each device in its own collapsible section.** Each section opens from the device's name, so the page shows only the steps for your device.
+- **Updates from your own server** ([kiosk-satellite#1229](https://github.com/jxlarrea/kiosk-satellite/discussions/1229)). A new guide covers updating an Echo on a network without Internet access from a folder on your own web server, such as a NAS. It has a script that mirrors the newest releases and the adb command that points the Echo at the folder.
 
 ## 2026.10.5 - 2026-10-30
 

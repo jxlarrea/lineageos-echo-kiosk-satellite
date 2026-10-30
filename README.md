@@ -40,7 +40,7 @@ The images come from the [releases](https://github.com/jxlarrea/lineageos-echo-k
 
 ## Updating
 
-Once a device runs its image, the image installs new releases over the air. Home Assistant shows a new release on the device's **Firmware** update entity. Kiosk Satellite shows it in its remote admin. The device's guide covers the details.
+Once a device runs its image, the image installs new releases over the air. Home Assistant shows a new release on the device's **Firmware** update entity. Kiosk Satellite shows it in its remote admin. The device's guide covers the details. An Echo on a network without Internet access can [update from your own server](docs/offline-updates.md).
 
 ## Building
 

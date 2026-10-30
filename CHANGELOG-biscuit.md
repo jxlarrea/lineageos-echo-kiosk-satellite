@@ -6,6 +6,7 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 
 ### Changed
 - **Unlocking shows each device in its own collapsible section.** Each section opens from the device's name, so the page shows only the steps for your device.
+- **Updates from your own server** ([kiosk-satellite#1229](https://github.com/jxlarrea/kiosk-satellite/discussions/1229)). A new guide covers updating an Echo on a network without Internet access from a folder on your own web server, such as a NAS. It has a script that mirrors the newest releases and the adb command that points the Echo at the folder.
 
 ## 2026.10.17 - 2026-10-30
 

@@ -133,7 +133,7 @@ EchoService installs new releases of this image. Home Assistant shows a new rele
 
 EchoService downloads the release and checks it against GitHub's checksum and the release signature. Then it restarts the Show into TWRP, which installs the release and starts Android again. The Show has one copy of the system, so this takes it offline for a few minutes, once. Kiosk Satellite and its settings stay.
 
-EchoService checks for a new release a minute after every boot. Kiosk Satellite asks it to check again twice a day. [System updates](#system-updates) covers the same from adb.
+EchoService checks for a new release a minute after every boot. Kiosk Satellite asks it to check again twice a day. [Updates from your own server](offline-updates.md) covers a Show on a network without Internet access. [System updates](#system-updates) covers the same from adb.
 
 If installing an update from Home Assistant or Kiosk Satellite does nothing, check that Kiosk Satellite is the device owner. EchoService only takes an update from the device owner:
 

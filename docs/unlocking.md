@@ -2,7 +2,8 @@
 
 Every image installs from TWRP, which needs an unlocked bootloader. Each Echo has its own way to unlock, with a port of amonet, an exploit of MediaTek's boot chain. This page covers each device this repository has an image for. Once a device is unlocked, [Getting into TWRP](twrp.md) covers starting TWRP. The device's guide covers the installation.
 
-## Echo Dot (2nd gen)
+<details>
+<summary><h2 id="echo-dot-2nd-gen">Echo Dot (2nd gen)</h2></summary>
 
 Use [firebreak](https://github.com/bboe/firebreak) to unlock the Echo Dot (2nd gen) over USB. It installs amonet v2.0.1 and its TWRP 3.7.0_9-0 in the same run, which is what the image needs. The image also installs on amonet v2.0.0.
 
@@ -57,7 +58,10 @@ uvx firebreak@latest unlock
 
 The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 
-## Echo Show 5 (2nd gen)
+</details>
+
+<details>
+<summary><h2 id="echo-show-5-2nd-gen">Echo Show 5 (2nd gen)</h2></summary>
 
 Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5 (2nd gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-2nd-gen-2021-cronos.4772596/). Its `fastbrick` script unlocks the Show over USB and writes TWRP 3.7.0_9-0, which is what the image needs. A Show that runs R0rt1z2's LineageOS 18.1 image v0.5 or later is already on amonet 2 and ready as it is.
 
@@ -89,7 +93,10 @@ A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not s
 
 The system that was on the Show does not boot on amonet 2, so install the image right after.
 
-## Echo Show 8 (1st gen)
+</details>
+
+<details>
+<summary><h2 id="echo-show-8-1st-gen">Echo Show 8 (1st gen)</h2></summary>
 
 Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 8 (1st gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/). It unlocks the Show over USB the same way as on the Echo Show 5 and writes TWRP 3.7.0_9-0, which is what the image needs.
 
@@ -121,6 +128,8 @@ A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not s
    ```
 
 The system that was on the Show does not boot on amonet 2, so install the image right after.
+
+</details>
 
 ## Next
 

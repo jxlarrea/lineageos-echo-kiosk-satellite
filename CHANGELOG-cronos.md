@@ -6,6 +6,7 @@ All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented
 
 ### Changed
 - **Updating from amonet 1 installs the amonet package from TWRP** ([#29](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/29)). Unlocking said to run `fastbrick` again on a Show unlocked with amonet 1, but `fastbrick` does not run on a Show that is already unlocked. It now says to install R0rt1z2's amonet package from TWRP, as the XDA thread does. When `fastbrick` says the bootloader is already unlocked, Unlocking now says to check the TWRP version instead of taking the Show as on amonet 2. The links to the XDA thread now point at R0rt1z2's unlock thread for the Echo Show 5 (2nd gen), which has the amonet package, instead of the LineageOS thread.
+- **Unlocking shows each device in its own collapsible section.** Each section opens from the device's name, so the page shows only the steps for your device.
 
 ## 2026.10.6 - 2026-10-30
 

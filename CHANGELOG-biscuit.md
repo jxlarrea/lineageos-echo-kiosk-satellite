@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **Unlocking shows each device in its own collapsible section.** Each section opens from the device's name, so the page shows only the steps for your device.
+
 ## 2026.10.17 - 2026-10-30
 
 ### Fixed

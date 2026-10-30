@@ -4,6 +4,9 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 
 ## Unreleased
 
+### Fixed
+- **Apps crashed when a filled-in text field became visible** ([#24](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/24)). The image leaves out Android's autofill service to save memory, but Android's autofill code still called it when a text field that already had text and no focus came into view. The app crashed with a NullPointerException, for example YouTube Morphe on saving its settings to a file. Android now skips autofill when the service is not there. This fix applies to every Echo.
+
 ### Changed
 - **The docs no longer cover moving from the CM14.1 image.** The README section, the Echo Dot guide's Moving from the CM14.1 image section and the notes about Dots on 2026.10.5 are gone. The CM14.1 image's last release came out before this image. Dots still on it can install this image by hand with the steps in Installing.
 - **The README lists the Echos in progress.** The devices table now lists the Echo Dot (3rd gen) as `donut`, the Echo Show 5 (1st gen) as `checkers` and the Echo Show 8 (2nd gen) as `athena`, all as work in progress.

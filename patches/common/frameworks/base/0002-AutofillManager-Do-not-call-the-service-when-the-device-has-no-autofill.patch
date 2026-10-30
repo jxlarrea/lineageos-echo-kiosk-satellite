@@ -1,0 +1,110 @@
+AutofillManager: Do not call the service when the device has no autofill
+
+The Echos leave out android.software.autofill, so SystemServer never
+starts AutofillManagerService and mService is null. Most entry points
+return early through hasAutofillFeature(), but some did not. A filled-in,
+unfocused EditText that became visible went through
+notifyViewVisibilityChanged() to ensureServiceClientAddedIfNeededLocked(),
+which called mService.addClient() and crashed the app with a
+NullPointerException (issue #24).
+
+Return early there and in the other public methods that called mService
+without the check. Without a client mEnabled stays false, so no session
+starts and nothing else reaches mService.
+
+diff --git a/core/java/android/view/autofill/AutofillManager.java b/core/java/android/view/autofill/AutofillManager.java
+index fbfeda6f..1ecc5130 100644
+--- a/core/java/android/view/autofill/AutofillManager.java
++++ b/core/java/android/view/autofill/AutofillManager.java
+@@ -861,6 +861,9 @@ public final class AutofillManager {
+      * @hide
+      */
+     @Nullable public FillEventHistory getFillEventHistory() {
++        if (!hasAutofillFeature()) {
++            return null;
++        }
+         try {
+             final SyncResultReceiver receiver = new SyncResultReceiver(SYNC_CALLS_TIMEOUT_MS);
+             mService.getFillEventHistory(receiver);
+@@ -1526,6 +1529,9 @@ public final class AutofillManager {
+      * service for the user.
+      */
+     @Nullable public String getUserDataId() {
++        if (!hasAutofillFeature()) {
++            return null;
++        }
+         try {
+             final SyncResultReceiver receiver = new SyncResultReceiver(SYNC_CALLS_TIMEOUT_MS);
+             mService.getUserDataId(receiver);
+@@ -1549,6 +1555,9 @@ public final class AutofillManager {
+      * reset or if the caller currently does not have an enabled autofill service for the user.
+      */
+     @Nullable public UserData getUserData() {
++        if (!hasAutofillFeature()) {
++            return null;
++        }
+         try {
+             final SyncResultReceiver receiver = new SyncResultReceiver(SYNC_CALLS_TIMEOUT_MS);
+             mService.getUserData(receiver);
+@@ -1569,6 +1578,9 @@ public final class AutofillManager {
+      * the user.
+      */
+     public void setUserData(@Nullable UserData userData) {
++        if (!hasAutofillFeature()) {
++            return;
++        }
+         try {
+             mService.setUserData(userData);
+         } catch (RemoteException e) {
+@@ -1589,6 +1601,9 @@ public final class AutofillManager {
+      * the user.
+      */
+     public boolean isFieldClassificationEnabled() {
++        if (!hasAutofillFeature()) {
++            return false;
++        }
+         final SyncResultReceiver receiver = new SyncResultReceiver(SYNC_CALLS_TIMEOUT_MS);
+         try {
+             mService.isFieldClassificationEnabled(receiver);
+@@ -1613,6 +1628,9 @@ public final class AutofillManager {
+      */
+     @Nullable
+     public String getDefaultFieldClassificationAlgorithm() {
++        if (!hasAutofillFeature()) {
++            return null;
++        }
+         final SyncResultReceiver receiver = new SyncResultReceiver(SYNC_CALLS_TIMEOUT_MS);
+         try {
+             mService.getDefaultFieldClassificationAlgorithm(receiver);
+@@ -1634,6 +1652,9 @@ public final class AutofillManager {
+      */
+     @NonNull
+     public List<String> getAvailableFieldClassificationAlgorithms() {
++        if (!hasAutofillFeature()) {
++            return Collections.emptyList();
++        }
+         final SyncResultReceiver receiver = new SyncResultReceiver(SYNC_CALLS_TIMEOUT_MS);
+         try {
+             mService.getAvailableFieldClassificationAlgorithms(receiver);
+@@ -1907,6 +1928,11 @@ public final class AutofillManager {
+ 
+     @GuardedBy("mLock")
+     private void ensureServiceClientAddedIfNeededLocked() {
++        // Without the autofill service (no android.software.autofill) there is
++        // no client to add, and mEnabled stays false, so no session starts.
++        if (!hasAutofillFeature()) {
++            return;
++        }
+         final AutofillClient client = getClient();
+         if (client == null) {
+             return;
+@@ -2674,6 +2700,9 @@ public final class AutofillManager {
+ 
+     /** @hide */
+     public void onPendingSaveUi(int operation, IBinder token) {
++        if (!hasAutofillFeature()) {
++            return;
++        }
+         if (sVerbose) Log.v(TAG, "onPendingSaveUi(" + operation + "): " + token);
+ 
+         synchronized (mLock) {

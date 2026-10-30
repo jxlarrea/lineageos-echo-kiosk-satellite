@@ -12,6 +12,7 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 
 ### Changed
 - **One changelog for each device.** `CHANGELOG.md` is now `CHANGELOG-biscuit.md`, `CHANGELOG-cronos.md` and `CHANGELOG-crown.md`, with release headings such as `## 2026.10.15 - 2026-10-29`. A build takes its release from its own device's changelog, so an Unreleased section for one Echo never touches another's builds.
+- **Setting the time server.** The Echo Show 8 guide has a new Time section. It covers using your own NTP server instead of `time.android.com` and changing the time zone later with `echo_service time zone`. Android 11 ignores an NTP server the router hands out over DHCP ([#25](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/25)).
 
 ## 2026.10.3 - 2026-10-29
 

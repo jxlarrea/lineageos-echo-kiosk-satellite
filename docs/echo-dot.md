@@ -222,6 +222,29 @@ Bluetooth is on. Android 11 can either take audio from phones or play to headpho
 
 Switching between the two restarts Bluetooth, which drops what was connected. `adb logcat -s BiscuitService` shows how a `bt connect` went.
 
+### Time
+
+- **Network time.** Android sets the clock over NTP from `time.android.com` at every boot and once a day after that. To use another NTP server, such as your router or a time server on your network, set its name or IP address:
+
+  ```sh
+  adb shell settings put global ntp_server 192.168.1.1
+  ```
+
+  Wait a few seconds, then restart the Dot with `adb reboot`. Android saves the setting a moment after it changes, so a restart right away can lose it. Android reads the setting the next time it syncs, so the new server takes over at the restart. Android does not use an NTP server your router hands out over DHCP. To go back to `time.android.com`, run:
+
+  ```sh
+  adb shell settings delete global ntp_server
+  ```
+
+- **Time zone.** The Dot starts on GMT, since it has no mobile network to learn the time zone from. Kiosk Satellite's clock times, such as its alarms, follow it. Turn off automatic time zone, which has nothing to go by on the Dot. Then set the zone with a name from the [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones):
+
+  ```sh
+  adb shell settings put global auto_time_zone 0
+  adb shell service call alarm 3 s16 'America/New_York'
+  ```
+
+  It prints `Result: Parcel(00000000    '....')` when the zone is set. `adb shell date` then shows the time in the new zone.
+
 ### Network
 
 - **Wi-Fi power saving is off.** With it on, some messages between kiosks got lost or delayed. Kiosks use those messages to decide which one answers a wake word. The Dot is always plugged in, so it costs little. To turn it back on, run this and restart the Dot:

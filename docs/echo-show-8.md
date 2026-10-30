@@ -82,7 +82,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
    adb shell echo_service time sync ([DateTimeOffset]::UtcNow.ToUnixTimeSeconds()) "'$((Get-TimeZone).Id)'"
    ```
 
-   Once the Show is online, Android keeps the time from the network.
+   Once the Show is online, Android keeps the time from the network. [Time](#time) covers using your own NTP server.
 
 2. **Join Wi-Fi.** The second command shows the Show's IP address:
 
@@ -206,6 +206,26 @@ Bluetooth is on. Android 11 can either take audio from phones or play to headpho
   Without a name, EchoService takes any headphones or speaker nearby that is in pairing mode, so give a name where neighbors have Bluetooth audio.
 
 Switching between the two restarts Bluetooth, which drops what was connected. `adb logcat -s EchoBluetooth` shows how a `bt connect` went. Kiosk Satellite's Bluetooth proxy for Home Assistant keeps scanning in both.
+
+### Time
+
+- **Network time.** Android sets the clock over NTP from `time.android.com` at every boot and once a day after that. To use another NTP server, such as your router or a time server on your network, set its name or IP address:
+
+  ```sh
+  adb shell settings put global ntp_server 192.168.1.1
+  ```
+
+  Wait a few seconds, then restart the Show with `adb reboot`. Android saves the setting a moment after it changes, so a restart right away can lose it. Android reads the setting the next time it syncs, so the new server takes over at the restart. Android does not use an NTP server your router hands out over DHCP. To go back to `time.android.com`, run:
+
+  ```sh
+  adb shell settings delete global ntp_server
+  ```
+
+- **Time zone.** A Show has no mobile network, so Android cannot find the time zone by itself. [After installing](#after-installing) sets it from your computer. To change it later, run `echo_service time zone` with a zone from the [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones):
+
+  ```sh
+  adb shell echo_service time zone 'America/New_York'
+  ```
 
 ### Network
 

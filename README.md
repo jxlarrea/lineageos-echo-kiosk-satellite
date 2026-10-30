@@ -23,8 +23,11 @@ LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk 
 | Device | Codename | Status | Guide |
 | --- | --- | --- | --- |
 | Echo Dot (2nd gen) | `biscuit` | Ready | [Echo Dot](docs/echo-dot.md) |
+| Echo Dot (3rd gen) | `donut` | Work in progress | Not yet |
+| Echo Show 5 (1st gen) | `checkers` | Work in progress | Not yet |
 | Echo Show 5 (2nd gen) | `cronos` | Ready | [Echo Show 5](docs/echo-show-5.md) |
 | Echo Show 8 (1st gen) | `crown` | Ready | [Echo Show 8](docs/echo-show-8.md) |
+| Echo Show 8 (2nd gen) | `athena` | Work in progress | Not yet |
 
 Each image leaves out what Kiosk Satellite never uses on that device, installs Kiosk Satellite on its first boot with every permission it needs and installs new releases of the image from this repository. The device's guide lists everything its image does.
 
@@ -34,10 +37,6 @@ Each image leaves out what Kiosk Satellite never uses on that device, installs K
 2. **Install the image** with the steps in the device's guide.
 
 The images come from the [releases](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases). Each release is for one device, with the device in its title and its codename in its tag, such as **Echo Dot (2nd gen) 2026.10.6** tagged `biscuit-2026.10.6`. The device's guide links its releases.
-
-### Coming from the CM14.1 Echo Dot image
-
-The Echo Dot used to have a LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](https://github.com/jxlarrea/lineageos-biscuit-kiosk-satellite). Its last release, 2026.10.5, does not update to this image over the air. [Moving from the CM14.1 image](docs/echo-dot.md#moving-from-the-cm141-image) covers the move by hand, with Kiosk Satellite's settings kept.
 
 ## Updating
 

@@ -2,6 +2,12 @@
 
 All notable changes to LineageOS for Amazon Echo devices, Kiosk Satellite Edition are documented here.
 
+## Echo Dot (2nd gen) Unreleased
+
+### Changed
+- **The docs no longer cover moving from the CM14.1 image.** The README section, the Echo Dot guide's Moving from the CM14.1 image section and the notes about Dots on 2026.10.5 are gone. The CM14.1 image's last release came out before this image, and Dots still on it can install this image by hand with the steps in Installing.
+- **The README lists the Echos in progress.** The devices table now lists the Echo Dot (3rd gen) as `donut`, the Echo Show 5 (1st gen) as `checkers` and the Echo Show 8 (2nd gen) as `athena`, all as work in progress.
+
 ## Echo Dot (2nd gen) 2026.10.15 - 2026-10-29
 
 ### Fixed

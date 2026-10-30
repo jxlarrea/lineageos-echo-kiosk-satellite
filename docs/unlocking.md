@@ -4,7 +4,7 @@ Every image installs from TWRP, which needs an unlocked bootloader. Each Echo ha
 
 ## Echo Dot (2nd gen)
 
-Use [firebreak](https://github.com/bboe/firebreak) to unlock the Echo Dot (2nd gen) over USB. It installs amonet v2.0.1 and its TWRP 3.7.0_9-0 in the same run, which is what the image needs. The image also installs on amonet v2.0.0, so a Dot that runs the CM14.1 image 2026.10.5 is ready as it is.
+Use [firebreak](https://github.com/bboe/firebreak) to unlock the Echo Dot (2nd gen) over USB. It installs amonet v2.0.1 and its TWRP 3.7.0_9-0 in the same run, which is what the image needs. The image also installs on amonet v2.0.0.
 
 > [!IMPORTANT]
 > Do not set up the Dot in the Alexa app before you unlock it. If it gets on Wi-Fi, it can update to a Fire OS build firebreak does not support.

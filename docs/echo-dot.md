@@ -2,8 +2,6 @@
 
 A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Dot (`biscuit`), tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) as a voice satellite, intercom and speaker for Home Assistant. The Dot has no screen, so the image leaves out everything that draws one and runs Kiosk Satellite headless.
 
-It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](https://github.com/jxlarrea/lineageos-biscuit-kiosk-satellite). Its last release was 2026.10.5. To move a Dot from it, see [Moving from the CM14.1 image](#moving-from-the-cm141-image).
-
 ## What the image does
 
 - **Wake words over loud music.** The Dot has seven microphones. The image uses all of them to remove the speaker's own sound from what Kiosk Satellite hears, about 18 to 20 dB less music, so the wake word works with music at full volume. See [Volume](#volume) for the levels that work best.
@@ -21,7 +19,7 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 
 ## Before you start
 
-- **An unlocked Dot with TWRP.** The image needs amonet v2 and its TWRP 3.7.0_9-0. Follow [Unlocking the Echo Dot](unlocking.md#echo-dot-2nd-gen), then [Getting into TWRP](twrp.md). A Dot that runs 2026.10.5 already has both.
+- **An unlocked Dot with TWRP.** The image needs amonet v2 and its TWRP 3.7.0_9-0. Follow [Unlocking the Echo Dot](unlocking.md#echo-dot-2nd-gen), then [Getting into TWRP](twrp.md).
 - **adb** on your computer and a micro USB cable that carries data.
 - **Your Wi-Fi name and password.**
 
@@ -135,19 +133,6 @@ It replaces the LineageOS 14.1 image in [lineageos-biscuit-kiosk-satellite](http
 3. **Set up Kiosk Satellite.** Open `http://<dot ip>:2324` in a browser. In the setup wizard, set an admin password, your Home Assistant connection and the wake word. Then add the Dot in Home Assistant under **Settings > Devices & services**, where Home Assistant lists it as discovered. The [Echo Dot guide](https://github.com/jxlarrea/kiosk-satellite/blob/main/docs/echo-dot.md) covers the buttons, the light ring and the other Kiosk Satellite features on the Dot.
 
 BiscuitService names the Dot `echo-dot-ks` and the last three characters of its serial, `echo-dot-ks-he4` for example, so your router lists it under its own name. Android reports it as an **Amzn Echo Dot (KS)**.
-
-## Moving from the CM14.1 image
-
-A Dot on 2026.10.5 or an earlier CM14.1 release cannot update to this image over the air. The move from Android 7 to Android 11 needs an erased data partition, which an update does not do. Install it by hand. It takes about ten minutes. Kiosk Satellite's settings come back from a backup.
-
-1. **Back up Kiosk Satellite.** In its remote admin, use **Export configuration** and keep the file.
-2. **Install the image** with the steps in [Installing](#installing), `twrp wipe data` included. The Dot already has amonet v2 and its TWRP.
-3. **Join Wi-Fi and wait for Kiosk Satellite** as in [After installing](#after-installing).
-4. **Restore the backup.** In the setup wizard, choose **Restore from configuration file** and pick the file you exported.
-
-Kiosk Satellite makes a new TLS certificate, since the old one cannot leave the Android 7 image. If Home Assistant or another client trusted the old one, it asks to trust the new one once.
-
-Both slots get this image, so 2026.10.5 is no longer on the Dot afterwards. To go back to it, install it from TWRP the same way, with its own steps.
 
 ## Updating
 

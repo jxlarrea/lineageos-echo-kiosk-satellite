@@ -101,6 +101,13 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
 
    It prints `downloading`, `installed Kiosk Satellite`, `Kiosk Satellite is the device owner` and `permissions granted`. This takes a couple of minutes. Kiosk Satellite then opens on the screen.
 
+   If it prints `download failed`, the installer stops and tries again at the next boot, so restart the Show with `adb reboot`. If the download keeps failing, download the APK from the URL in the `downloading` line on your computer and install it from there. At the next boot the installer makes it the device owner and gives it its permissions:
+
+   ```sh
+   adb install <kiosk-satellite>.apk
+   adb reboot
+   ```
+
 4. **Set up Kiosk Satellite.** Go through its setup wizard on the screen or at `http://<show ip>:2324` in a browser: an admin password, your Home Assistant connection and the wake word. Then add the Show in Home Assistant under **Settings > Devices & services**, where Home Assistant lists it as discovered.
 
 EchoService names the Show `echo-show-5-ks` and the last three characters of its serial, `echo-show-5-ks-bqf` for example, so your router lists it under its own name. Android reports it as an **Echo Show 5 2nd Gen (KS)**.

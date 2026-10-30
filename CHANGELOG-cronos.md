@@ -7,6 +7,9 @@ All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented
 ### Fixed
 - **The Echo stopped rejoining a Wi-Fi network without Internet access** ([kiosk-satellite#1009](https://github.com/jxlarrea/kiosk-satellite/discussions/1009)). When a network the Echo was connected to by hand failed Android's Internet check, Android turned auto-join off for that network for good, while the Echo stayed connected. After the next restart or Wi-Fi drop the Echo never rejoined, which hit Echos on a VLAN that only reaches Home Assistant. Android now keeps auto-join on for such a network. A network a previous release disabled this way is enabled again when the update starts. This fix applies to every Echo.
 
+### Changed
+- **What to do when the first-boot download of Kiosk Satellite fails** ([#28](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/28)). The Echo Show 5 guide now says to restart the Show or to install the APK from the computer and restart.
+
 ## 2026.10.5 - 2026-10-30
 
 ### Added

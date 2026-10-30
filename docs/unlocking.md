@@ -85,13 +85,14 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 8
 ### What you need
 
 - The Echo Show 8 (1st gen), its power adapter and a USB cable that carries data.
-- A computer with Linux, macOS or Windows. The package brings its own `fastboot`.
+- A computer with Linux or Windows. The package brings its own `fastboot`. On macOS it does not run as shipped. [This post](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/post-90798261) on the XDA thread has a workaround.
+- The Show off Wi-Fi until it is unlocked, so Fire OS cannot update itself first. The package is known to work on Fire OS 6.5.7.4 (NS65741).
 
 ### Run fastbrick
 
 1. Download R0rt1z2's package for the Echo Show 8 (1st gen) from the XDA thread and extract it.
 2. Put the Show in fastboot mode. Unplug its power, then hold **Volume Down**, **Volume Up** and the **privacy button** together, plug the power back in and keep holding until the fastboot screen shows. Connect the Show to your computer.
-3. From the extracted folder, run `./fastbrick.sh` on Linux and macOS. On Windows, run `fastbrick.bat`.
+3. From the extracted folder, run `./fastbrick.sh` on Linux. On Windows, run `fastbrick.bat`.
 
 `fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. If it says the bootloader is already unlocked, the Show is on amonet 2 already. If the Show is not in TWRP when `fastbrick` ends, follow the next step in the package's instructions on the XDA thread.
 

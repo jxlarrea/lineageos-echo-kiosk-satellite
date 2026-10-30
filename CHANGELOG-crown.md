@@ -7,6 +7,9 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 ### Fixed
 - **The Echo stopped rejoining a Wi-Fi network without Internet access** ([kiosk-satellite#1009](https://github.com/jxlarrea/kiosk-satellite/discussions/1009)). When a network the Echo was connected to by hand failed Android's Internet check, Android turned auto-join off for that network for good, while the Echo stayed connected. After the next restart or Wi-Fi drop the Echo never rejoined, which hit Echos on a VLAN that only reaches Home Assistant. Android now keeps auto-join on for such a network. A network a previous release disabled this way is enabled again when the update starts. This fix applies to every Echo.
 
+### Changed
+- **The Echo Show 8 guides cover macOS and a failed Kiosk Satellite download** ([#28](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/28)). Unlocking says R0rt1z2's package does not run on macOS as shipped and links a workaround on the XDA thread, says to keep the Show off Wi-Fi until it is unlocked and names Fire OS 6.5.7.4 as known to work. The Echo Show 8 guide says what to do when the first-boot download of Kiosk Satellite fails.
+
 ## 2026.10.4 - 2026-10-30
 
 ### Added

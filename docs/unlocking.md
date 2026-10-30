@@ -59,7 +59,7 @@ The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 
 ## Echo Show 5 (2nd gen)
 
-Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5 (2nd gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/rom-unofficial-11-cronos-lineageos-18-1-for-the-amazon-echo-show-5-2021.4772598/). Its `fastbrick` script unlocks the Show over USB and writes TWRP 3.7.0_9-0, which is what the image needs. A Show that runs R0rt1z2's LineageOS 18.1 image v0.5 or later is already on amonet 2 and ready as it is.
+Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5 (2nd gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-2nd-gen-2021-cronos.4772596/). Its `fastbrick` script unlocks the Show over USB and writes TWRP 3.7.0_9-0, which is what the image needs. A Show that runs R0rt1z2's LineageOS 18.1 image v0.5 or later is already on amonet 2 and ready as it is.
 
 ### What you need
 
@@ -72,11 +72,22 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5
 2. Put the Show in fastboot mode. Unplug its power, then hold **Volume Down**, **Volume Up** and the **privacy button** together, plug the power back in and keep holding until the fastboot screen shows. Connect the Show to your computer.
 3. From the extracted folder, run `./fastbrick.sh` on Linux and macOS. On Windows, run `fastbrick.bat`.
 
-`fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. If it says the bootloader is already unlocked, the Show is on amonet 2 already. On the Echo Show 5 it writes TWRP itself and restarts into it, so the package's `fastboot-step.sh` is not needed. If the Show is in TWRP when `fastbrick` ends, skip that step.
+`fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. If it says the bootloader is already unlocked, the Show was unlocked before. [Check its TWRP version](twrp.md#echo-show-5-2nd-gen). If it prints `3.2.3-0`, the Show is on amonet 1 and needs the update below. On the Echo Show 5 `fastbrick` writes TWRP itself and restarts into it, so the package's `fastboot-step.sh` is not needed. If the Show is in TWRP when `fastbrick` ends, skip that step.
 
 ### Updating from amonet 1
 
-A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not support. Run `fastbrick` the same way to update from amonet 1 to amonet 2. The system that was on the Show does not boot on amonet 2, so install the image right after.
+A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not support. `fastbrick` does not run on a Show that is already unlocked. Install the amonet package from TWRP instead to update from amonet 1 to amonet 2. The first post of the [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-2nd-gen-2021-cronos.4772596/) has the full details.
+
+1. Download `amonet-cronos-v2.0.1.zip` from the XDA thread. It is the same package `fastbrick` comes in. Do not extract it.
+2. Connect the Show over USB and start TWRP with `adb reboot recovery`. [Getting into TWRP](twrp.md#echo-show-5-2nd-gen) covers a Show that does not boot.
+3. Copy the zip to the Show and install it:
+
+   ```sh
+   adb push amonet-cronos-v2.0.1.zip /sdcard/
+   adb shell twrp install /sdcard/amonet-cronos-v2.0.1.zip
+   ```
+
+The system that was on the Show does not boot on amonet 2, so install the image right after.
 
 ## Echo Show 8 (1st gen)
 
@@ -94,11 +105,22 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 8
 2. Put the Show in fastboot mode. Unplug its power, then hold **Volume Down**, **Volume Up** and the **privacy button** together, plug the power back in and keep holding until the fastboot screen shows. Connect the Show to your computer.
 3. From the extracted folder, run `./fastbrick.sh` on Linux. On Windows, run `fastbrick.bat`.
 
-`fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. If it says the bootloader is already unlocked, the Show is on amonet 2 already. If the Show is not in TWRP when `fastbrick` ends, follow the next step in the package's instructions on the XDA thread.
+`fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. If it says the bootloader is already unlocked, the Show was unlocked before. [Check its TWRP version](twrp.md#echo-show-8-1st-gen). If it prints `3.2.3-0`, the Show is on amonet 1 and needs the update below. If the Show is not in TWRP when `fastbrick` ends, follow the next step in the package's instructions on the XDA thread.
 
 ### Updating from amonet 1
 
-A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not support. Run `fastbrick` the same way to update from amonet 1 to amonet 2. The system that was on the Show does not boot on amonet 2, so install the image right after.
+A Show unlocked earlier with amonet 1 has TWRP 3.2.3, which the image does not support. `fastbrick` does not run on a Show that is already unlocked. Install the amonet package from TWRP instead to update from amonet 1 to amonet 2. R0rt1z2's [update post](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/post-90694642) on the XDA thread has the full details.
+
+1. Download `amonet-crown-v2.0.1.zip` from the XDA thread. It is the same package `fastbrick` comes in. Do not extract it.
+2. Connect the Show over USB and start TWRP with `adb reboot recovery`. [Getting into TWRP](twrp.md#echo-show-8-1st-gen) covers a Show that does not boot.
+3. Copy the zip to the Show and install it:
+
+   ```sh
+   adb push amonet-crown-v2.0.1.zip /sdcard/
+   adb shell twrp install /sdcard/amonet-crown-v2.0.1.zip
+   ```
+
+The system that was on the Show does not boot on amonet 2, so install the image right after.
 
 ## Next
 

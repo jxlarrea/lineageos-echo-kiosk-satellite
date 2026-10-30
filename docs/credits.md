@@ -42,7 +42,7 @@ The Echo Show 5 (2nd gen) image is R0rt1z2's `cronos` port in amazon-oss and the
 - [k4y0z](https://github.com/chaosmaster) made the first port of amonet to the Echo Dot.
 - [R0rt1z2](https://github.com/R0rt1z2) continued [that port](https://github.com/R0rt1z2/amonet/tree/mt8163-biscuit), released it with [TWRP](https://github.com/R0rt1z2/twrp_device_amazon_echo-mt8163) and keeps the [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-dot-2nd-gen-2016-biscuit.4761416/).
 - [bboe](https://github.com/bboe) wrote [firebreak](https://github.com/bboe/firebreak), which unlocks a Dot in one run.
-- [k4y0z](https://github.com/chaosmaster) and [R0rt1z2](https://github.com/R0rt1z2) made amonet's `fastbrick`, which unlocks the Echo Shows on amonet 2. R0rt1z2 keeps the Echo Show 5 (2nd gen) [XDA thread](https://xdaforums.com/t/rom-unofficial-11-cronos-lineageos-18-1-for-the-amazon-echo-show-5-2021.4772598/) and the Echo Show 8 (1st gen) [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/).
+- [k4y0z](https://github.com/chaosmaster) and [R0rt1z2](https://github.com/R0rt1z2) made amonet's `fastbrick`, which unlocks the Echo Shows on amonet 2. R0rt1z2 keeps the Echo Show 5 (2nd gen) [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-2nd-gen-2021-cronos.4772596/) and the Echo Show 8 (1st gen) [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/).
 
 ## SpeexDSP
 

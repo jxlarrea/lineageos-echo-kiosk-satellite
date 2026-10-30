@@ -65,7 +65,7 @@ adb reboot recovery
 
 Within about half a minute, `adb devices -l` lists the Show as `recovery`. TWRP has a touch screen on the Show, but the guide runs everything over `adb shell`. The `twrp` command does what its buttons do, such as `twrp install` and `twrp wipe`.
 
-If the Show does not boot, R0rt1z2's amonet package has a `boot-recovery.sh` that asks the bootloader over USB to start TWRP. R0rt1z2's [XDA thread](https://xdaforums.com/t/rom-unofficial-11-cronos-lineageos-18-1-for-the-amazon-echo-show-5-2021.4772598/) covers it.
+If the Show does not boot, R0rt1z2's amonet package has a `boot-recovery.sh` that asks the bootloader over USB to start TWRP. R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-2nd-gen-2021-cronos.4772596/) covers it.
 
 ### Checking the version
 

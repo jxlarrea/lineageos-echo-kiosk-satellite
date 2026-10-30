@@ -26,6 +26,13 @@ on property:sys.boot_completed=1 && property:persist.echo.adb_wifi=1
     setprop service.adb.tcp.port 5555
     restart adbd
 
+# Double tap to wake, which Android's Double tap to wake setting turns on and
+# off. EchoService copies the setting to persist.echo.double_tap_wake. Each
+# Show has one of these touch drivers (patches/<device>/kernel).
+on property:persist.echo.double_tap_wake=*
+    write /sys/module/gt9xx/parameters/double_tap ${persist.echo.double_tap_wake}
+    write /sys/module/focaltech_core/parameters/double_tap ${persist.echo.double_tap_wake}
+
 # Half the kernel's emergency reserve mt8163-common sets (16 MB), which it
 # sizes for the Echos with 2 GB. The low and high watermarks follow it, and
 # at 8 MB a 1 GB Show has about 30 MB more available. The Dot goes down to

@@ -12,6 +12,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
 - **No on-screen onboarding.** There is no setup wizard and no lock screen. adb works over USB from the first boot, so a computer only has to be allowed on the screen once. Allowed computers do not expire. Android's screen timeout is set to never, so only Kiosk Satellite dims the screen or turns it off.
 - **Set up from adb.** `echo_service` joins Wi-Fi, sets the time and time zone from your computer and changes the Show's settings without touching the screen. See [Device commands](#device-commands).
 - **Privacy and the screen on separate presses.** Press the button briefly to turn the screen on or off. Hold it for about a second and a half to turn privacy on or off. See [The button](#the-button).
+- **Double tap to wake.** Double tap the screen while it is off to turn it back on. R0rt1z2's image shows the setting, but its touch driver ignored every tap while the screen was off. See [Screen](#screen).
 - **Bluetooth both ways.** Phones can play to the Show as a Bluetooth speaker. The Show's audio can also go to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
 - **System updates.** EchoService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
 - **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz. The image also connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256.
@@ -178,6 +179,12 @@ With `menu`, a hold still turns privacy on or off as well.
 - **The screen timeout is never,** so only Kiosk Satellite dims the screen or turns it off. `echo_service screen timeout <seconds>` sets one.
 - **No clock on a sleeping screen.** LineageOS's ambient display is off, so the screen shows nothing while it is off. `echo_service screen ambient on` brings the clock back.
 - **No lock screen.** `echo_service lockscreen on` turns the swipe lock screen on.
+- **Double tap to wake.** A double tap on the screen while it is off turns it back on. A single tap leaves it off. No touch reaches Kiosk Satellite while the screen is off. Android does not tell Kiosk Satellite what woke the screen, so **Wake to screensaver** counts a double tap as **Power button**. To turn it off, run the first command. The second turns it back on:
+
+  ```sh
+  adb shell settings put secure double_tap_to_wake 0
+  adb shell settings put secure double_tap_to_wake 1
+  ```
 
 ### Bluetooth
 

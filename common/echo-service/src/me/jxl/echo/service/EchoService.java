@@ -8,11 +8,15 @@ package me.jxl.echo.service;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.provider.Settings;
@@ -28,6 +32,10 @@ import java.io.PrintWriter;
  */
 public class EchoService extends Service {
     static final String TAG = "EchoService";
+
+    // init copies it to the touch driver's double_tap switch
+    // (init.kiosk-satellite.rc).
+    private static final String DOUBLE_TAP_PROPERTY = "persist.echo.double_tap_wake";
 
     public static final class BootReceiver extends BroadcastReceiver {
         @Override
@@ -69,7 +77,24 @@ public class EchoService extends Service {
     public void onCreate() {
         super.onCreate();
         applyDefaults(this);
+        followDoubleTap();
         SystemUpdate.get(this).resume();
+    }
+
+    // Android's Double tap to wake setting turns the touch driver's double
+    // tap on and off. The driver has it on until init copies the setting.
+    private void followDoubleTap() {
+        final ContentResolver resolver = getContentResolver();
+        ContentObserver observer = new ContentObserver(new Handler(Looper.getMainLooper())) {
+            @Override
+            public void onChange(boolean selfChange) {
+                boolean on = Settings.Secure.getInt(resolver, Settings.Secure.DOUBLE_TAP_TO_WAKE, 1) != 0;
+                SystemProperties.set(DOUBLE_TAP_PROPERTY, on ? "1" : "0");
+            }
+        };
+        resolver.registerContentObserver(Settings.Secure.getUriFor(Settings.Secure.DOUBLE_TAP_TO_WAKE),
+                false, observer);
+        observer.onChange(false);
     }
 
     @Override

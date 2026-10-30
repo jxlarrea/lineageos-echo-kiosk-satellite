@@ -4,6 +4,9 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 
 ## Unreleased
 
+### Added
+- **Double tap to wake** ([#25](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/25)). Android offered a Double tap to wake setting, but it did nothing. When the screen turned off, the touch driver put the touch chip to sleep and cut its power, so no tap could reach Android. The chip now keeps scanning while the screen is off. The driver now turns the screen on when two touches start within 400 ms of each other. No other touch reaches Android while the screen is off. Android's Double tap to wake setting turns it on and off. It is on by default.
+
 ### Fixed
 - **The device in a release zip's `release.prop`.** It read `ro.product.device=None` on every Echo Show release. Android 11 keeps `ro.product.device` out of the system `build.prop`, which the release step read it from. It now reads `ro.product.system.device`. Nothing used the line, since EchoService checks the device in the zip's metadata, so updates were never affected. `make check` now fails a release zip that names another device.
 

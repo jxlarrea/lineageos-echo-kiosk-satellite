@@ -146,8 +146,8 @@ case "$DEVICE" in
     expect default_prop ro.echo.hostname echo-show-8-ks
     expect default_prop ro.echo.privacy_hold 1
     expect default_prop persist.sys.audio.noise_suppression 0
-    expect prop ro.vendor.audio.asr_capture 1
-    expect prop ro.vendor.audio.asr_capture_gain_db 24
+    expect prop ro.vendor.audio.asr_capture ""
+    expect prop ro.vendor.audio.asr_capture_gain_db ""
     expect prop ro.vendor.amznaec.enable 0
     expect prop ro.vendor.amznaec.engine 3
     expect prop ro.config.media_vol_default 8
@@ -158,10 +158,10 @@ case "$DEVICE" in
   cronos)
     expect default_prop ro.echo.hostname echo-show-5-ks
     expect default_prop ro.echo.privacy_hold ""
-    expect default_prop persist.sys.audio.noise_suppression ""
+    expect default_prop persist.sys.audio.noise_suppression 0
     expect prop ro.vendor.audio.asr_capture ""
     expect prop ro.vendor.audio.asr_capture_gain_db ""
-    expect prop ro.vendor.amznaec.enable ""
+    expect prop ro.vendor.amznaec.enable 0
     expect prop ro.vendor.amznaec.engine 2
     expect prop ro.config.media_vol_default 10
     [[ "$(asr_passthrough)" == true ]] || fail "asp.cfg has the ASR pipeline on, which is the Echo Show 8's"

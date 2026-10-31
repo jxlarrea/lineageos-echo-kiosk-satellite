@@ -9,15 +9,27 @@
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     ro.echo.hostname=echo-show-5-ks
 
-# Echo cancellation with Speex below 1 kHz and the pattern removal across the
-# two microphones above it (common/audio/amznaec, engine 2), then 20 dB of
-# gain: Amazon's analog microphone gain (MICPGA 40) leaves a voice about 20 dB
-# below what Kiosk Satellite's wake word engines expect. Measured on this
-# Show with music at 55%: the wake word 10 times out of 10, against 7 with
-# Speex alone, 4 with WebRTC and 3 with Amazon's own front end.
+# Kiosk Satellite's MIC capture stays raw: microphone 0 as captured, so
+# Kiosk Satellite's own echo canceller sees the speaker's echo at a fixed
+# delay. Any echo canceller, suppressor or gain control ahead of it changes
+# that echo as it adapts, and Kiosk Satellite's canceller never settles.
+#
+# The Kiosk Satellite Edition's echo canceller (common/audio/amznaec) stays
+# loaded but passes the microphones through. persist.vendor.amznaec.enable 1
+# brings it back with these settings: Speex below 1 kHz and the pattern
+# removal across the two microphones above it (engine 2), then 20 dB of gain,
+# since Amazon's analog microphone gain (MICPGA 40) leaves a voice about 20 dB
+# below what Kiosk Satellite's wake word engines expect.
 PRODUCT_PROPERTY_OVERRIDES += \
+    ro.vendor.amznaec.enable=0 \
     ro.vendor.amznaec.engine=2 \
     ro.vendor.amznaec.gain_db=20
+
+# EchoParts' noise suppression off on a fresh install. When it is on, the
+# audio HAL wrapper sends every MIC recording through Amazon's VoIP pipeline,
+# with its AGC and noise reduction.
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    persist.sys.audio.noise_suppression=0
 
 # Media volume 10 of 15 on a fresh install, which Kiosk Satellite shows as
 # 70%. With Kiosk Satellite's media player and assistant volumes at their

@@ -649,13 +649,18 @@ static void adev_close_output_stream(struct audio_hw_device* dev, struct audio_s
 /* Input streams ---------------------------------------------------------- */
 
 /*
- * The voice capture Android opens, 16 kHz mono from the built-in
- * microphones, reads the microphone array itself through mic_beam.c, which
- * removes the speaker from it. It hands Android microphone 0 unless
- * persist.biscuit.mic_beam_out picks another (0 to 6), for a Dot whose
- * microphone 0 is weak. Every other capture, and this one when
- * persist.biscuit.mic_beam is 0 or the array cannot be opened, goes to the
- * Fire OS HAL, which hands Android microphone 0 unprocessed.
+ * Every capture goes to the Fire OS HAL, which hands Android microphone 0
+ * unprocessed, so Kiosk Satellite's own echo canceller sees the speaker's
+ * echo at a fixed delay. The speaker removal in mic_beam.c fades in while
+ * the speaker plays and out after it stops, which moves that echo under the
+ * canceller.
+ *
+ * With persist.biscuit.mic_beam 1, the voice capture Android opens, 16 kHz
+ * mono from the built-in microphones, reads the microphone array itself
+ * through mic_beam.c instead, which removes the speaker from it. It hands
+ * Android microphone 0 unless persist.biscuit.mic_beam_out picks another
+ * (0 to 6), for a Dot whose microphone 0 is weak. It goes to the Fire OS HAL
+ * when the array cannot be opened.
  */
 struct biscuit_stream_in {
     struct audio_stream_in stream;
@@ -756,7 +761,7 @@ static ssize_t in_read(struct audio_stream_in* stream, void* buffer, size_t byte
     struct biscuit_stream_in* in = IN(stream);
 
     if (in->beam_capable && !in->beam && !in->beam_off) {
-        if (property_get_bool("persist.biscuit.mic_beam", true)) {
+        if (property_get_bool("persist.biscuit.mic_beam", false)) {
             if (!in->adev->fireos_capture_ready) {
                 /* The Fire OS HAL applies its mixer defaults, the microphone
                  * inputs and preamp among them, when it first opens a

@@ -9,26 +9,20 @@
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     ro.echo.hostname=echo-show-8-ks
 
-# Amazon's ASR pipeline does the echo cancellation: the far-field front end
-# Amazon's own wake word listens to, with its echo canceller, beamformer and
-# residual echo suppression over all four microphones and the speaker
-# reference. The audio HAL wrapper sends Kiosk Satellite's mic capture
-# through it (patches/crown/hardware/amazon) with 24 dB of gain and a soft
-# limit, since it comes out about 25 dB quieter than a plain capture. At
-# 12 dB a voice reached Kiosk Satellite's talk over level only now and then.
-# Measured live with vsWakeWord, 40 held-out voices played from 2.5 m at 50%
-# volume (scripts/audio-test.sh): 14 of 40 wake words over music and 17 of
-# 40 over the assistant's voice, as many as in a quiet room (15). The Kiosk
-# Satellite Edition's own echo canceller on microphone 0 caught 5 and 11.
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.vendor.audio.asr_capture=1 \
-    ro.vendor.audio.asr_capture_gain_db=24
+# Kiosk Satellite's MIC capture stays raw: microphone 0 as captured, with
+# nothing from Amazon's audio HAL on it. ro.vendor.audio.asr_capture=1 would
+# have the wrapper open it as VOICE_RECOGNITION instead, on Amazon's ASR
+# pipeline (patches/crown/hardware/amazon). That pipeline's echo canceller
+# and residual echo suppression leave an echo that moves against the speaker
+# by about 16 ms every few seconds as it adapts, so Kiosk Satellite's own
+# echo canceller, which needs a fixed echo path, never settles. Measured on
+# the raw capture: every frame in order and the echo 2 to 3 ms behind the
+# speaker loopback the whole time.
 
 # The Kiosk Satellite Edition's echo canceller (common/audio/amznaec) stays
-# loaded but passes the microphones through, so Amazon's pipeline gets them
-# as captured. Its settings are kept for persist.vendor.amznaec.enable 1:
-# engine 3, Speex's linear filter, then WebRTC's moderate suppression and
-# light noise reduction. audio/speaker-null.txt is a speaker null
+# loaded but passes the microphones through. Its settings are kept for
+# persist.vendor.amznaec.enable 1: engine 3, Speex's linear filter, then
+# WebRTC's moderate suppression and light noise reduction. audio/speaker-null.txt is a speaker null
 # calibration for it (speaker_null.h), off: it scored better on the audio
 # test's mixes but lost wake words in a live session.
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -41,7 +35,7 @@ PRODUCT_PROPERTY_OVERRIDES += \
 # audio HAL wrapper sends every MIC recording through Amazon's VoIP pipeline,
 # whose AGC turns the level down by up to 25 dB after a loud sound and keeps
 # it there until the stream closes. With it off, Android gets microphone 0 as
-# the echo canceller leaves it.
+# captured.
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     persist.sys.audio.noise_suppression=0
 

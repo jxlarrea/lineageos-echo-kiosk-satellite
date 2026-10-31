@@ -4,8 +4,8 @@ A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Dot (`biscuit`),
 
 ## What the image does
 
-- **Wake words over loud music.** The Dot has seven microphones. The image uses all of them to remove the speaker's own sound from what Kiosk Satellite hears, about 18 to 20 dB less music, so the wake word works with music at full volume. See [Volume](#volume) for the levels that work best.
-- **Stock wake words.** Kiosk Satellite hears the Show through the stock processing used on Fire OS: echo cancellation and a beamformer over all four microphones, with the Dot's own copy of the speaker signal. Wake word detection holds up over loud music and over the assistant's own voice.
+- **A raw microphone for Kiosk Satellite.** Kiosk Satellite hears microphone 0 as captured, with nothing removed from it. Its own echo canceller then sees the speaker's echo at a fixed delay. See [Volume](#volume) for the levels that work best.
+- **Stock wake words.** The image includes Amazon's wake word engine with its models for Alexa, Echo, Computer, Amazon and Ziggy in 17 locales. Choose **Amazon** as the wake word engine in Kiosk Satellite. It runs on the Dot and sends nothing to Amazon.
 - **A louder microphone and speaker.** The microphone preamp is 36 dB instead of Fire OS's 20, so voices and intercom calls come through at a normal level. The image drives the speaker 3 dB louder than the Fire OS drivers alone, without distortion at full volume.
 - **Kiosk Satellite on first boot.** Once the Dot is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. No adb grants needed.
 - **System updates.** BiscuitService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
@@ -157,13 +157,13 @@ adb shell biscuit_service volume set 11
 
 ### Voice
 
-To hear only one microphone, for example to compare, turn the speaker removal off and restart the Dot:
+Kiosk Satellite hears microphone 0 as captured. The image can also remove the speaker's sound across all seven microphones before Kiosk Satellite hears it, about 18 to 20 dB less music. The removal fades in while the speaker plays and out after it stops, which moves the echo under Kiosk Satellite's own echo canceller, so it is off. To try it, turn it on and restart the Dot:
 
 ```sh
-adb shell setprop persist.biscuit.mic_beam 0
+adb shell setprop persist.biscuit.mic_beam 1
 ```
 
-Kiosk Satellite hears microphone 0. If Kiosk Satellite barely hears the wake word, one of the Dot's microphones may be weak. To check each one:
+If Kiosk Satellite barely hears the wake word, one of the Dot's microphones may be weak. To check each one:
 
 1. Turn off **Enable Voice Satellite** in Kiosk Satellite's Voice Satellite settings, since Kiosk Satellite holds the microphones while it listens.
 2. The test needs `adb root` to open the microphones. Allow it and print the level of each one over 4 seconds:
@@ -181,9 +181,10 @@ Kiosk Satellite hears microphone 0. If Kiosk Satellite barely hears the wake wor
    adb shell biscuit_service adb root off
    ```
 
-Channels 0 to 6 are the microphones and should read within a few dB of each other. Channels 7 and 8 are the speaker and read 0 when nothing plays. If microphone 0 reads far below the rest, pick another microphone and restart the Dot. The speaker removal keeps working with any of them:
+Channels 0 to 6 are the microphones and should read within a few dB of each other. Channels 7 and 8 are the speaker and read 0 when nothing plays. If microphone 0 reads far below the rest, turn on the speaker removal, which can hand Kiosk Satellite another microphone, pick one and restart the Dot:
 
 ```sh
+adb shell setprop persist.biscuit.mic_beam 1
 adb shell setprop persist.biscuit.mic_beam_out 6
 ```
 

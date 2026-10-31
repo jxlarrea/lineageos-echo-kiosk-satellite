@@ -187,6 +187,16 @@ Channels 0 to 6 are the microphones and should read within a few dB of each othe
 adb shell setprop persist.biscuit.mic_beam_out 6
 ```
 
+### Mute timeout
+
+To keep the microphones muted unless someone just pressed the **mute** button, set a timeout. Once the microphones have been unmuted for that many seconds, BiscuitService mutes them again, however they were unmuted. This one mutes them again after 2 minutes:
+
+```sh
+adb shell biscuit_service mute timeout 120
+```
+
+`biscuit_service status` shows how long until the next mute. `biscuit_service mute timeout off` stops it. The timeout stays across restarts and updates. Its countdown starts again at every boot. The countdown does not wait for the assistant, so it can cut off a conversation that runs past it.
+
 ### Speaker
 
 The image drives the speaker 3 dB above the Fire OS drivers. To change it, set a gain in dB from -6 to 29. It applies within a second, with no restart:
@@ -293,6 +303,7 @@ adb shell biscuit_service volume down
 adb shell biscuit_service volume set '<0..15>'
 adb shell biscuit_service mute on|off|toggle
 adb shell biscuit_service mic mute|unmute|toggle
+adb shell biscuit_service mute timeout '<seconds>'|off
 adb shell biscuit_service countdown set '<remaining-ms>' '<total-ms>'
 adb shell biscuit_service countdown clear
 adb shell biscuit_service adb root on|off

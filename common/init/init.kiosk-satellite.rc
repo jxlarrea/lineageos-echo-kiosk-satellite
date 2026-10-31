@@ -41,6 +41,13 @@ on property:persist.echo.double_tap_wake=*
 on boot
     write /proc/sys/vm/min_free_kbytes 8192
 
+# EchoService turns privacy on through the privacy chip's enable file, for
+# echo_service privacy on and the privacy timeout (Privacy.java). The driver
+# only ever turns privacy on through it. Each Show has one of the two.
+on boot
+    chown system system /sys/devices/platform/gpio-privacy/enable
+    chown system system /sys/devices/platform/amazon-gating/enable
+
 
 # Services a kiosk never uses, replaced by definitions that do nothing, as
 # on the Echo Dot. init keeps the first definition of a service unless a

@@ -4,6 +4,9 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 
 ## Unreleased
 
+### Added
+- **Mute timeout** ([#30](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/30)). `biscuit_service mute timeout <seconds>` has BiscuitService mute the microphones again once they have been unmuted that long, so they stay muted unless someone just pressed the mute button.
+
 ### Changed
 - **Unlocking shows each device in its own collapsible section.** Each section opens from the device's name, so the page shows only the steps for your device.
 - **Updates from your own server** ([kiosk-satellite#1229](https://github.com/jxlarrea/kiosk-satellite/discussions/1229)). A new guide covers updating an Echo on a network without Internet access from a folder on your own web server, such as a NAS. It has a script that mirrors the newest releases and the adb command that points the Echo at the folder.

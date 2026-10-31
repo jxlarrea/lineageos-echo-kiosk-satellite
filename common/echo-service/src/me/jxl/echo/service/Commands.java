@@ -64,12 +64,6 @@ public final class Commands extends BroadcastReceiver {
     // Android's default for adb keys: they expire after 7 days unused.
     private static final long ADB_KEY_DEFAULT_MS = 7L * 24 * 60 * 60 * 1000;
     private static final int PAIRING_SECONDS = 300;
-    // The privacy chip's state: gpio-privacy on the Echo Show 5, amazon-gating
-    // on the Echo Show 8. 1 while privacy is on.
-    private static final String[] PRIVACY_STATES = {
-        "/sys/devices/platform/gpio-privacy/state",
-        "/sys/devices/platform/amazon-gating/state",
-    };
     // PhoneWindowManager's long press actions: the power menu, and holding the
     // button past the privacy chip's threshold to turn the screen on and off
     // (patches/cronos/frameworks/base).
@@ -495,24 +489,54 @@ public final class Commands extends BroadcastReceiver {
 
     // Privacy and the button
 
-    // A press shorter than about 3 seconds turns privacy on and off in the
-    // privacy chip itself, so the only thing to set here is what holding the
-    // button does.
+    // The privacy chip turns privacy on and off on the button. Software can
+    // only turn it on (Privacy.java), so the button is the only way to turn
+    // the microphones back on.
     private static String privacy(String[] args) throws UsageException {
-        if (args.length > 0 && !args[0].equals("status")) {
-            throw new UsageException("usage: privacy [status]. The button turns privacy on and off.");
+        Privacy privacy = Privacy.get();
+        switch (arg(args, 0)) {
+            case "":
+            case "status":
+                return privacyStatus();
+            case "on":
+                if (!privacy.present()) return "no privacy button";
+                if (privacy.state() != 1 && !privacy.turnOn()) return "failed: cannot turn privacy on";
+                return privacyStatus();
+            case "timeout":
+                String value = arg(args, 1);
+                if (value.isEmpty()) return privacyTimeoutStatus();
+                if (value.equals("off")) {
+                    privacy.setTimeout(0);
+                } else {
+                    int seconds;
+                    try {
+                        seconds = Integer.parseInt(value);
+                    } catch (NumberFormatException e) {
+                        throw new UsageException("expected a number of seconds or off, not '" + value + "'");
+                    }
+                    if (seconds < 0) throw new UsageException("expected 0 or more seconds, not " + seconds);
+                    privacy.setTimeout(seconds);
+                }
+                return privacyTimeoutStatus();
+            default:
+                throw new UsageException("usage: privacy [status|on|timeout [<seconds>|off]]");
         }
-        return privacyStatus();
     }
 
     private static String privacyStatus() {
-        String state = "";
-        for (String path : PRIVACY_STATES) {
-            state = readLine(path);
-            if (!state.isEmpty()) break;
-        }
-        if (state.isEmpty()) return "no privacy button";
-        return "1".equals(state) ? "on, microphones and camera off" : "off";
+        Privacy privacy = Privacy.get();
+        int state = privacy.state();
+        if (state < 0) return "no privacy button";
+        String status = state == 1 ? "on, microphones and camera off" : "off";
+        long remaining = privacy.remaining();
+        if (state == 0 && remaining >= 0) status += ", back on in " + remaining + " s";
+        return Privacy.timeout() > 0 ? status + ". " + privacyTimeoutStatus() : status;
+    }
+
+    private static String privacyTimeoutStatus() {
+        int timeout = Privacy.timeout();
+        return timeout > 0 ? "Timeout: privacy goes back on after the microphones are on for " + timeout + " s"
+                : "Timeout: off, privacy stays off until the button turns it on";
     }
 
     private static String button(Context context, String[] args) throws UsageException {

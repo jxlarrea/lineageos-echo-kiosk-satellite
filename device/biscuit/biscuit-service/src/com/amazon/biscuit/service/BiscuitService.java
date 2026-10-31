@@ -28,6 +28,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.util.Slog;
@@ -69,6 +70,7 @@ public final class BiscuitService extends Service {
             } else if (AudioManager.ACTION_MICROPHONE_MUTE_CHANGED.equals(intent.getAction())) {
                 mMicMuted = audio.isMicrophoneMute();
                 announceMicMuted(mMicMuted);
+                followMuteTimeout();
             }
         }
     };
@@ -88,6 +90,8 @@ public final class BiscuitService extends Service {
     public static final String MIC_MUTE_ON = "com.amazon.biscuit.service.MICROPHONE_MUTE_ON";
     public static final String MIC_MUTE_OFF = "com.amazon.biscuit.service.MICROPHONE_MUTE_OFF";
     public static final String MIC_MUTE_TOGGLE = "com.amazon.biscuit.service.MICROPHONE_MUTE_TOGGLE";
+    // biscuit_service mute timeout sends this once it has set the timeout.
+    public static final String MIC_MUTE_TIMEOUT = "com.amazon.biscuit.service.MICROPHONE_MUTE_TIMEOUT";
     public static final String COUNTDOWN_PROGRESS = "com.amazon.biscuit.service.COUNTDOWN_PROGRESS";
     public static final String COUNTDOWN_CLEAR = "com.amazon.biscuit.service.COUNTDOWN_CLEAR";
     private static final String EXTRA_SSID = "ssid";
@@ -121,6 +125,22 @@ public final class BiscuitService extends Service {
     // A search for Bluetooth headphones or a speaker to play to. Only the
     // main thread touches these.
     private final Handler mHandler = new Handler(Looper.getMainLooper());
+
+    // With persist.biscuit.mute_timeout set to a number of seconds, the
+    // microphones are muted again once they have been on that long, however
+    // they were unmuted. BiscuitService reads it at boot and when
+    // biscuit_service sets it. Only the main thread touches these.
+    private static final String MUTE_TIMEOUT_PROPERTY = "persist.biscuit.mute_timeout";
+    private int mMuteTimeout;
+    // When the microphones were unmuted, in elapsedRealtime, or -1.
+    private long mUnmutedSince = -1;
+    private final Runnable mMuteAgain = new Runnable() {
+        @Override
+        public void run() {
+            Slog.i(TAG, "the microphones were on for " + mMuteTimeout + " s, muting them");
+            setRealMicMuted(true);
+        }
+    };
     private boolean mConnecting;
     private BluetoothAdapter mConnectAdapter;
     private String mConnectName;
@@ -289,6 +309,7 @@ public final class BiscuitService extends Service {
         IntentFilter filter = new IntentFilter(VOLUME_CHANGED);
         filter.addAction(AudioManager.ACTION_MICROPHONE_MUTE_CHANGED);
         registerReceiver(mAudioReceiver, filter);
+        followMuteTimeout();
         startInBluetoothSpeakerRole();
         // BiscuitService starts once per boot: carry on with an update TWRP
         // has just installed, or look for one.
@@ -349,6 +370,8 @@ public final class BiscuitService extends Service {
             setRealMicMuted(true);
         } else if (intent != null && MIC_MUTE_OFF.equals(intent.getAction())) {
             setRealMicMuted(false);
+        } else if (intent != null && MIC_MUTE_TIMEOUT.equals(intent.getAction())) {
+            followMuteTimeout();
         }
         return START_STICKY;
     }
@@ -362,6 +385,7 @@ public final class BiscuitService extends Service {
     @Override
     protected void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         writer.println("Microphone muted: " + mMicMuted);
+        writer.println("Mute timeout: " + muteTimeoutStatus());
         synchronized (mClaimLock) {
             writer.println("Volume buttons claimed by: "
                     + (mVolumeClaimPackage != null ? mVolumeClaimPackage : "nobody"));
@@ -396,6 +420,35 @@ public final class BiscuitService extends Service {
             boolean ok = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
             if (!ok) throw new RemoteException("bad frame");
         }
+    }
+
+    private static int muteTimeout() {
+        return Math.max(0, SystemProperties.getInt(MUTE_TIMEOUT_PROPERTY, 0));
+    }
+
+    // Starts, moves or stops the countdown to the next mute, when the mute
+    // or the timeout changes.
+    private void followMuteTimeout() {
+        mMuteTimeout = muteTimeout();
+        mHandler.removeCallbacks(mMuteAgain);
+        if (mMicMuted) {
+            mUnmutedSince = -1;
+            return;
+        }
+        long now = SystemClock.elapsedRealtime();
+        if (mUnmutedSince < 0) mUnmutedSince = now;
+        if (mMuteTimeout > 0) {
+            mHandler.postDelayed(mMuteAgain, Math.max(0, mMuteTimeout * 1000L - (now - mUnmutedSince)));
+        }
+    }
+
+    private String muteTimeoutStatus() {
+        int timeout = mMuteTimeout;
+        if (timeout <= 0) return "off";
+        long since = mUnmutedSince;
+        if (mMicMuted || since < 0) return timeout + " s";
+        long left = Math.max(0, timeout - (SystemClock.elapsedRealtime() - since) / 1000);
+        return timeout + " s, muting again in " + left + " s";
     }
 
     private void setRealMicMuted(boolean muted) {

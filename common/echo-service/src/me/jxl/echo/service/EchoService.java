@@ -78,6 +78,7 @@ public class EchoService extends Service {
         super.onCreate();
         applyDefaults(this);
         followDoubleTap();
+        Privacy.get().start();
         SystemUpdate.get(this).resume();
     }
 

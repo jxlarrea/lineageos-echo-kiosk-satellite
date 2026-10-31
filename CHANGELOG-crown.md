@@ -4,6 +4,9 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 
 ## Unreleased
 
+### Added
+- **Privacy timeout** ([#30](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/30)). `echo_service privacy on` turns privacy on from adb. `echo_service privacy timeout <seconds>` has EchoService turn privacy back on once the microphones have been on that long, so the microphones stay off unless someone just held the button. The privacy chip's driver only lets software turn privacy on, so only the button turns the microphones back on.
+
 ### Changed
 - **Updating from amonet 1 installs the amonet package from TWRP** ([#29](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/29)). Unlocking said to run `fastbrick` again on a Show unlocked with amonet 1, but `fastbrick` does not run on a Show that is already unlocked. It now says to install R0rt1z2's amonet package from TWRP, as the XDA thread does. When `fastbrick` says the bootloader is already unlocked, Unlocking now says to check the TWRP version instead of taking the Show as on amonet 2.
 - **Unlocking shows each device in its own collapsible section.** Each section opens from the device's name, so the page shows only the steps for your device.

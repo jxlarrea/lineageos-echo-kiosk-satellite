@@ -191,6 +191,18 @@ adb shell echo_service button press
 
 With `menu`, a hold still turns privacy on or off as well.
 
+### Privacy timeout
+
+`echo_service privacy on` turns privacy on from adb. Only the button turns it off again, so no command can turn the microphones or the camera on.
+
+To keep the microphones off unless someone just held the button, set a timeout. Once the microphones have been on for that many seconds, EchoService turns privacy back on. This one turns it back on after 2 minutes:
+
+```sh
+adb shell echo_service privacy timeout 120
+```
+
+`echo_service privacy` shows how long until privacy goes back on. `echo_service privacy timeout off` stops it. The timeout stays across restarts and updates. Its countdown starts again at every boot. Privacy turns the camera off too, so the timeout also stops Kiosk Satellite's camera. The countdown does not wait for the assistant, so it can cut off a conversation that runs past it.
+
 ### Screen
 
 - **The screen timeout is never,** so only Kiosk Satellite dims the screen or turns it off. `echo_service screen timeout <seconds>` sets one.
@@ -290,6 +302,8 @@ adb shell echo_service adb root on|off
 adb shell echo_service adb keys expire on|off
 adb shell echo_service lockscreen on|off
 adb shell echo_service privacy
+adb shell echo_service privacy on
+adb shell echo_service privacy timeout '<seconds>'|off
 adb shell echo_service button press|menu
 adb shell echo_service locale '<tag>'
 adb shell echo_service screen on|off

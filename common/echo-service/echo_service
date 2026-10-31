@@ -50,6 +50,9 @@ Lock screen, privacy, language and screen:
   privacy [status]               whether privacy is on. The privacy chip turns it
                                  on and off on a short press on the Echo Show 5
                                  and on a hold on the Echo Show 8
+  privacy on                     turn privacy on. Only the button turns it off
+  privacy timeout [<s>|off]      turn privacy back on once the microphones have
+                                 been on for this many seconds
   button [status]                what the button does
   button screen|press|menu       screen: holding it 3 s turns the screen on and off
                                  (the Echo Show 5's default). press: a short press

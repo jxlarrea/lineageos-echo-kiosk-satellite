@@ -24,6 +24,8 @@ Audio:
   volume set <0..max>        set music volume
   mute on|off|toggle         set/toggle real microphone mute
   mic mute|unmute|toggle     same as mute
+  mute timeout [<s>|off]     mute the microphones again once they have been
+                             unmuted for this many seconds
 
 Countdown:
   countdown set <remaining-ms> <total-ms>  show a breathing countdown bar
@@ -73,6 +75,30 @@ case "$1" in
         ;;
     mute)
         case "$2" in
+            timeout)
+                case "${3:-}" in
+                    '')
+                        ;;
+                    off)
+                        setprop persist.biscuit.mute_timeout 0
+                        ;;
+                    *[!0-9]*)
+                        echo "expected a number of seconds or off, not '$3'" >&2
+                        exit 2
+                        ;;
+                    *)
+                        setprop persist.biscuit.mute_timeout "$3"
+                        ;;
+                esac
+                am startservice -a "$PKG.MICROPHONE_MUTE_TIMEOUT" "$COMP" >/dev/null
+                timeout=$(getprop persist.biscuit.mute_timeout)
+                if [ "${timeout:-0}" -gt 0 ]; then
+                    echo "the microphones are muted again once they have been unmuted for $timeout s"
+                else
+                    echo "off, the microphones stay unmuted until they are muted"
+                fi
+                exit 0
+                ;;
             on|mute|1|true)
                 start "$PKG.MICROPHONE_MUTE_ON"
                 ;;

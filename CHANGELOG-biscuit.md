@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.10.18 - 2026-10-31
 
 ### Added
 - **Mute timeout** ([#30](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/30)). `biscuit_service mute timeout <seconds>` has BiscuitService mute the microphones again once they have been unmuted that long, so they stay muted unless someone just pressed the mute button.

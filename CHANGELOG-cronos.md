@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.10.7 - 2026-10-31
 
 ### Added
 - **Privacy timeout** ([#30](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/30)). `echo_service privacy on` turns privacy on from adb. `echo_service privacy timeout <seconds>` has EchoService turn privacy back on once the microphones have been on that long, so the microphones stay off unless someone just pressed the button. The privacy chip's driver only lets software turn privacy on, so only the button turns the microphones back on.

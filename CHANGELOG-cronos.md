@@ -13,6 +13,7 @@ All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented
 - **Updates from your own server** ([kiosk-satellite#1229](https://github.com/jxlarrea/kiosk-satellite/discussions/1229)). A new guide covers updating an Echo on a network without Internet access from a folder on your own web server, such as a NAS. It has a script that mirrors the newest releases and the adb command that points the Echo at the folder.
 - **The kernel version names the release.** It said `4.9.337-g3e46726afcbe-dirty`, with a build number that counted every kernel build on the build machine. It now says `4.9.337-kiosksatellite-cronos-<release>`, such as `4.9.337-kiosksatellite-cronos-2026.10.7`, with build `#1`.
 - **Android's build string names the release.** Its build number was `eng.<user>.<date>`, as in `lineage_cronos-userdebug 11 RQ3A.211001.001 eng.builde.20261030.161037 test-keys`. It is now the release, as in `lineage_cronos-userdebug 11 RQ3A.211001.001 2026.10.7 test-keys`. The build fingerprint has the release too.
+- **Joining a Wi-Fi network with a `!` in its name or password.** The guide's `wifi connect` command failed with `event not found` for a name like `FRITZ!Box 7590`, since bash and zsh read a `!` inside double quotes as a history command before the command reaches the Show. The guide now names `!` and `$` among the characters to type in a shell on the Show instead.
 
 ## 2026.10.6 - 2026-10-30
 

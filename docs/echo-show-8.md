@@ -91,7 +91,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
    adb shell echo_service wifi
    ```
 
-   Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Show. If the name or password has a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Show instead, as the [Echo Dot guide](echo-dot.md#after-installing) shows for the Dot.
+   Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Show. If the name or password has a `!`, a `$`, a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Show instead, as the [Echo Dot guide](echo-dot.md#after-installing) shows for the Dot. Inside the double quotes, bash and zsh read a `!` as a history command and a `$` as a variable, so a name like `FRITZ!Box 7590` fails with `event not found` before it reaches the Show.
 
    If your router offers separate 2.4 GHz and 5 GHz networks, join the 5 GHz one. In testing, the Show answered about four times faster on 5 GHz than on 2.4 GHz from the same router.
 

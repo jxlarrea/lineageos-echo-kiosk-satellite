@@ -91,7 +91,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
    adb shell echo_service wifi
    ```
 
-   Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Show. If the name or password has a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Show instead, as the [Echo Dot guide](echo-dot.md#after-installing) shows for the Dot.
+   Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Show. If the name or password has a `!`, a `$`, a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Show instead, as the [Echo Dot guide](echo-dot.md#after-installing) shows for the Dot. Inside the double quotes, bash and zsh read a `!` as a history command and a `$` as a variable, so a name like `FRITZ!Box 7590` fails with `event not found` before it reaches the Show.
 
 3. **Wait for Kiosk Satellite.** Once the Show is on Wi-Fi, Kiosk Satellite is downloaded and installed automatically. Follow the progress with:
 

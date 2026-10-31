@@ -113,7 +113,7 @@ A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Dot (`biscuit`),
 
    Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Dot.
 
-   If the name or password has a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Dot instead. There, only the single quotes around each value matter:
+   If the name or password has a `!`, a `$`, a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Dot instead. Inside the double quotes, bash and zsh read a `!` as a history command and a `$` as a variable, so a name like `FRITZ!Box 7590` fails with `event not found` before it reaches the Dot. On the Dot, only the single quotes around each value matter:
 
    ```sh
    adb shell

@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Fri, 30 Oct 2026 20:11:58 -0500
+Subject: [PATCH] ARM64: configs: biscuit: Leave the git state out of the
+ kernel version
+
+The image's layer is applied to the kernel as uncommitted changes, so the
+git state setlocalversion appends only ever says -dirty. The build names
+the kernel after the release instead, through LOCALVERSION.
+---
+ arch/arm64/configs/biscuit_defconfig | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/arch/arm64/configs/biscuit_defconfig b/arch/arm64/configs/biscuit_defconfig
+index d1dbb92..31248a1 100644
+--- a/arch/arm64/configs/biscuit_defconfig
++++ b/arch/arm64/configs/biscuit_defconfig
+@@ -1,4 +1,5 @@
+ CONFIG_CROSS_COMPILE="aarch64-linux-android-"
++# CONFIG_LOCALVERSION_AUTO is not set
+ # CONFIG_FHANDLE is not set
+ CONFIG_CPUSETS=y
+ CONFIG_MEMCG=y

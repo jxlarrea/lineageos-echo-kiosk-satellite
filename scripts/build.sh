@@ -114,6 +114,10 @@ docker run -d \
     renice -n 19 -p \$\$ >/dev/null
     source build/envsetup.sh >/dev/null
     export BISCUIT_RELEASE='$BISCUIT_RELEASE'
+    # The build number in Android's build string and fingerprint, such as
+    # lineage_crown-userdebug 11 RQ3A.211001.001 2026.10.6 test-keys, instead
+    # of eng.<user>.<date>.
+    export BUILD_NUMBER='$BISCUIT_RELEASE'
     export NINJA_HIGHMEM_NUM_JOBS='$BUILD_HIGHMEM_JOBS'
     export USE_CCACHE=1
     export CCACHE_EXEC=/usr/bin/ccache

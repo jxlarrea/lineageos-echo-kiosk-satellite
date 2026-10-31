@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Fri, 30 Oct 2026 20:12:41 -0500
+Subject: [PATCH] mt8163: Include the Kiosk Satellite Edition board settings
+
+The layer names the kernel after the image and its release, which is a
+board setting (TARGET_KERNEL_ADDITIONAL_FLAGS). Every Echo includes this
+file, so the layer's board settings go here once.
+---
+ BoardConfigCommon.mk | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/BoardConfigCommon.mk b/BoardConfigCommon.mk
+index 590bdfb..45f156d 100644
+--- a/BoardConfigCommon.mk
++++ b/BoardConfigCommon.mk
+@@ -95,3 +95,7 @@ WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
+ 
+ # Inherit the proprietary files
+ include vendor/amazon/mt8163-common/BoardConfigVendor.mk
++
++# Kiosk Satellite Edition: the layer's board settings, such as the kernel's
++# name.
++include vendor/kiosk-satellite/config/BoardConfig.mk

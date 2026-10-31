@@ -8,6 +8,8 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 - **Updating from amonet 1 installs the amonet package from TWRP** ([#29](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/29)). Unlocking said to run `fastbrick` again on a Show unlocked with amonet 1, but `fastbrick` does not run on a Show that is already unlocked. It now says to install R0rt1z2's amonet package from TWRP, as the XDA thread does. When `fastbrick` says the bootloader is already unlocked, Unlocking now says to check the TWRP version instead of taking the Show as on amonet 2.
 - **Unlocking shows each device in its own collapsible section.** Each section opens from the device's name, so the page shows only the steps for your device.
 - **Updates from your own server** ([kiosk-satellite#1229](https://github.com/jxlarrea/kiosk-satellite/discussions/1229)). A new guide covers updating an Echo on a network without Internet access from a folder on your own web server, such as a NAS. It has a script that mirrors the newest releases and the adb command that points the Echo at the folder.
+- **The kernel version names the release.** It said `4.9.337-g3e46726afcbe-dirty`, with a build number that counted every kernel build on the build machine. It now says `4.9.337-kiosksatellite-crown-<release>`, such as `4.9.337-kiosksatellite-crown-2026.10.6`, with build `#1`.
+- **Android's build string names the release.** Its build number was `eng.<user>.<date>`, as in `lineage_crown-userdebug 11 RQ3A.211001.001 eng.builde.20261030.161037 test-keys`. It is now the release, as in `lineage_crown-userdebug 11 RQ3A.211001.001 2026.10.6 test-keys`. The build fingerprint has the release too.
 
 ## 2026.10.5 - 2026-10-30
 

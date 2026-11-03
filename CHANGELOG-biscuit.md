@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.10.19 - 2026-11-03
 
 ### Changed
 - **`biscuit_service bt on` turns Bluetooth on without pairing mode.** It was another name for `bt pair`, which also set the Dot up to take audio from phones and made it discoverable for five minutes. It now turns Bluetooth back on with the Dot set up as it was, such as for Kiosk Satellite's Bluetooth proxy for Home Assistant. The guide now shows how to turn Bluetooth off and back on.

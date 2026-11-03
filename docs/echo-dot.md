@@ -236,6 +236,15 @@ Bluetooth is on. Android 11 can either take audio from phones or play to headpho
 
 Switching between the two restarts Bluetooth, which drops what was connected. `adb logcat -s BiscuitService` shows how a `bt connect` went.
 
+To turn Bluetooth off and back on:
+
+```sh
+adb shell biscuit_service bt off
+adb shell biscuit_service bt on
+```
+
+Bluetooth stays off across reboots. `bt on` keeps the Dot set up as it was and does not start pairing mode. Kiosk Satellite's Bluetooth proxy for Home Assistant needs Bluetooth on.
+
 ### Time
 
 - **Network time.** Android sets the clock over NTP from `time.android.com` at every boot and once a day after that. To use another NTP server, such as your router or a time server on your network, set its name or IP address:
@@ -298,7 +307,7 @@ adb shell "biscuit_service wifi connect '<ssid>' '<password>'"
 adb shell biscuit_service wifi off
 adb shell biscuit_service bt pair
 adb shell biscuit_service bt connect '<name>'
-adb shell biscuit_service bt off
+adb shell biscuit_service bt on|off
 adb shell biscuit_service volume up
 adb shell biscuit_service volume down
 adb shell biscuit_service volume set '<0..15>'

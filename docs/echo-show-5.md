@@ -233,6 +233,15 @@ Bluetooth is on. Android 11 can either take audio from phones or play to headpho
 
 Switching between the two restarts Bluetooth, which drops what was connected. `adb logcat -s EchoBluetooth` shows how a `bt connect` went. Kiosk Satellite's Bluetooth proxy for Home Assistant keeps scanning in both.
 
+To turn Bluetooth off and back on:
+
+```sh
+adb shell echo_service bt off
+adb shell echo_service bt on
+```
+
+Bluetooth stays off across reboots. `bt on` keeps the Show set up as it was and does not make it discoverable. Kiosk Satellite's Bluetooth proxy for Home Assistant needs Bluetooth on.
+
 ### Time
 
 - **Network time.** Android sets the clock over NTP from `time.android.com` at every boot and once a day after that. To use another NTP server, such as your router or a time server on your network, set its name or IP address:

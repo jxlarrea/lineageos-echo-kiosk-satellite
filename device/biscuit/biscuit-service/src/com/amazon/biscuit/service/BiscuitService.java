@@ -79,6 +79,7 @@ public final class BiscuitService extends Service {
     private static final String VOLUME_CHANGED = "android.media.VOLUME_CHANGED_ACTION";
     private static final String MIC_MUTE_CHANGED = "com.amazon.biscuit.service.MICROPHONE_MUTE_CHANGED";
     public static final String BLUETOOTH_PAIRING_MODE = "com.amazon.biscuit.service.BLUETOOTH_PAIRING_MODE";
+    public static final String BLUETOOTH_ON = "com.amazon.biscuit.service.BLUETOOTH_ON";
     public static final String BLUETOOTH_OFF = "com.amazon.biscuit.service.BLUETOOTH_OFF";
     public static final String BLUETOOTH_CONNECT = "com.amazon.biscuit.service.BLUETOOTH_CONNECT";
     public static final String WIFI_ON = "com.amazon.biscuit.service.WIFI_ON";
@@ -345,6 +346,8 @@ public final class BiscuitService extends Service {
             setRealMicMuted(!mMicMuted);
         } else if (intent != null && BLUETOOTH_PAIRING_MODE.equals(intent.getAction())) {
             startBluetoothPairingMode();
+        } else if (intent != null && BLUETOOTH_ON.equals(intent.getAction())) {
+            startBluetooth();
         } else if (intent != null && BLUETOOTH_OFF.equals(intent.getAction())) {
             stopBluetooth();
         } else if (intent != null && BLUETOOTH_CONNECT.equals(intent.getAction())) {
@@ -739,6 +742,13 @@ public final class BiscuitService extends Service {
         mConnecting = false;
         mConnectAdapter = null;
         mConnectDevice = null;
+    }
+
+    // Bluetooth back on in the role the Dot had, such as for Kiosk
+    // Satellite's Bluetooth proxy, without pairing mode.
+    private void startBluetooth() {
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if (adapter != null && !adapter.isEnabled()) adapter.enable();
     }
 
     private void stopBluetooth() {

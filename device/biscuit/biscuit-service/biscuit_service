@@ -32,6 +32,7 @@ Countdown:
   countdown clear                          clear the countdown display
 
 Bluetooth:
+  bt on                      enable Bluetooth in the role it had
   bt pair                    enable Bluetooth and enter pairing mode
   bt connect [name]          pair with and play to Bluetooth headphones or a
                              speaker in pairing mode, the first found or the
@@ -138,7 +139,10 @@ case "$1" in
         ;;
     bt|bluetooth)
         case "$2" in
-            pair|pairing|pairing-mode|on)
+            on|enable)
+                start "$PKG.BLUETOOTH_ON"
+                ;;
+            pair|pairing|pairing-mode)
                 start "$PKG.BLUETOOTH_PAIRING_MODE"
                 ;;
             connect)

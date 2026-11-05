@@ -6,9 +6,12 @@
 <resources>
     <!-- No upgrade of a saved WPA2 network to WPA3 (SAE). On an access
          point in WPA2/WPA3 transition mode Android 11 connects with SAE,
-         which the Echos' Wi-Fi drivers cannot do, so wpa_supplicant failed
-         to pick a key management type and the Echo never joined (issue #1).
-         It now connects with WPA2, as the CM14 image did. -->
+         which the Echo Dot's Wi-Fi driver cannot do, so wpa_supplicant
+         failed to pick a key management type and the Dot never joined
+         (issue #1). It now connects with WPA2, as the CM14 image did. The
+         Echo Shows' driver can do SAE. They keep WPA2 on these networks as
+         well, and this does not touch a network saved as WPA3, which is how
+         echo_service joins a WPA3-only network (issue #36). -->
     <bool name="config_wifiSaeUpgradeEnabled">false</bool>
 
     <!-- No WPA2 with SHA256 key management (PSK-SHA256). Android 11 adds it
@@ -34,7 +37,8 @@
          conversation. Each move is a full reassociation on these drivers,
          which stalled audio and dropped Home Assistant. Android still picks
          the best access point when it connects and after a disconnect. This
-         also ends the scans every 20 seconds while connected. -->
+         also ends the scans every 20 seconds while connected. On the Echo
+         Shows, EchoService makes one exception after boot (issue #35). -->
     <bool name="config_wifi_framework_enable_associated_network_selection">false</bool>
 
     <!-- Pick the access point by signal strength and band, not by Android's

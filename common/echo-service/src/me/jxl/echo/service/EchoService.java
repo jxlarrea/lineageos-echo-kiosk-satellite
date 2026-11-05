@@ -41,6 +41,7 @@ public class EchoService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             context.startService(new Intent(context, EchoService.class));
+            WifiBandCheck.start(context.getApplicationContext());
         }
     }
 

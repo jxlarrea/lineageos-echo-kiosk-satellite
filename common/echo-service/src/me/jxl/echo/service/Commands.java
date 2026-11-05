@@ -24,6 +24,7 @@ import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
 import android.net.Network;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
@@ -45,6 +46,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -64,6 +66,11 @@ public final class Commands extends BroadcastReceiver {
     // Android's default for adb keys: they expire after 7 days unused.
     private static final long ADB_KEY_DEFAULT_MS = 7L * 24 * 60 * 60 * 1000;
     private static final int PAIRING_SECONDS = 300;
+    // A full scan takes these Echos up to 6 seconds, and one can miss a DFS
+    // channel, so wifi connect allows for a second scan.
+    private static final long WIFI_SCAN_TIMEOUT_MS = 15000;
+    private static final long WIFI_SCAN_RETRY_MS = 7000;
+    private static final long WIFI_SCAN_POLL_MS = 500;
     // PhoneWindowManager's long press actions: the power menu, and holding the
     // button past the privacy chip's threshold to turn the screen on and off
     // (patches/cronos/frameworks/base).
@@ -93,20 +100,42 @@ public final class Commands extends BroadcastReceiver {
             String arg = intent.getStringExtra("arg" + i);
             args[i] = arg == null ? "" : arg;
         }
-        int code = 0;
-        String reply;
+        // wifi connect waits for a scan. This receiver runs on system_server's
+        // main thread, so the wait has to happen somewhere else.
+        if (args.length >= 2 && "wifi".equals(args[0]) && "connect".equals(args[1])) {
+            PendingResult pending = goAsync();
+            new Thread(() -> {
+                Reply reply = execute(context, args);
+                pending.setResultCode(reply.code);
+                pending.setResultData(reply.text);
+                pending.finish();
+            }, "echo-wifi-connect").start();
+            return;
+        }
+        Reply reply = execute(context, args);
+        setResultCode(reply.code);
+        setResultData(reply.text);
+    }
+
+    private static final class Reply {
+        final int code;
+        final String text;
+
+        Reply(int code, String text) {
+            this.code = code;
+            this.text = text;
+        }
+    }
+
+    private static Reply execute(Context context, String[] args) {
         try {
-            reply = run(context, args);
+            return new Reply(0, run(context, args));
         } catch (UsageException e) {
-            code = 2;
-            reply = e.getMessage();
+            return new Reply(2, e.getMessage());
         } catch (RuntimeException e) {
             Log.w(TAG, "echo_service " + String.join(" ", args) + " failed", e);
-            code = 1;
-            reply = "failed: " + e.getMessage();
+            return new Reply(1, "failed: " + e.getMessage());
         }
-        setResultCode(code);
-        setResultData(reply);
     }
 
     private static String run(Context context, String[] args) throws UsageException {
@@ -234,30 +263,46 @@ public final class Commands extends BroadcastReceiver {
                 return "Wi-Fi off";
             case "connect":
                 if (args.length < 2 || args[1].isEmpty()) throw new UsageException("usage: wifi connect <ssid> [password]");
-                connectWifi(wifi, args[1], arg(args, 2));
-                return "Connecting to " + args[1] + ". Run echo_service wifi to check.";
+                boolean wpa3 = connectWifi(wifi, args[1], arg(args, 2));
+                return "Connecting to " + args[1] + (wpa3 ? " with WPA3" : "")
+                        + ". Run echo_service wifi to check.";
             default:
                 throw new UsageException("usage: wifi [status|on|off|connect <ssid> [password]]");
         }
     }
 
-    private static void connectWifi(WifiManager wifi, String ssid, String password) {
+    // Returns whether the network was saved as WPA3.
+    private static boolean connectWifi(WifiManager wifi, String ssid, String password) {
+        wifi.setWifiEnabled(true);
         WifiConfiguration config = new WifiConfiguration();
         // Android 11 only takes the outer quotes off before the name and
         // password reach wpa_supplicant, so nothing inside is escaped.
         config.SSID = "\"" + ssid + "\"";
+        List<WifiConfiguration> saved = wifi.getConfiguredNetworks();
+        boolean wpa3 = !password.isEmpty() && usesWpa3(wifi, ssid, config.SSID, saved);
         if (password.isEmpty()) {
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        } else if (wpa3) {
+            // WPA3 only takes a passphrase, even one that looks like a hex key.
+            config.setSecurityParams(WifiConfiguration.SECURITY_TYPE_SAE);
+            config.preSharedKey = "\"" + password + "\"";
         } else {
             // A 64 digit hex key goes as it is, a passphrase in quotes.
             config.preSharedKey = password.matches("[0-9A-Fa-f]{64}") ? password : "\"" + password + "\"";
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
         }
-        wifi.setWifiEnabled(true);
+        // Android saves WPA2 and WPA3 networks separately. Updating the other
+        // kind would turn it into this one, and keeping it leaves a copy that
+        // can never connect, so only the kind being joined stays.
         int id = -1;
-        List<WifiConfiguration> saved = wifi.getConfiguredNetworks();
         for (int i = 0; saved != null && i < saved.size(); i++) {
-            if (config.SSID.equals(saved.get(i).SSID)) id = saved.get(i).networkId;
+            WifiConfiguration network = saved.get(i);
+            if (!config.SSID.equals(network.SSID)) continue;
+            if (isWpa3(network) == wpa3) {
+                id = network.networkId;
+            } else {
+                wifi.removeNetwork(network.networkId);
+            }
         }
         if (id >= 0) {
             config.networkId = id;
@@ -268,6 +313,58 @@ public final class Commands extends BroadcastReceiver {
         if (id < 0) throw new IllegalStateException("Android did not take the network");
         wifi.enableNetwork(id, true);
         wifi.reconnect();
+        return wpa3;
+    }
+
+    private static boolean isWpa3(WifiConfiguration network) {
+        return network.allowedKeyManagement.get(WifiConfiguration.KeyMgmt.SAE);
+    }
+
+    // A network out of range keeps the kind it was saved as, and one never
+    // saved goes as WPA2.
+    private static boolean usesWpa3(WifiManager wifi, String ssid, String quotedSsid,
+            List<WifiConfiguration> saved) {
+        Boolean scanned = scanForWpa3Only(wifi, ssid);
+        if (scanned != null) return scanned;
+        for (int i = 0; saved != null && i < saved.size(); i++) {
+            if (quotedSsid.equals(saved.get(i).SSID) && isWpa3(saved.get(i))) return true;
+        }
+        return false;
+    }
+
+    // Whether the access points of this network only offer WPA3, or null if a
+    // scan did not find them. A network in WPA2/WPA3 transition mode counts as
+    // WPA2, as issue #1 needs.
+    private static Boolean scanForWpa3Only(WifiManager wifi, String ssid) {
+        List<ScanResult> results = scanFor(wifi, ssid, WIFI_SCAN_TIMEOUT_MS);
+        if (results.isEmpty()) return null;
+        boolean psk = false;
+        boolean sae = false;
+        for (ScanResult result : results) {
+            psk |= result.capabilities.contains("PSK");
+            sae |= result.capabilities.contains("SAE");
+        }
+        return sae && !psk;
+    }
+
+    // The access points of this network that a scan from now on finds, none if
+    // it does not find any in time. Android keeps the last scan with no time
+    // limit and the Echos do not scan while connected, so an older scan can
+    // describe the network as it was days ago. This call blocks, so it must
+    // stay off system_server's main thread.
+    static List<ScanResult> scanFor(WifiManager wifi, String ssid, long timeoutMs) {
+        List<ScanResult> found = new ArrayList<>();
+        long started = SystemClock.elapsedRealtime();
+        long nextScan = started;
+        while (found.isEmpty() && SystemClock.elapsedRealtime() - started < timeoutMs) {
+            long now = SystemClock.elapsedRealtime();
+            if (now >= nextScan && wifi.startScan()) nextScan = now + WIFI_SCAN_RETRY_MS;
+            SystemClock.sleep(WIFI_SCAN_POLL_MS);
+            for (ScanResult result : wifi.getScanResults()) {
+                if (ssid.equals(result.SSID) && result.timestamp / 1000 >= started) found.add(result);
+            }
+        }
+        return found;
     }
 
     private static String wifiStatus(Context context) {

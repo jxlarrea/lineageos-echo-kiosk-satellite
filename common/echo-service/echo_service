@@ -18,7 +18,8 @@ usage: echo_service <command>
 
 Wi-Fi:
   wifi [status]                  the network, signal and IP address
-  wifi connect <ssid> [password] join a network, open if no password
+  wifi connect <ssid> [password] join a network, open if no password, WPA3 if
+                                 it only offers WPA3
   wifi on|off
 
 Bluetooth:

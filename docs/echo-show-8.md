@@ -15,7 +15,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
 - **Double tap to wake.** Double tap the screen while it is off to turn it back on. R0rt1z2's image shows the setting, but its touch driver ignored every tap while the screen was off. See [Screen](#screen).
 - **Bluetooth both ways.** Phones can play to the Show as a Bluetooth speaker. The Show's audio can also go to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
 - **System updates.** EchoService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
-- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz. The image also connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256.
+- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz. The image also connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256. `echo_service wifi connect` joins a WPA3-only network with WPA3.
 - **More free memory.** With Kiosk Satellite on screen for over an hour, about 1.1 GB of the Show's 2 GB stays available.
 
 ## Before you start
@@ -267,6 +267,8 @@ Bluetooth stays off across reboots. `bt on` keeps the Show set up as it was and 
 
 ### Network
 
+- **2.4 GHz after a boot.** Android's first scan after a boot can miss a radio, so Android can join the 2.4 GHz radio of a network that also has 5 GHz. About 30 seconds after the first connection of a boot, EchoService scans once. If the same network has a 5 GHz radio that Android would pick, EchoService reconnects so Android can choose again. Wi-Fi drops for a few seconds when that happens. A network locked to one access point stays where it is.
+- **WPA3.** `echo_service wifi connect` scans for the network first, which can take up to 15 seconds. It saves a network that only offers WPA3 as WPA3 and any other network as WPA2, including a network in WPA2/WPA3 transition mode. It replaces a saved network of the same name that uses the other kind.
 - **adb works over Wi-Fi** on port 5555, as on R0rt1z2's image. A computer still has to be allowed on the Show's screen once before it can connect. To turn it off, run the first command. The second turns it back on:
 
   ```sh

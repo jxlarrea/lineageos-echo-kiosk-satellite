@@ -7,6 +7,10 @@ All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented
 ### Changed
 - **The guide shows how to turn Bluetooth off and back on.** `echo_service bt off` and `bt on` were only in the list of device commands. The Bluetooth section now has them and says Kiosk Satellite's Bluetooth proxy for Home Assistant needs Bluetooth on.
 
+### Fixed
+- **The Show stayed on 2.4 GHz after a boot** ([#35](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/35)). Android's first scan after a boot can miss a radio, and Android does not look again while connected, so when Android joined the 2.4 GHz radio of a network with 5 GHz, the Show stayed there until the next disconnect. About 30 seconds after the first connection of a boot, EchoService now scans once and reconnects if Android would pick the network's 5 GHz radio.
+- **Joining a WPA3-only network with `echo_service`** ([#36](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/36)). `echo_service wifi connect` saved every network with a password as WPA2, so it could not join a network that only offers WPA3, and running it on a network saved as WPA3 turned that network into WPA2. It now scans for the network first and saves it as WPA3 when it only offers WPA3. A network in WPA2/WPA3 transition mode stays on WPA2. The Echo Dot's Wi-Fi cannot do WPA3, so `biscuit_service` does not change.
+
 ## 2026.10.7 - 2026-10-31
 
 ### Added

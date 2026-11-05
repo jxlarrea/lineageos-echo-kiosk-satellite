@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.11.1 - 2026-11-05
 
 ### Changed
 - **The guide shows how to turn Bluetooth off and back on.** `echo_service bt off` and `bt on` were only in the list of device commands. The Bluetooth section now has them and says Kiosk Satellite's Bluetooth proxy for Home Assistant needs Bluetooth on.

@@ -34,7 +34,9 @@ final class WifiBandCheck {
 
     // Lets the first connection settle before the scan.
     private static final long DELAY_MS = 30000;
-    private static final long SCAN_TIMEOUT_MS = 8000;
+    // A scan while connected takes up to 9 seconds. Stopping before it ends
+    // loses its results, since the next attempt only accepts newer ones.
+    private static final long SCAN_TIMEOUT_MS = 15000;
     // A second scan, since one can miss a radio.
     private static final int SCANS = 2;
     // The levels from common/rro/Wifi that Android stops counting signal at.

@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Fixed
+- **The 2.4 GHz check after a boot could miss the 5 GHz radio** ([#35](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/35)). A scan while connected can take more than 8 seconds, which was as long as EchoService waited for it. EchoService then lost the results of that scan and could leave the Show on 2.4 GHz. It now waits up to 15 seconds for each scan.
+
 ## 2026.11.1 - 2026-11-05
 
 ### Changed

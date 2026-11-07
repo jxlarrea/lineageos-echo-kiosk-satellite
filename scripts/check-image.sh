@@ -62,10 +62,12 @@ default_prop() {
   sed -n "s/^$1=//p" <<<"$DEFAULT_PROP" | tail -n 1
 }
 
-# Every Echo: the Wi-Fi overlay and Amazon's wake word engine with its
-# models (common.mk).
-must_have "vendor/overlay/EchoWifiOverlay\.apk" "bin/biscuit-pryond$" "etc/init/biscuit-pryond\.rc$" \
-  "lib/pryon/libpryon\.so$" "etc/pryon/locales\.txt$" "etc/pryon/alexa-en-US/"
+# Every Echo: the Wi-Fi overlay (common.mk). Amazon's wake word engine and
+# its models were removed from the images, so none of them may come back.
+must_have "vendor/overlay/EchoWifiOverlay\.apk"
+must_not_have "bin/biscuit-pryond$" "etc/init/biscuit-pryond\.rc$" "lib/pryon/" "etc/pryon/" \
+  "lib/libtvm_modelops_ww_v5_cnet\.so$"
+grep -q 'pryon' <<<"$DEFAULT_PROP$BUILD_PROP" && fail "a property still offers Amazon's wake word engine"
 
 # Each device's own parts, and none of the other kind's. The Echo Dot has
 # BiscuitService and its own ks-install. The Echo Shows have EchoService.
@@ -90,7 +92,6 @@ if [[ "$DEVICE" == biscuit ]]; then
   RELEASE_PROP_NAME=ro.biscuit.release
   RELEASE_PROP_FILE=META-INF/com/amazon/biscuit/release.prop
   [[ "$(prop ro.biscuit.ota)" == 1 ]] || fail "ro.biscuit.ota is not 1"
-  [[ "$(default_prop ro.biscuit.pryon)" == 1 ]] || fail "ro.biscuit.pryon is not 1"
   grep -q '^ro\.echo\.' <<<"$BUILD_PROP" && fail "build.prop has ro.echo properties, which are the Echo Shows'"
   grep -q '^ro\.echo\.' <<<"$DEFAULT_PROP" && fail "default.prop has ro.echo properties, which are the Echo Shows'"
   # A speaker without a screen ships none of these.
@@ -101,7 +102,6 @@ else
   RELEASE_PROP_NAME=ro.echo.release
   RELEASE_PROP_FILE=META-INF/com/kiosk-satellite/release.prop
   [[ "$(prop ro.echo.ota)" == 1 ]] || fail "ro.echo.ota is not 1"
-  [[ "$(default_prop ro.echo.pryon)" == 1 ]] || fail "ro.echo.pryon is not 1"
   grep -q '^ro\.biscuit\.' <<<"$BUILD_PROP" && fail "build.prop has ro.biscuit properties, which are the Echo Dot's"
   grep -q '^ro\.biscuit\.' <<<"$DEFAULT_PROP" && fail "default.prop has ro.biscuit properties, which are the Echo Dot's"
   # The screen's parts, which the Dot leaves out.

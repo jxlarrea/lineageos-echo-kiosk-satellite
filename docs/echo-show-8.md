@@ -7,7 +7,6 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
 ## What the image does
 
 - **A raw microphone for Kiosk Satellite.** Kiosk Satellite hears microphone 0 as captured, with no processing from Amazon's audio HAL. Its own echo canceller then sees the speaker's echo at a fixed delay. See [Volume](#volume) for the levels that work best.
-- **Stock wake words.** The image includes Amazon's wake word engine with its models for Alexa, Echo, Computer, Amazon and Ziggy in 17 locales, the same as the Echo Dot image. Choose **Amazon** as the wake word engine in Kiosk Satellite. It runs on the Show and sends nothing to Amazon. Kiosk Satellite 2026.10.41 and later offer it on the Show.
 - **Kiosk Satellite on first boot.** Once the Show is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. Kiosk Satellite then makes itself the home launcher and reports the Show's real Wi-Fi MAC address to Home Assistant.
 - **No on-screen onboarding.** There is no setup wizard and no lock screen. adb works over USB from the first boot, so a computer only has to be allowed on the screen once. Allowed computers do not expire. Android's screen timeout is set to never, so only Kiosk Satellite dims the screen or turns it off.
 - **Set up from adb.** `echo_service` joins Wi-Fi, sets the time and time zone from your computer and changes the Show's settings without touching the screen. See [Device commands](#device-commands).

@@ -4,6 +4,9 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 
 ## Unreleased
 
+### Removed
+- **Amazon's wake word engine.** The image no longer includes Amazon's wake word engine (Pryon), its libraries or its models for Alexa, Echo, Computer, Amazon and Ziggy, to avoid potential issues with Amazon. Kiosk Satellite no longer offers **Amazon** as a wake word engine. If the Dot listened with it, Kiosk Satellite listens with vsWakeWord after the update. It keeps Alexa, which vsWakeWord also has. If none of its wake words is one vsWakeWord has, such as Echo or Computer, it listens for Okay Nabu and updates its wake word selects in Home Assistant to match.
+
 ### Changed
 - **The guide warns that Bluetooth slows 2.4 GHz Wi-Fi** ([#42](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/42)). Bluetooth and 2.4 GHz Wi-Fi share one radio on the Dot, so with Bluetooth on, Wi-Fi gets less airtime even with nothing paired. On 2.4 GHz that can slow voice audio to Home Assistant below real time. The Bluetooth section now says to join a 5 GHz network or turn Bluetooth off when it is not used. Joining Wi-Fi now recommends the 5 GHz network.
 - **Android asks Hotspot 2.0 networks for details only when a Passpoint profile is saved** ([#38](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/38)). The Dot was not affected by the Echo Show bug behind this change. The change is in the Wi-Fi code that all the Echos share.

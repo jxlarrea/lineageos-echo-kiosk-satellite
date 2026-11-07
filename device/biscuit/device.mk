@@ -27,10 +27,9 @@ PRODUCT_PACKAGES += \
     ks-install
 
 # What Kiosk Satellite looks for on a Dot: the Action button and the volume
-# buttons as BiscuitService broadcasts, and Amazon's wake word engine.
+# buttons as BiscuitService broadcasts.
 PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
     ro.biscuit.action_broadcast=1 \
-    ro.biscuit.pryon=1 \
     ro.biscuit.volume_claim=1
 
 # System updates from this repository's GitHub releases through BiscuitService

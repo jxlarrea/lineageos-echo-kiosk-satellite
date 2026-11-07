@@ -5,7 +5,6 @@ A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Dot (`biscuit`),
 ## What the image does
 
 - **A raw microphone for Kiosk Satellite.** Kiosk Satellite hears microphone 0 as captured, with nothing removed from it. Its own echo canceller then sees the speaker's echo at a fixed delay. See [Volume](#volume) for the levels that work best.
-- **Stock wake words.** The image includes Amazon's wake word engine with its models for Alexa, Echo, Computer, Amazon and Ziggy in 17 locales. Choose **Amazon** as the wake word engine in Kiosk Satellite. It runs on the Dot and sends nothing to Amazon.
 - **A louder microphone and speaker.** The microphone preamp is 36 dB instead of Fire OS's 20, so voices and intercom calls come through at a normal level. The image drives the speaker 3 dB louder than the Fire OS drivers alone, without distortion at full volume.
 - **Kiosk Satellite on first boot.** Once the Dot is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. No adb grants needed.
 - **System updates.** BiscuitService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.

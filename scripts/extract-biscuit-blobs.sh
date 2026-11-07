@@ -2,9 +2,8 @@
 # Generate vendor/amazon/biscuit in the tree: the Echo Dot's own blobs from
 # its Fire OS 6.5.7.4 OTA, each checked against the sha256 and size in the
 # blobs/biscuit/*.txt manifests. biscuit-vendor.mk copies them into the Dot's
-# image. Amazon's wake word engine (pryon.txt) and its DAVS models go in
-# pryon-vendor.mk instead, which every Echo inherits (common/config/common.mk). The blobs the Echos share come from
-# amazon-oss's vendor/amazon/mt8163-common.
+# image. The blobs the Echos share come from amazon-oss's
+# vendor/amazon/mt8163-common.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -108,7 +107,6 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 mkdir -p "$TMP/proprietary"
 copy_files=()
-pryon_files=()
 
 for manifest in "$REPO_ROOT"/blobs/biscuit/*.txt; do
 while IFS=: read -r source destination expected_sha expected_size; do
@@ -126,72 +124,9 @@ while IFS=: read -r source destination expected_sha expected_size; do
   }
   install -D -m 0644 "$file" "$TMP/proprietary/$destination"
   blob_fixup "$destination" "$TMP/proprietary/$destination"
-  line="    vendor/amazon/biscuit/proprietary/$destination:\$(TARGET_COPY_OUT_SYSTEM)/$destination"
-  if [[ "$(basename "$manifest")" == pryon.txt ]]; then
-    pryon_files+=("$line")
-  else
-    copy_files+=("$line")
-  fi
+  copy_files+=("    vendor/amazon/biscuit/proprietary/$destination:\$(TARGET_COPY_OUT_SYSTEM)/$destination")
 done < "$manifest"
 done
-
-# Amazon's other wake word models, every locale. DAVS hands them only to a
-# registered Echo, so they come from the private amazon-davs-models
-# repository, checked against blobs/biscuit/davs-models.manifest.
-DAVS_DIR="${DAVS_MODELS:-$REPO_ROOT/../amazon-davs-models}"
-[[ -d "$DAVS_DIR" ]] || {
-  echo "ERROR: no DAVS models at $DAVS_DIR: check out amazon-davs-models there or set DAVS_MODELS" >&2; exit 1;
-}
-davs_count=0
-while IFS=: read -r path expected_sha expected_size; do
-  [[ -z "$path" || "$path" == \#* ]] && continue
-  [[ "$path" != /* && "$path" != *".."* ]] || { echo "ERROR: unsafe path in the DAVS manifest: $path" >&2; exit 1; }
-  file="$DAVS_DIR/$path"
-  [[ -f "$file" ]] || { echo "ERROR: missing DAVS model file: $path" >&2; exit 1; }
-  [[ "$(stat -c %s "$file")" == "$expected_size" ]] || { echo "ERROR: wrong size: $path" >&2; exit 1; }
-  [[ "$(sha256sum "$file" | awk '{print $1}')" == "$expected_sha" ]] || {
-    echo "ERROR: sha256 mismatch: $path" >&2; exit 1;
-  }
-  install -D -m 0644 "$file" "$TMP/proprietary/etc/pryon/$path"
-  pryon_files+=("    vendor/amazon/biscuit/proprietary/etc/pryon/$path:\$(TARGET_COPY_OUT_SYSTEM)/etc/pryon/$path")
-  ((davs_count += 1))
-done < "$REPO_ROOT/blobs/biscuit/davs-models.manifest"
-[[ "$davs_count" -gt 0 ]] || { echo "ERROR: the DAVS manifest lists no files" >&2; exit 1; }
-
-# Amazon's models hear "stop" only for a few seconds after the wake word: the
-# spotter starts asleep, where STOP does not count, and the firmware's Alexa
-# model scores a "stop" on its own at 0.20 to 0.41 against its 0.55. Kiosk
-# Satellite arms the stop word itself while a timer rings or a reply plays,
-# so in every model STOP counts while asleep and is accepted from 0.18, as on
-# CM14. Near misses still come from 0.05. The newer models keep these files
-# in subfolders. Pryon reports checksum.txt but does not check it.
-python3 - "$TMP/proprietary/etc/pryon" <<'PY'
-import json, pathlib, sys
-root = pathlib.Path(sys.argv[1])
-patched = set()
-for kw_path in root.rglob("kw.cfg.json"):
-    kw = json.loads(kw_path.read_text())
-    spotters = kw.get("keyword-orchestra", {}).get("keyword-spotters", [])
-    stops = [s for s in spotters if s.get("name") == "STOP"]
-    if not stops:
-        continue
-    for spotter in stops:
-        thresholds = spotter["spotter"]["classification-thresholds"]
-        thresholds["accept-threshold"] = 0.18
-        thresholds["notify-threshold"] = 0.05
-    kw_path.write_text(json.dumps(kw, indent=2))
-    op_path = kw_path.with_name("op.cfg.json")
-    op = json.loads(op_path.read_text()) if op_path.exists() else {}
-    if "sleep" in op:
-        rules = op["sleep"]["rules"]
-        if not any(r["name"] == "STOP" for r in rules):
-            rules.append({"name": "STOP", "next": "sleep"})
-        op_path.write_text(json.dumps(op, indent=2))
-    patched.add(kw_path.relative_to(root).parts[0])
-if "alexa-en-US" not in patched:
-    sys.exit("ERROR: could not let the stop word fire without Alexa")
-print(f"Let the stop word fire without the wake word in {len(patched)} model sets.")
-PY
 
 # A makefile that copies the given files, one per line.
 write_copy_mk() {
@@ -211,10 +146,10 @@ write_copy_mk() {
   } >"$out"
 }
 write_copy_mk "$TMP/biscuit-vendor.mk" "${copy_files[@]}"
-write_copy_mk "$TMP/pryon-vendor.mk" "${pryon_files[@]}"
 
 mkdir -p "$OUT"
 rsync -a --delete --checksum "$TMP/proprietary/" "$OUT/proprietary/"
 install -m 0644 "$TMP/biscuit-vendor.mk" "$OUT/biscuit-vendor.mk"
-install -m 0644 "$TMP/pryon-vendor.mk" "$OUT/pryon-vendor.mk"
-echo "Extracted ${#copy_files[@]} Echo Dot blobs and ${#pryon_files[@]} Pryon files to $OUT."
+# Amazon's wake word engine, which earlier images installed from here.
+rm -f "$OUT/pryon-vendor.mk"
+echo "Extracted ${#copy_files[@]} Echo Dot blobs to $OUT."

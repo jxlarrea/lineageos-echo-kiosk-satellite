@@ -43,10 +43,6 @@ The build container gets half of the host's CPUs and half of its memory without 
 
 `scripts/extract-biscuit-blobs.sh` downloads the Fire OS 6.5.7.4 OTA, unpacks its system image and copies every file `blobs/biscuit/*.txt` lists, after checking its size and checksum. It also applies the fixups the Fire OS audio libraries need on Android 11. Staging runs it.
 
-Amazon's wake word engine Pryon and the en-US Alexa model come from that OTA like the other files. The other wake words and locales come from Amazon's DAVS. DAVS hands them out only to an Echo registered to an Amazon account, so the build cannot download them. They live in the private [amazon-davs-models](https://github.com/jxlarrea/amazon-davs-models) repository, one folder per set. Check it out next to this repository or set `DAVS_MODELS` to where it is. The build checks every file against `blobs/biscuit/davs-models.manifest` before it installs them under `/system/etc/pryon`. `common/pryon/locales.txt` names the sets each locale listens with.
-
-The extract script writes Pryon and its models to `pryon-vendor.mk` and the Dot's other files to `biscuit-vendor.mk`. Every Echo is an MT8163 with the same 32-bit userspace, so every image installs Pryon with `biscuit-pryond` (`common/pryon`, `common/config/common.mk`). Only the Dot's image gets the rest.
-
 ## WebView
 
 The Echo Shows ship LineageOS's prebuilt Chromium WebView (`external/chromium-webview/prebuilt/arm`), which LineageOS keeps current on its `main` branch for every release. Before each release, set that project's revision in `manifest/lock.xml` to the newest commit on `main` and sync, so the Shows ship the newest WebView. The Echo Dot has no screen and ships no WebView.

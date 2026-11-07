@@ -1,0 +1,25 @@
+PasspointManager: Ask for ANQP data only with a Passpoint profile saved
+
+Android asks every Hotspot 2.0 network it sees for ANQP data after a scan,
+even with no Passpoint profile to match it against. The query takes the
+radio off its channel while connected, and the mt76x8 driver on the Echo
+Shows then loses most traffic until Wi-Fi reconnects. Without a profile
+nothing uses the answer, so skip the query.
+
+diff --git a/service/java/com/android/server/wifi/hotspot2/PasspointManager.java b/service/java/com/android/server/wifi/hotspot2/PasspointManager.java
+index ad66f11..51d9a86 100644
+--- a/service/java/com/android/server/wifi/hotspot2/PasspointManager.java
++++ b/service/java/com/android/server/wifi/hotspot2/PasspointManager.java
+@@ -851,7 +851,11 @@ public class PasspointManager {
+                 vsa.anqpDomainID);
+         ANQPData anqpEntry = mAnqpCache.getEntry(anqpKey);
+         if (anqpEntry == null) {
+-            if (anqpRequestAllowed) {
++            // Kiosk Satellite Edition: ask only when a Passpoint profile can use the answer. The
++            // query takes the radio off its channel, and the Echo Shows' Wi-Fi driver then loses
++            // most traffic until Wi-Fi reconnects, so one nearby Hotspot 2.0 network was enough
++            // to break the connection.
++            if (anqpRequestAllowed && !mProviders.isEmpty()) {
+                 mAnqpRequestManager.requestANQPElements(bssid, anqpKey,
+                         roamingConsortium.anqpOICount > 0, vsa.hsRelease);
+             }

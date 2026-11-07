@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **Android asks Hotspot 2.0 networks for details only when a Passpoint profile is saved** ([#38](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/38)). The Dot was not affected by the Echo Show bug behind this change. The change is in the Wi-Fi code that all the Echos share.
+
 ## 2026.11.1 - 2026-11-03
 
 ### Changed

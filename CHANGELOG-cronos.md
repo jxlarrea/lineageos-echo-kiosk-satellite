@@ -6,6 +6,7 @@ All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented
 
 ### Fixed
 - **The 2.4 GHz check after a boot could miss the 5 GHz radio** ([#35](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/35)). A scan while connected can take more than 8 seconds, which was as long as EchoService waited for it. EchoService then lost the results of that scan and could leave the Show on 2.4 GHz. It now waits up to 15 seconds for each scan.
+- **Wi-Fi almost stopped working near a Hotspot 2.0 network** ([#38](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/38)). After a scan, Android asked every nearby Hotspot 2.0 network for details, such as `xfinitywifi`, even with no Passpoint profile saved. That query takes the Wi-Fi radio off its channel and the Show's Wi-Fi driver then lost most traffic until Wi-Fi reconnected. The scan after a boot added in 2026.11.1 made this happen on Shows connected at 2.4 GHz. Android now sends the query only when a Passpoint profile is saved.
 
 ## 2026.11.1 - 2026-11-05
 

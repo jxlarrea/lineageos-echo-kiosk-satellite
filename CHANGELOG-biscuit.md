@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.11.2 - 2026-11-07
 
 ### Removed
 - **Amazon's wake word engine.** The image no longer includes Amazon's wake word engine (Pryon), its libraries or its models for Alexa, Echo, Computer, Amazon and Ziggy, to avoid potential issues with Amazon. Kiosk Satellite no longer offers **Amazon** as a wake word engine. If the Dot listened with it, Kiosk Satellite listens with vsWakeWord after the update. It keeps Alexa, which vsWakeWord also has. If none of its wake words is one vsWakeWord has, such as Echo or Computer, it listens for Okay Nabu and updates its wake word selects in Home Assistant to match.

@@ -5,7 +5,7 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 ## 2026.11.3 - 2026-11-07
 
 ### Removed
-- **Amazon's wake word engine.** The image no longer includes Amazon's wake word engine (Pryon), its libraries or its models for Alexa, Echo, Computer, Amazon and Ziggy, to avoid potential issues with Amazon. Kiosk Satellite no longer offers **Amazon** as a wake word engine. If the Show listened with it, Kiosk Satellite listens with vsWakeWord after the update. It keeps Alexa, which vsWakeWord also has. If none of its wake words is one vsWakeWord has, such as Echo or Computer, it listens for Okay Nabu and updates its wake word selects in Home Assistant to match.
+- **Amazon's wake word engine.** The image no longer includes Amazon's wake word engine (Pryon), its libraries or its models for Alexa, Echo, Computer, Amazon and Ziggy, to avoid potential issues with Amazon. Kiosk Satellite no longer offers **Amazon** as a wake word engine. If the Show listened with it, Kiosk Satellite listens with vsWakeWord after the update. Alexa stays, since vsWakeWord has it too. A wake word vsWakeWord does not have, such as Echo or Computer, changes to one it has, and Kiosk Satellite updates its wake word selects in Home Assistant to match.
 
 ### Changed
 - **The guide warns that Bluetooth slows 2.4 GHz Wi-Fi** ([#42](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/42)). Bluetooth and 2.4 GHz Wi-Fi share one radio on the Show, so with Bluetooth on, Wi-Fi gets less airtime even with nothing paired. On 2.4 GHz that can slow voice audio to Home Assistant below real time. The Bluetooth section now says to join a 5 GHz network or turn Bluetooth off when it is not used.

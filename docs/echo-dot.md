@@ -123,6 +123,8 @@ A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Dot (`biscuit`),
 
    If the password itself has a single quote, end the quoted part, add `\'` and start it again: `'it'\''s a password'`. If the connection still fails, `adb logcat -d -s BiscuitService wpa_supplicant` shows why.
 
+   If your router offers separate 2.4 GHz and 5 GHz networks, join the 5 GHz one. On 2.4 GHz, Bluetooth takes airtime from Wi-Fi and can slow voice audio a lot. See [Bluetooth](#bluetooth).
+
 2. **Wait for Kiosk Satellite.** Once the Dot is on Wi-Fi, Kiosk Satellite is downloaded and installed automatically. Follow the progress with:
 
    ```sh
@@ -244,6 +246,9 @@ adb shell biscuit_service bt on
 ```
 
 Bluetooth stays off across reboots. `bt on` keeps the Dot set up as it was and does not start pairing mode. Kiosk Satellite's Bluetooth proxy for Home Assistant needs Bluetooth on.
+
+> [!WARNING]
+> Bluetooth and 2.4 GHz Wi-Fi share one radio on the Dot. With Bluetooth on, Wi-Fi gets less airtime even with nothing paired. On a 2.4 GHz network, pings to the Dot can take hundreds of milliseconds and voice audio can reach Home Assistant slower than real time, so speech to text answers late or times out. Join a 5 GHz network or turn Bluetooth off if you do not use the Dot as a speaker, with headphones or as a Bluetooth proxy.
 
 ### Time
 

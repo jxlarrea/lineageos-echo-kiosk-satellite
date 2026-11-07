@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **The guide warns that Bluetooth slows 2.4 GHz Wi-Fi** ([#42](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/42)). Bluetooth and 2.4 GHz Wi-Fi share one radio on the Show, so with Bluetooth on, Wi-Fi gets less airtime even with nothing paired. On 2.4 GHz that can slow voice audio to Home Assistant below real time. The Bluetooth section now says to join a 5 GHz network or turn Bluetooth off when it is not used. Joining Wi-Fi now recommends the 5 GHz network.
+
 ## 2026.11.2 - 2026-11-06
 
 ### Fixed

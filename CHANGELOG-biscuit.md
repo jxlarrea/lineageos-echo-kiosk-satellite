@@ -5,6 +5,7 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 ## Unreleased
 
 ### Changed
+- **The guide warns that Bluetooth slows 2.4 GHz Wi-Fi** ([#42](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/42)). Bluetooth and 2.4 GHz Wi-Fi share one radio on the Dot, so with Bluetooth on, Wi-Fi gets less airtime even with nothing paired. On 2.4 GHz that can slow voice audio to Home Assistant below real time. The Bluetooth section now says to join a 5 GHz network or turn Bluetooth off when it is not used. Joining Wi-Fi now recommends the 5 GHz network.
 - **Android asks Hotspot 2.0 networks for details only when a Passpoint profile is saved** ([#38](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/38)). The Dot was not affected by the Echo Show bug behind this change. The change is in the Wi-Fi code that all the Echos share.
 
 ## 2026.11.1 - 2026-11-03

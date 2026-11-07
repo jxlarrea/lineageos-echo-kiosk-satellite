@@ -93,7 +93,7 @@ To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#movi
 
    Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Show. If the name or password has a `!`, a `$`, a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Show instead, as the [Echo Dot guide](echo-dot.md#after-installing) shows for the Dot. Inside the double quotes, bash and zsh read a `!` as a history command and a `$` as a variable, so a name like `FRITZ!Box 7590` fails with `event not found` before it reaches the Show.
 
-   If your router offers separate 2.4 GHz and 5 GHz networks, join the 5 GHz one. In testing, the Show answered about four times faster on 5 GHz than on 2.4 GHz from the same router.
+   If your router offers separate 2.4 GHz and 5 GHz networks, join the 5 GHz one. In testing, the Show answered about four times faster on 5 GHz than on 2.4 GHz from the same router. On 2.4 GHz, Bluetooth also takes airtime from Wi-Fi. See [Bluetooth](#bluetooth).
 
 3. **Wait for Kiosk Satellite.** Once the Show is on Wi-Fi, Kiosk Satellite is downloaded and installed automatically. Follow the progress with:
 
@@ -244,6 +244,9 @@ adb shell echo_service bt on
 ```
 
 Bluetooth stays off across reboots. `bt on` keeps the Show set up as it was and does not make it discoverable. Kiosk Satellite's Bluetooth proxy for Home Assistant needs Bluetooth on.
+
+> [!WARNING]
+> Bluetooth and 2.4 GHz Wi-Fi share one radio on the Show. With Bluetooth on, Wi-Fi gets less airtime even with nothing paired. On a 2.4 GHz network, pings to the Show can take much longer and voice audio can reach Home Assistant slower than real time, so speech to text answers late or times out. Join a 5 GHz network or turn Bluetooth off if you do not use the Show as a speaker, with headphones or as a Bluetooth proxy.
 
 ### Time
 

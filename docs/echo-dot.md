@@ -295,7 +295,7 @@ Bluetooth stays off across reboots. `bt on` keeps the Dot set up as it was and d
 
 ### Amazon's wake word engine
 
-The image does not include Amazon's wake word engine (Pryon) or its wake word models. If you have them, put them in `/data/pryon` on the Dot. pryond, a service in the image, then runs them for Kiosk Satellite, and Kiosk Satellite offers **Amazon** as a wake word engine with the wake words and locales you installed. pryond reads this layout:
+The image does not include Amazon's wake word engine (Pryon) or its wake word models. If you have them, put them in `/data/pryon` on the Dot. pryond, a service in the image, then runs them for Kiosk Satellite, and Kiosk Satellite 2026.11.14 or newer offers **Amazon** as a wake word engine with the wake words and locales you installed. pryond reads this layout:
 
 ```
 /data/pryon/lib/              Pryon's libraries

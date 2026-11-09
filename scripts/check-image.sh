@@ -62,12 +62,26 @@ default_prop() {
   sed -n "s/^$1=//p" <<<"$DEFAULT_PROP" | tail -n 1
 }
 
-# Every Echo: the Wi-Fi overlay (common.mk). Amazon's wake word engine and
-# its models were removed from the images, so none of them may come back.
-must_have "vendor/overlay/EchoWifiOverlay\.apk"
+# Every Echo: the Wi-Fi overlay and pryond, the service that runs Amazon's
+# wake word engine from files the user installs (common.mk). The image ships
+# none of Amazon's libraries or models, under any path.
+must_have "vendor/overlay/EchoWifiOverlay\.apk" "bin/pryond$" "etc/init/pryond\.rc$"
 must_not_have "bin/biscuit-pryond$" "etc/init/biscuit-pryond\.rc$" "lib/pryon/" "etc/pryon/" \
-  "lib/libtvm_modelops_ww_v5_cnet\.so$"
-grep -q 'pryon' <<<"$DEFAULT_PROP$BUILD_PROP" && fail "a property still offers Amazon's wake word engine"
+  "(.*/)?lib(pryon|pryonConfig|watermars|AFEMetadataDecoder|NeMoRt|nemort-cnpy|acsl|blu_native_toolkit|grxml_parser)\.so$" \
+  "(.*/)?(pryon\.manifest|pryon\.config|kw\.cfg\.json|op\.cfg\.json|words\.shrunk\.txt)$"
+# Some models load this one from /system/lib, so the image links it to
+# /data/pryon/lib. Anything but that link would be Amazon's library.
+TVM=lib/libtvm_modelops_ww_v5_cnet.so
+if grep -Fxq "SYSTEM/$TVM" <<<"$FILES"; then
+  [[ "$(unzip -Z -l "$TARGET_FILES" "SYSTEM/$TVM" | awk 'NR==1 {print substr($1, 1, 1)}')" == l &&
+     "$(unzip -p "$TARGET_FILES" "SYSTEM/$TVM")" == "/data/pryon/$TVM" ]] ||
+    fail "$TVM is not the link to /data/pryon/$TVM"
+else
+  fail "missing the link $TVM"
+fi
+[[ "$(default_prop ro.kiosk_satellite.pryon)" == 1 ]] || fail "ro.kiosk_satellite.pryon is not 1"
+grep -Eq '^ro\.(biscuit|echo)\.pryon=' <<<"$DEFAULT_PROP"$'\n'"$BUILD_PROP" &&
+  fail "has ro.biscuit.pryon or ro.echo.pryon, which pryond replaced"
 
 # Each device's own parts, and none of the other kind's. The Echo Dot has
 # BiscuitService and its own ks-install. The Echo Shows have EchoService.

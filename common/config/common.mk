@@ -7,3 +7,14 @@
 # WPA2/WPA3 transition mode networks join with WPA2 (rro/Wifi).
 PRODUCT_PACKAGES += \
     EchoWifiOverlay
+
+# Amazon's wake word engine from files the user puts in /data/pryon (pryond/).
+# The image ships none of Amazon's files: pryond only reports to Kiosk
+# Satellite what it finds there and listens with it. The property tells
+# Kiosk Satellite the service is there.
+PRODUCT_PACKAGES += \
+    pryond \
+    pryond-tvm-link
+
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+    ro.kiosk_satellite.pryon=1

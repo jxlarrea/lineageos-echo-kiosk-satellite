@@ -1,0 +1,17 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// A service that runs Amazon's wake word engine for Kiosk Satellite from
+// files the user installs in /data/pryon. The image ships none of them.
+cc_binary {
+    name: "pryond",
+    srcs: ["pryond.cpp"],
+    init_rc: ["pryond.rc"],
+    cflags: ["-Wall", "-Werror"],
+    shared_libs: [
+        "libcutils",
+        "libdl",
+    ],
+}

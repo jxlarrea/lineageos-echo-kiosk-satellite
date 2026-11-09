@@ -288,6 +288,32 @@ Bluetooth stays off across reboots. `bt on` keeps the Show set up as it was and 
 
   `adb unroot` goes back to a normal shell. `echo_service adb root off` stops `adb root` from working again. A root shell can change anything on the Show, so turn it off when you are done.
 
+### Amazon's wake word engine
+
+The image does not include Amazon's wake word engine (Pryon) or its wake word models. If you have them, put them in `/data/pryon` on the Show. pryond, a service in the image, then runs them for Kiosk Satellite, and Kiosk Satellite offers **Amazon** as a wake word engine with the wake words and locales you installed. pryond reads this layout:
+
+```
+/data/pryon/lib/              Pryon's libraries
+/data/pryon/models/<model>/   one model per folder, with its pryon.manifest
+/data/pryon/locales.txt       one line per locale: the locale, then its models
+```
+
+A line in `locales.txt` looks like `en-US alexa-en-US echo-en-US`. Kiosk Satellite does not offer a model that `locales.txt` leaves out. Some models load `libtvm_modelops_ww_v5_cnet.so` from `/system/lib`. The image links that path to `/data/pryon/lib`, so put that library there with the others.
+
+Copying files to `/data/pryon` needs `adb root` (see [Network](#network)). pryond runs as the `nobody` user, so make the files readable to every user:
+
+```sh
+adb shell chmod -R a+rX /data/pryon
+```
+
+Then check what pryond found:
+
+```sh
+adb shell pryond status
+```
+
+It prints one line. `"available":true` means Kiosk Satellite can listen with the engine. `missing` names the libraries pryond could not read and `skipped` names the models it cannot use, with the reason. Restart the Show afterward so Kiosk Satellite sees the change. System updates keep `/data/pryon`. `twrp wipe data` erases it.
+
 ### Kiosk Satellite installer
 
 On every boot the image makes sure Kiosk Satellite is installed and has its permissions. To run the Show without Kiosk Satellite, turn that off:

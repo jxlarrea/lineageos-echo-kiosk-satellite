@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.11.3 - 2026-11-09
 
 ### Added
 - **pryond runs Amazon's wake word engine from files you install.** The image still includes none of Amazon's wake word files. If you put Pryon's libraries and models in `/data/pryon` yourself, pryond, a new service, runs them for Kiosk Satellite and reports whether the engine is available and which locales and models it has. Kiosk Satellite then offers **Amazon** as a wake word engine again. `adb shell pryond status` prints what pryond found. Some models load a library from `/system/lib`, so the image links that path to `/data/pryon/lib`. See [Amazon's wake word engine](docs/echo-dot.md#amazons-wake-word-engine).

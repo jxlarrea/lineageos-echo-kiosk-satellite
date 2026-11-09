@@ -5,6 +5,8 @@
 
 // A service that runs Amazon's wake word engine for Kiosk Satellite from
 // files the user installs in /data/pryon. The image ships none of them.
+// jsoncpp writes the copies of the keyword files in /data/pryond that let
+// the stop word count without the wake word.
 cc_binary {
     name: "pryond",
     srcs: ["pryond.cpp"],
@@ -13,5 +15,6 @@ cc_binary {
     shared_libs: [
         "libcutils",
         "libdl",
+        "libjsoncpp",
     ],
 }

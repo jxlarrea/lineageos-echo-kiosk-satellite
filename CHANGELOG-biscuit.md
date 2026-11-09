@@ -5,7 +5,7 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 ## 2026.11.3 - 2026-11-09
 
 ### Added
-- **pryond runs Amazon's wake word engine from files you install.** The image still includes none of Amazon's wake word files. If you put Pryon's libraries and models in `/data/pryon` yourself, pryond, a new service, runs them for Kiosk Satellite and reports whether the engine is available and which locales and models it has. Kiosk Satellite then offers **Amazon** as a wake word engine again. `adb shell pryond status` prints what pryond found. Some models load a library from `/system/lib`, so the image links that path to `/data/pryon/lib`. See [Amazon's wake word engine](docs/echo-dot.md#amazons-wake-word-engine).
+- **pryond runs Amazon's wake word engine from files you install.** The image still includes none of Amazon's wake word files. If you put Pryon's libraries and models in `/data/pryon` yourself, pryond, a new service, runs them for Kiosk Satellite and reports whether the engine is available and which locales and models it has. Kiosk Satellite then offers **Amazon** as a wake word engine again. `adb shell pryond status` prints what pryond found. Some models load a library from `/system/lib`, so the image links that path to `/data/pryon/lib`. pryond lets you say "stop" without the wake word by loading each model from its own copy of the keyword files in `/data/pryond`. Your files in `/data/pryon` stay as they are. See [Amazon's wake word engine](docs/echo-dot.md#amazons-wake-word-engine).
 
 ## 2026.11.2 - 2026-11-07
 

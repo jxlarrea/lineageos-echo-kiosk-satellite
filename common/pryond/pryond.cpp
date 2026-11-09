@@ -7,6 +7,14 @@
 //   /data/pryon/locales.txt   one line per locale: the locale, then the models
 //                             it listens with, such as "en-US alexa-en-US"
 //
+// Amazon's models count STOP only right after the wake word, and only from
+// 0.55, while a plain "stop" scores 0.20 to 0.41. Kiosk Satellite listens for
+// the stop word on its own while a timer rings or a reply plays, so before a
+// model loads the daemon builds a copy of it in /data/pryond: links to the
+// user's files, with its own kw.cfg.json and op.cfg.json wherever a STOP
+// spotter is. There STOP counts without the wake word and is accepted from
+// 0.18, with near misses from 0.05. The user's files stay as they are.
+//
 // Nothing is loaded until a client asks to listen, so the daemon costs next
 // to nothing while another engine runs. It looks at the files again on every
 // connection, so a client reconnects to see what changed.
@@ -18,14 +26,15 @@
 // libraries that are not there or cannot be read. models lists every usable
 // model, in the order locales.txt names them, with the locales that listen
 // with it, the keywords it spots and the threshold each keyword is accepted
-// at before any client property lowers it. A keyword named STOP is a stop
+// at before any client property lowers it, with the stop word's from the
+// daemon's copy. A keyword named STOP is a stop
 // word, every other one a wake word. skipped names the models that cannot be
 // used and why. Without every library, models is empty.
 //
 //   {"event":"hello","version":2,"available":true,"missing":[],
 //    "locales":["en-US"],"models":[{"model":"alexa-en-US","locales":["en-US"],
 //    "wake_words":["ALEXA"],"stop_words":["STOP"],
-//    "accept_thresholds":{"ALEXA":0.923,"STOP":0.55}}],"skipped":[]}
+//    "accept_thresholds":{"ALEXA":0.923,"STOP":0.18}}],"skipped":[]}
 //
 // The client sends frames: a type byte, a little-endian 32-bit length and
 // the payload.
@@ -50,9 +59,10 @@
 // "pryond status" prints the hello the running service gives, to check what
 // it found.
 //
-// One client at a time: the next one waits until the first disconnects.
-// PRYOND_DIR and PRYOND_SOCKET override /data/pryon and the init socket for
-// testing. PRYOND_DEBUG=1 prints every result and Pryon's detection log
+// Every client gets the hello right away. One client listens at a time: the
+// next one to send a frame waits until the first disconnects.
+// PRYOND_DIR, PRYOND_CACHE and PRYOND_SOCKET override /data/pryon,
+// /data/pryond and the init socket for testing. PRYOND_DEBUG=1 prints every result and Pryon's detection log
 // lines to stderr.
 
 #include <sys/socket.h>
@@ -61,6 +71,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <errno.h>
+#include <ftw.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdint.h>
@@ -75,10 +86,15 @@
 #include <vector>
 
 #include <cutils/sockets.h>
+#include <json/json.h>
 
 #define PRYON_DIR "/data/pryon"
+#define CACHE_DIR "/data/pryond"
 #define SOCKET_NAME "pryond"
 #define MAX_FRAME (1 << 20)
+// The stop word's thresholds in the daemon's copy, as on CM14.
+#define STOP_ACCEPT 0.18
+#define STOP_NOTIFY 0.05
 
 // The layouts below were read from libpryon.so 6.5.7.4 and checked on a Dot:
 // the decoder's audio format, a client property event and the fields of a
@@ -111,6 +127,7 @@ struct Score { double score, threshold; };
 static std::string g_lib_dir = PRYON_DIR "/lib";
 static std::string g_model_dir = PRYON_DIR "/models";
 static std::string g_locales = PRYON_DIR "/locales.txt";
+static std::string g_cache_dir = CACHE_DIR;
 static bool g_debug;
 static bool g_loaded;
 static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -182,6 +199,122 @@ static std::string keyword_file(const std::string& dir, const char* name) {
     return dir + "/BDPGeneratedFiles/" + name;
 }
 
+// Android 11's jsoncpp is the older one, with Reader and StyledWriter.
+static bool parse_json(const std::string& text, Json::Value* root) {
+    Json::Reader reader;
+    return reader.parse(text, *root, false) && root->isObject();
+}
+
+static std::string write_json(const Json::Value& root) {
+    Json::StyledWriter writer;
+    return writer.write(root);
+}
+
+static bool is_stop(const Json::Value& v) {
+    return v.isObject() && v.isMember("name") && v["name"].isString() && v["name"].asString() == "STOP";
+}
+
+// kw.cfg.json with the stop word's thresholds lowered, or false when it has
+// no STOP spotter.
+static bool patch_kw(const std::string& text, std::string* out) {
+    Json::Value root;
+    if (!parse_json(text, &root) || !root.isMember("keyword-orchestra")) return false;
+    Json::Value& orchestra = root["keyword-orchestra"];
+    if (!orchestra.isObject() || !orchestra.isMember("keyword-spotters")) return false;
+    Json::Value& spotters = orchestra["keyword-spotters"];
+    if (!spotters.isArray()) return false;
+    bool found = false;
+    for (Json::ArrayIndex i = 0; i < spotters.size(); ++i) {
+        Json::Value& s = spotters[i];
+        if (!is_stop(s) || !s.isMember("spotter") || !s["spotter"].isObject()) continue;
+        Json::Value& spotter = s["spotter"];
+        if (!spotter.isMember("classification-thresholds")) continue;
+        Json::Value& t = spotter["classification-thresholds"];
+        if (!t.isObject()) continue;
+        t["accept-threshold"] = STOP_ACCEPT;
+        t["notify-threshold"] = STOP_NOTIFY;
+        found = true;
+    }
+    if (found) *out = write_json(root);
+    return found;
+}
+
+// op.cfg.json with STOP counted while asleep, that is without the wake word,
+// or false when there is nothing to change.
+static bool patch_op(const std::string& text, std::string* out) {
+    Json::Value root;
+    if (!parse_json(text, &root) || !root.isMember("sleep") || !root["sleep"].isObject()) return false;
+    Json::Value& sleep = root["sleep"];
+    if (!sleep.isMember("rules") || !sleep["rules"].isArray()) return false;
+    Json::Value& rules = sleep["rules"];
+    for (Json::ArrayIndex i = 0; i < rules.size(); ++i)
+        if (is_stop(rules[i])) return false;
+    Json::Value rule(Json::objectValue);
+    rule["name"] = "STOP";
+    rule["next"] = "sleep";
+    rules.append(rule);
+    *out = write_json(root);
+    return true;
+}
+
+static bool write_file(const std::string& path, const std::string& text) {
+    unlink(path.c_str());
+    FILE* f = fopen(path.c_str(), "w");
+    if (!f) return false;
+    bool ok = fwrite(text.data(), 1, text.size(), f) == text.size();
+    return fclose(f) == 0 && ok;
+}
+
+static int remove_entry(const char* path, const struct stat*, int, struct FTW*) {
+    remove(path);
+    return 0;
+}
+
+static void remove_tree(const std::string& path) {
+    nftw(path.c_str(), remove_entry, 16, FTW_DEPTH | FTW_PHYS);
+}
+
+// Fills the empty folder to with links to everything in from, then puts the
+// patched keyword files in place of the links.
+static bool mirror(const std::string& from, const std::string& to) {
+    DIR* d = opendir(from.c_str());
+    if (!d) return false;
+    bool ok = true, kw = false;
+    while (dirent* e = readdir(d)) {
+        std::string name = e->d_name;
+        if (name == "." || name == "..") continue;
+        std::string src = from + "/" + name, dst = to + "/" + name;
+        struct stat st;
+        if (stat(src.c_str(), &st)) continue;
+        if (S_ISDIR(st.st_mode)) {
+            ok = ok && !mkdir(dst.c_str(), 0700) && mirror(src, dst);
+        } else {
+            ok = ok && !symlink(src.c_str(), dst.c_str());
+            kw = kw || name == "kw.cfg.json";
+        }
+    }
+    closedir(d);
+    if (!ok || !kw) return ok;
+    std::string text;
+    if (!patch_kw(read_file(from + "/kw.cfg.json"), &text)) return true;
+    if (!write_file(to + "/kw.cfg.json", text)) return false;
+    if (patch_op(read_file(from + "/op.cfg.json"), &text) && !write_file(to + "/op.cfg.json", text)) return false;
+    return true;
+}
+
+// The manifest to load a model from: the daemon's copy, or the user's own
+// files when the copy cannot be made.
+static std::string prepare(const std::string& name) {
+    std::string src = g_model_dir + "/" + name, models = g_cache_dir + "/models", dst = models + "/" + name;
+    remove_tree(dst);
+    mkdir(models.c_str(), 0700);
+    if (mkdir(dst.c_str(), 0700) || !mirror(src, dst)) {
+        fprintf(stderr, "cannot copy %s to %s, so its stop word needs the wake word first\n", src.c_str(), dst.c_str());
+        return src + "/pryon.manifest";
+    }
+    return dst + "/pryon.manifest";
+}
+
 // locales.txt: one line per locale, the locale and then its model sets.
 static std::vector<std::pair<std::string, std::string> > read_locales() {
     std::vector<std::pair<std::string, std::string> > out;
@@ -239,7 +372,10 @@ static bool read_model(const std::string& name, Model* m, std::string* why) {
     fclose(f);
     std::string cfg = read_file(keyword_file(dir, "kw.cfg.json"));
     for (size_t i = 0; i < m->wake.size(); ++i) m->accept[m->wake[i]] = accept_threshold(cfg, m->wake[i]);
-    for (size_t i = 0; i < m->stop.size(); ++i) m->accept[m->stop[i]] = accept_threshold(cfg, m->stop[i]);
+    std::string patched;
+    bool lowered = patch_kw(cfg, &patched);
+    for (size_t i = 0; i < m->stop.size(); ++i)
+        m->accept[m->stop[i]] = lowered ? STOP_ACCEPT : accept_threshold(cfg, m->stop[i]);
     if (m->wake.empty() && m->stop.empty()) { *why = "no keywords in words.shrunk.txt"; return false; }
     return true;
 }
@@ -430,7 +566,7 @@ static void start(Session& s, const std::string& wanted) {
         const Model& m = models[i];
         if (!wanted.empty() && ("," + wanted + ",").find("," + m.name + ",") == std::string::npos) continue;
         std::string set = "ks-set-" + m.name, decoder = "ks-" + m.name;
-        std::string manifest = g_model_dir + "/" + m.name + "/pryon.manifest";
+        std::string manifest = prepare(m.name);
         if (p_model_new(set.c_str(), manifest.c_str(), "")) { error("cannot load model " + m.name); continue; }
         s.model_sets.push_back(set);
         // Without this Pryon spots only the model's default keyword, which
@@ -499,30 +635,48 @@ static std::string hello() {
            "],\"skipped\":[" + skip + "]}";
 }
 
-static void serve(int fd) {
+static bool read_frame(int fd, uint8_t* type, std::vector<uint8_t>* payload) {
+    uint8_t header[5];
+    if (!read_all(fd, header, sizeof(header))) return false;
+    uint32_t len = header[1] | header[2] << 8 | header[3] << 16 | (uint32_t)header[4] << 24;
+    if (len > MAX_FRAME) return false;
+    payload->resize(len);
+    if (len && !read_all(fd, &(*payload)[0], len)) return false;
+    *type = header[0];
+    return true;
+}
+
+// Held by the client that listens.
+static pthread_mutex_t g_session = PTHREAD_MUTEX_INITIALIZER;
+
+static void* serve(void* arg) {
+    int fd = (int)(intptr_t)arg;
+    std::string line = hello() + "\n";
+    send(fd, line.data(), line.size(), MSG_NOSIGNAL);
+
+    // A client that only wants the hello, such as pryond status, hangs up
+    // here and never waits for the one listening.
+    uint8_t type;
+    std::vector<uint8_t> payload;
+    if (!read_frame(fd, &type, &payload)) {
+        close(fd);
+        return NULL;
+    }
+    pthread_mutex_lock(&g_session);
     pthread_mutex_lock(&g_lock);
     g_client = fd;
     pthread_mutex_unlock(&g_lock);
 
-    send_line(hello());
-
     Session s;
     s.index = 0;
-    std::vector<uint8_t> payload;
-    for (;;) {
-        uint8_t header[5];
-        if (!read_all(fd, header, sizeof(header))) break;
-        uint32_t len = header[1] | header[2] << 8 | header[3] << 16 | (uint32_t)header[4] << 24;
-        if (len > MAX_FRAME) break;
-        payload.resize(len);
-        if (len && !read_all(fd, &payload[0], len)) break;
+    do {
         std::string text(payload.begin(), payload.end());
-        switch (header[0]) {
+        switch (type) {
         case 'S':
             start(s, text);
             break;
         case 'A': {
-            uint32_t samples = len / 2;
+            uint32_t samples = payload.size() / 2;
             if (!samples) break;
             for (size_t i = 0; i < s.decoders.size(); ++i)
                 p_push(s.decoders[i].c_str(), s.index, (const int16_t*)&payload[0], samples);
@@ -545,12 +699,14 @@ static void serve(int fd) {
         default:
             error("unknown frame");
         }
-    }
+    } while (read_frame(fd, &type, &payload));
     if (g_loaded) stop(s);
     pthread_mutex_lock(&g_lock);
     g_client = -1;
     pthread_mutex_unlock(&g_lock);
+    pthread_mutex_unlock(&g_session);
     close(fd);
+    return NULL;
 }
 
 static int make_socket(const char* path) {
@@ -599,6 +755,7 @@ int main(int argc, char** argv) {
         g_model_dir = std::string(dir) + "/models";
         g_locales = std::string(dir) + "/locales.txt";
     }
+    if (const char* dir = getenv("PRYOND_CACHE")) g_cache_dir = dir;
     g_debug = getenv("PRYOND_DEBUG") && !strcmp(getenv("PRYOND_DEBUG"), "1");
     setvbuf(stderr, NULL, _IOLBF, 0);
     // init's socket, which Android 11 publishes as ANDROID_SOCKET_pryond.
@@ -608,8 +765,13 @@ int main(int argc, char** argv) {
     if (getenv("PRYOND_SOCKET")) s = make_socket(getenv("PRYOND_SOCKET"));
     else if ((s = android_get_control_socket(SOCKET_NAME)) < 0) s = make_socket("/dev/socket/" SOCKET_NAME);
     if (s < 0 || listen(s, 4) < 0) return 1;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
     for (;;) {
         int c = accept(s, NULL, NULL);
-        if (c >= 0) serve(c);
+        if (c < 0) continue;
+        pthread_t t;
+        if (pthread_create(&t, &attr, serve, (void*)(intptr_t)c)) close(c);
     }
 }

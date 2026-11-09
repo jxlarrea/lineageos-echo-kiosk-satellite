@@ -1,9 +1,10 @@
 # Amazon's wake word engine for Kiosk Satellite on /dev/socket/pryond, from
 # files the user puts in /data/pryon. The image ships none of them. It loads
 # nothing until an app connects, so any app may: it hears only the audio that
-# app sends it.
+# app sends it. /data/pryond holds its own copies of the keyword files.
 on post-fs-data
     mkdir /data/pryon 0755 root root
+    mkdir /data/pryond 0700 nobody nobody
 
 service pryond /system/bin/pryond
     class main

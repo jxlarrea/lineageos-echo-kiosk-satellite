@@ -305,6 +305,8 @@ The image does not include Amazon's wake word engine (Pryon) or its wake word mo
 
 A line in `locales.txt` looks like `en-US alexa-en-US echo-en-US`. Kiosk Satellite does not offer a model that `locales.txt` leaves out. Some models load `libtvm_modelops_ww_v5_cnet.so` from `/system/lib`. The image links that path to `/data/pryon/lib`, so put that library there with the others.
 
+Amazon's models count "stop" only right after the wake word. So that saying "stop" by itself ends a ringing timer or a reply, pryond loads each model from its own copy in `/data/pryond`. In that copy the stop word counts without the wake word and needs a lower score. pryond never changes your files in `/data/pryon`.
+
 Copying files to `/data/pryon` needs `adb root` (see [Network](#network)). pryond runs as the `nobody` user, so make the files readable to every user:
 
 ```sh

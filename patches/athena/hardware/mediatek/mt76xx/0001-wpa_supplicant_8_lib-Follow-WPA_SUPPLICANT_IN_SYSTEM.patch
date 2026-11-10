@@ -1,0 +1,21 @@
+wpa_supplicant_8_lib: Follow WPA_SUPPLICANT_IN_SYSTEM
+
+lib_driver_cmd_mtk links into wpa_supplicant, so it is a system module
+when wpa_supplicant is.
+
+diff --git a/wifi/wpa_supplicant_8_lib/Android.mk b/wifi/wpa_supplicant_8_lib/Android.mk
+index b540e8b..9f6ec41 100644
+--- a/wifi/wpa_supplicant_8_lib/Android.mk
++++ b/wifi/wpa_supplicant_8_lib/Android.mk
+@@ -70,9 +70,11 @@ LOCAL_CFLAGS := $(L_CFLAGS)
+ LOCAL_SRC_FILES := $(WPA_SRC_FILE)
+ LOCAL_C_INCLUDES := $(WPA_SUPPL_DIR_INCLUDE)
+ 
++ifneq ($(WPA_SUPPLICANT_IN_SYSTEM),true)
+ ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26 && echo OK),OK)
+ LOCAL_PROPRIETARY_MODULE := true
+ endif
++endif
+ include $(BUILD_STATIC_LIBRARY)
+ 
+ ########################

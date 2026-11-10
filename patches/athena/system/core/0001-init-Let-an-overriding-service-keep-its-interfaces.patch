@@ -1,0 +1,22 @@
+init: Let an overriding service keep its interfaces
+
+A service with override could not name an interface the definition it
+replaces already had: init refused it as redefined, so the new service lost
+it and hwservicemanager could not start it by that interface. The Echo Show
+8 (2nd gen) overrides the vendor partition's wpa_supplicant service.
+
+diff --git a/init/service_parser.cpp b/init/service_parser.cpp
+index bdac077..1f93c5b 100644
+--- a/init/service_parser.cpp
++++ b/init/service_parser.cpp
+@@ -169,7 +169,9 @@ Result<void> ServiceParser::ParseInterface(std::vector<std::string>&& args) {
+     const std::string fullname = interface_name + "/" + instance_name;
+ 
+     for (const auto& svc : *service_list_) {
+-        if (svc->interfaces().count(fullname) > 0) {
++        // A service that overrides an earlier definition of itself may keep
++        // that definition's interfaces.
++        if (svc->name() != service_->name() && svc->interfaces().count(fullname) > 0) {
+             return Error() << "Interface '" << fullname << "' redefined in " << service_->name()
+                            << " but is already defined by " << svc->name();
+         }

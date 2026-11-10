@@ -1,0 +1,10 @@
+# The bootloader has the kernel mount system as the root, and init mounts
+# vendor from the device tree's fstab. Fire OS's vendor partition brings its
+# own fstab.mt8183 for the rest.
+/dev/block/platform/bootdevice/by-name/system    /         ext4 ro                                                     wait
+/dev/block/platform/bootdevice/by-name/vendor    /vendor   ext4 ro                                                     wait
+/dev/block/platform/bootdevice/by-name/userdata  /data     ext4 noatime,nosuid,nodev,noauto_da_alloc,errors=remount-ro wait,check,formattable,quota,reservedsize=128m
+/dev/block/platform/bootdevice/by-name/cache     /cache    ext4 noatime,nosuid,nodev,noauto_da_alloc,discard           wait,check,formattable
+/dev/block/platform/bootdevice/by-name/boot      /boot     emmc defaults                                               defaults
+/dev/block/platform/bootdevice/by-name/recovery  /recovery emmc defaults                                               defaults
+/dev/block/platform/bootdevice/by-name/misc      /misc     emmc defaults                                               defaults

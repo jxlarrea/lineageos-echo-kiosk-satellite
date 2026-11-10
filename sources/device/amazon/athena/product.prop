@@ -1,0 +1,18 @@
+# Fire OS's vendor partition points factory reset protection at an frp
+# partition the Show does not have. Android reads the product properties after the vendor ones, so an empty value here wins over it and
+# keeps the persistent data block service off, which crashed the system
+# server on a block that is not there.
+ro.frp.pst=
+
+# Fire OS's vendor init scripts take the USB IDs from these properties, which
+# Fire OS's system image set. Without them the USB gadget shows up as 0000:0000
+# and a computer's udev rules refuse it for adb. These are Google's IDs.
+ro.vendor.usb.vid=0x18d1
+ro.vendor.usb.pid.adb=0x4ee7
+ro.vendor.usb.pid.mtp=0x4ee1
+ro.vendor.usb.pid.mtp.adb=0x4ee2
+ro.vendor.usb.pid.ptp=0x4ee5
+ro.vendor.usb.pid.ptp.adb=0x4ee6
+
+# The Show has no navigation keys, so Android draws the navigation bar.
+qemu.hw.mainkeys=0

@@ -18,8 +18,8 @@ STATE_FILE="$STATE_DIR/patches.sha256"
 TOUCHED_FILE="$STATE_DIR/touched-files"
 
 case "$DEVICE" in
-  crown|cronos|checkers|biscuit) ;;
-  *) echo "ERROR: set DEVICE to crown, cronos, checkers or biscuit" >&2; exit 1 ;;
+  crown|cronos|checkers|athena|biscuit) ;;
+  *) echo "ERROR: set DEVICE to crown, cronos, checkers, athena or biscuit" >&2; exit 1 ;;
 esac
 
 [[ -d "$TREE/build" ]] || { echo "ERROR: LineageOS 18.1 not synced at $TREE" >&2; exit 1; }

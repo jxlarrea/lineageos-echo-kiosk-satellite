@@ -1,0 +1,14 @@
+<!-- The image's own wpa_supplicant runs from system, so the framework
+     manifest declares its HAL. Fire OS's vendor manifest only lists the
+     versions its own wpa_supplicant served. -->
+<manifest version="1.0" type="framework">
+    <hal format="hidl">
+        <name>android.hardware.wifi.supplicant</name>
+        <transport>hwbinder</transport>
+        <version>1.3</version>
+        <interface>
+            <name>ISupplicant</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+</manifest>

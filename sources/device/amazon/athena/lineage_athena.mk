@@ -11,6 +11,9 @@ $(call inherit-product, vendor/lineage/config/common_full_tablet_wifionly.mk)
 # other Shows loads into Amazon's MT8163 audio HAL, which this Show does not
 # have.
 ECHO_SHOW_AMZNAEC := false
+# The image ships no vendor partition, so the layer's Wi-Fi overlay goes on
+# the product partition.
+ECHO_WIFI_OVERLAY_IN_PRODUCT := true
 $(call inherit-product, vendor/kiosk-satellite/config/common.mk)
 $(call inherit-product, vendor/kiosk-satellite/config/show.mk)
 $(call inherit-product, device/kiosk-satellite/athena/device.mk)

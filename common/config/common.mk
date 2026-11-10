@@ -5,8 +5,16 @@
 #
 
 # WPA2/WPA3 transition mode networks join with WPA2 (rro/Wifi).
+# The overlay goes on the vendor partition. An Echo whose image ships none
+# sets ECHO_WIFI_OVERLAY_IN_PRODUCT to true before it inherits this file and
+# gets it on the product partition.
+ifeq ($(ECHO_WIFI_OVERLAY_IN_PRODUCT),true)
+PRODUCT_PACKAGES += \
+    EchoWifiOverlayProduct
+else
 PRODUCT_PACKAGES += \
     EchoWifiOverlay
+endif
 
 # Amazon's wake word engine from files the user puts in /data/pryon (pryond/).
 # The image ships none of Amazon's files: pryond only reports to Kiosk

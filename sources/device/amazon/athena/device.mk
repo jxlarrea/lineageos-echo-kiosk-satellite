@@ -34,3 +34,29 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_COPY_FILES += \
     device/amazon/athena/configs/init.athena.rc:$(TARGET_COPY_OUT_SYSTEM)/etc/init/init.athena.rc
+
+# Volume curves. Fire OS's audio_policy_volumes.xml on the vendor partition
+# is in Amazon's own format and Android 11 loads no curve from it, so every
+# stream would play at full volume. The audio policy engine reads these from
+# system instead (patches/athena/frameworks/av).
+# The stream volumes file holds this Show's speaker curves, which stop at
+# -6 dB.
+AUDIO_ENGINE_CONFIG := frameworks/av/services/audiopolicy/enginedefault/config/example/phone
+PRODUCT_COPY_FILES += \
+    $(AUDIO_ENGINE_CONFIG)/audio_policy_engine_configuration.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/audio_policy_engine_configuration.xml \
+    $(AUDIO_ENGINE_CONFIG)/audio_policy_engine_product_strategies.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/audio_policy_engine_product_strategies.xml \
+    device/amazon/athena/configs/audio_policy_engine_stream_volumes.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/audio_policy_engine_stream_volumes.xml \
+    $(AUDIO_ENGINE_CONFIG)/audio_policy_engine_default_stream_volumes.xml:$(TARGET_COPY_OUT_SYSTEM)/etc/audio_policy_engine_default_stream_volumes.xml
+
+# Overlays: no telephony, the navigation bar, automatic brightness, the
+# always-on display, Bluetooth as a speaker and no battery icon. They are
+# built into their packages, as the layer's are (show.mk).
+DEVICE_PACKAGE_OVERLAYS += \
+    device/amazon/athena/overlay
+
+# The network stack and tethering inside system_server, as on the other
+# Echos, which saves their two processes. The layer's DHCP hostname overlay
+# (EchoNetworkStackOverlay) is for this network stack.
+PRODUCT_PACKAGES += \
+    InProcessNetworkStack \
+    com.android.tethering.inprocess

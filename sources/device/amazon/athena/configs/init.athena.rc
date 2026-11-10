@@ -2,6 +2,10 @@
 # their own from /vendor/lib/modules at the same point, which fails: those
 # are for Fire OS's 32-bit kernel.
 on post-fs-data
+    # No shell on the serial port. While it runs, Android shows a "Serial
+    # console enabled" notification at every boot.
+    stop console
+
     insmod /system/lib/modules/wlan_mt76x3_sdio_prealloc.ko
     insmod /system/lib/modules/wlan_mt76x3_sdio.ko
     insmod /system/lib/modules/btmtksdio.ko
@@ -53,3 +57,10 @@ service vendor_flash_recovery /system/bin/true
     class main
     oneshot
     disabled
+
+# Both CPU clusters at full clock, as on the other Echo Shows. With the
+# kernel's default governor the clock dropped at idle and Kiosk Satellite and
+# the audio HAL took twice the CPU time for the same work, for 1 degree less.
+on property:sys.boot_completed=1
+    write /sys/devices/system/cpu/cpufreq/policy0/scaling_governor performance
+    write /sys/devices/system/cpu/cpufreq/policy4/scaling_governor performance

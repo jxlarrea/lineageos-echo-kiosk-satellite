@@ -1,0 +1,37 @@
+audiopolicy: Read the engine configuration from system first
+
+The audio policy engine only read its configuration from
+/vendor/etc/audio_policy_engine_configuration.xml. Without it, the engine
+takes the volume curves from the vendor's audio_policy_configuration.xml.
+Fire OS's audio_policy_volumes.xml on the Echo Show 8 (2nd gen) is in
+Amazon's own format, so no curve loaded and every stream played at full
+volume. The image cannot add files to the vendor partition, so the engine
+now reads /system/etc/audio_policy_engine_configuration.xml when it exists.
+
+diff --git a/services/audiopolicy/engine/common/src/EngineBase.cpp b/services/audiopolicy/engine/common/src/EngineBase.cpp
+index 1bc7fe3..a74bba9 100644
+--- a/services/audiopolicy/engine/common/src/EngineBase.cpp
++++ b/services/audiopolicy/engine/common/src/EngineBase.cpp
+@@ -17,6 +17,8 @@
+ #define LOG_TAG "APM::AudioPolicyEngine/Base"
+ //#define LOG_NDEBUG 0
+ 
++#include <unistd.h>
++
+ #include "EngineBase.h"
+ #include "EngineDefaultConfig.h"
+ #include <TypeConverter.h>
+@@ -148,7 +150,12 @@ engineConfig::ParsingResult EngineBase::loadAudioPolicyEngineConfig()
+         return iter != end(volumeGroups);
+     };
+ 
+-    auto result = engineConfig::parse();
++    // An image on another vendor partition ships its engine configuration in
++    // system, because it cannot add files to vendor.
++    static constexpr char kSystemConfigPath[] =
++            "/system/etc/audio_policy_engine_configuration.xml";
++    auto result = access(kSystemConfigPath, R_OK) == 0 ? engineConfig::parse(kSystemConfigPath)
++                                                       : engineConfig::parse();
+     if (result.parsedConfig == nullptr) {
+         ALOGW("%s: No configuration found, using default matching phone experience.", __FUNCTION__);
+         engineConfig::Config config = gDefaultEngineConfig;

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- No battery, rotation or headset icons: the Show has none of them. -->
+    <string-array name="config_statusBarIconBlackList" translatable="false">
+        <item>battery</item>
+        <item>rotate</item>
+        <item>headset</item>
+    </string-array>
+</resources>

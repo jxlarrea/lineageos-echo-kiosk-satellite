@@ -9,3 +9,11 @@ runtime_resource_overlay {
     resource_dirs: ["res"],
     vendor: true,
 }
+
+// The same overlay on the product partition, for an Echo whose image ships
+// no vendor partition (ECHO_WIFI_OVERLAY_IN_PRODUCT in common.mk).
+runtime_resource_overlay {
+    name: "EchoWifiOverlayProduct",
+    resource_dirs: ["res"],
+    product_specific: true,
+}

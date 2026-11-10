@@ -5,6 +5,7 @@ All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented 
 ## Unreleased
 
 ### Changed
+- **No lock sound.** With the lock screen off, Android still played its lock sound at every boot and each time the screen turned off. A fresh install now has the lock and unlock sounds off, and EchoService turns them off once on a Show that is already set up. Settings > Sound turns them back on.
 - **The microphone dump and read-gap log work with processing off.** `persist.vendor.amznaec.dump` and `persist.vendor.amznaec.log` only worked while the image's echo canceller processed the microphones. With it off, as on a fresh install, the dump now gets the microphones as captured and the log reports the longest gap between the audio HAL's reads every 5 seconds. Neither changes what Kiosk Satellite hears.
 
 ## 2026.11.4 - 2026-11-09

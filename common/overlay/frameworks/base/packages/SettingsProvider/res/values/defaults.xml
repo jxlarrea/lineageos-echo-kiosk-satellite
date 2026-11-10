@@ -17,4 +17,8 @@
     <!-- The screen never turns off on its own: Kiosk Satellite decides when
          it dims or sleeps. echo_service screen timeout changes it. -->
     <integer name="def_screen_off_timeout">2147483647</integer>
+
+    <!-- No lock and unlock sounds. With the lock screen off, Android still
+         played the lock sound at every boot and screen off. -->
+    <integer name="def_lockscreen_sounds_enabled">0</integer>
 </resources>

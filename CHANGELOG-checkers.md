@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 5 (1st gen) (`checkers`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **No lock sound.** With the lock screen off, Android still played its lock sound at every boot and each time the screen turned off. A fresh install now has the lock and unlock sounds off, and EchoService turns them off once on a Show that is already set up. Settings > Sound turns them back on.
+
 ## 2026.11.1 - 2026-11-09
 
 ### Added

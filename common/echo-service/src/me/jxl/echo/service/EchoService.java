@@ -115,6 +115,9 @@ public class EchoService extends Service {
     }
 
     // Only settings that were never set, so a change made later stays.
+    // Set once the lock sounds were turned off on this settings database.
+    private static final String LOCK_SOUNDS_MIGRATED = "echo_lock_sounds_off";
+
     static void applyDefaults(Context context) {
         // adb keys never expire: the computer that set the Show up can come
         // back months later without someone at the screen to allow it again.
@@ -148,6 +151,16 @@ public class EchoService extends Service {
             if (Settings.Secure.getString(context.getContentResolver(), key) == null) {
                 Settings.Secure.putInt(context.getContentResolver(), key, 0);
             }
+        }
+        // No lock and unlock sounds: with the lock screen off Android still
+        // played the lock sound at every boot. A fresh install has the
+        // setting from the image's defaults (overlay/). This turns it off
+        // once on a settings database from before them, so turning the
+        // sounds back on in Settings stays.
+        if (Settings.Global.getString(context.getContentResolver(), LOCK_SOUNDS_MIGRATED) == null) {
+            Settings.System.putInt(context.getContentResolver(),
+                    Settings.System.LOCKSCREEN_SOUNDS_ENABLED, 0);
+            Settings.Global.putInt(context.getContentResolver(), LOCK_SOUNDS_MIGRATED, 1);
         }
         hideTrustNotifications(context);
         nameDevice(context);

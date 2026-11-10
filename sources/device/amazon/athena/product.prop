@@ -16,3 +16,8 @@ ro.vendor.usb.pid.ptp.adb=0x4ee6
 
 # The Show has no navigation keys, so Android draws the navigation bar.
 qemu.hw.mainkeys=0
+
+# Fire OS's vendor partition sets the USB configuration to none, which wins
+# over the system image's default. adb on USB from the first boot, as on the
+# other Shows.
+persist.sys.usb.config=mtp,adb

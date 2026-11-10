@@ -58,6 +58,7 @@ TARGET_COPY_OUT_VENDOR := vendor
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_NO_RECOVERY := true
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/configs/fstab.mt8183
+TARGET_RELEASETOOLS_EXTENSIONS := vendor/kiosk-satellite/releasetools
 
 # Wi-Fi: Fire OS's own wpa_supplicant on the vendor partition links a HIDL
 # library Amazon added to its Android 9 VNDK, which Android's VNDK 28 does not
@@ -70,7 +71,10 @@ BOARD_WLAN_DEVICE := MediaTek
 BOARD_MEDIATEK_COMBO_CHIP := mt76xx
 WPA_SUPPLICANT_IN_SYSTEM := true
 
-# Properties
+# Properties. A Treble product puts PRODUCT_PROPERTY_OVERRIDES in
+# vendor/build.prop, which this image does not ship: the vendor partition
+# stays Fire OS's. So they go in system/build.prop.
+BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED := false
 TARGET_PRODUCT_PROP += $(DEVICE_PATH)/product.prop
 
 # Treble

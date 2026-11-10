@@ -16,10 +16,14 @@ PRODUCT_PACKAGES += \
 
 # Echo cancellation on the microphones (audio/amznaec): the FPGA's copy of
 # the speaker signal is the reference, so the wake word works over music.
-# Each device sets ro.vendor.amznaec.gain_db for its microphone gain.
+# Each device sets ro.vendor.amznaec.gain_db for its microphone gain. It
+# loads into Amazon's MT8163 audio HAL, so a Show with another audio HAL
+# sets ECHO_SHOW_AMZNAEC to false before it inherits this file.
+ifneq ($(ECHO_SHOW_AMZNAEC),false)
 PRODUCT_PACKAGES += \
     libamznaec_shim \
     init.kiosk-satellite.audio.rc
+endif
 
 # Kiosk Satellite on first boot, with its grants and device owner. curl
 # fetches it from GitHub.

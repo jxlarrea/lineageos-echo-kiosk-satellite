@@ -12,12 +12,20 @@
           fetch="https://github.com/amazon-oss"
           revision="refs/heads/lineage-18.1" />
 
+  <!-- The Echo Show 8 (2nd gen)'s kernel: Amazon's Fire OS 7.5.7.1 source
+       release for the MT8183 with this project's changes. amazon-oss has no
+       MT8183 kernel. -->
+  <remote name="jxlarrea"
+          fetch="https://github.com/jxlarrea"
+          revision="refs/heads/lineage-18.1" />
+
   <project path="device/amazon/checkers"      name="android_device_amazon_checkers"      remote="amazon-oss" />
   <project path="device/amazon/crown"         name="android_device_amazon_crown"         remote="amazon-oss" />
   <project path="device/amazon/cronos"        name="android_device_amazon_cronos"        remote="amazon-oss" />
   <project path="device/amazon/mt8163-common" name="android_device_amazon_mt8163-common" remote="amazon-oss" />
 
   <project path="kernel/amazon/mt8163-4.9"    name="android_kernel_amazon_mt8163"        remote="amazon-oss" />
+  <project path="kernel/amazon/mt8183"        name="android_kernel_amazon_mt8183"        remote="jxlarrea" />
   <project path="kernel/amazon/mt66xx-common" name="android_kernel_amazon_mt66xx-common" remote="amazon-oss" />
   <project path="kernel/amazon/mt66xx-bt"     name="android_kernel_amazon_mt66xx-bt"     remote="amazon-oss" />
   <project path="kernel/amazon/mt66xx-wifi"   name="android_kernel_amazon_mt66xx-wifi"   remote="amazon-oss" />

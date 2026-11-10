@@ -1,6 +1,6 @@
 # Echo Dot (2nd gen) changelog
 
-All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
+All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented here. The [Echo Show 5 (1st gen)](CHANGELOG-checkers.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
 ## 2026.11.3 - 2026-11-09
 

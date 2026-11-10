@@ -1,0 +1,44 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: jxlarrea <jx@jxl.me>
+Date: Mon, 26 Oct 2026 09:20:00 -0500
+Subject: [PATCH] gating: Report the ungated state after a short press
+
+The Echo Show 8's privacy circuit ungates on any press of the button,
+but the driver only told its listeners about presses of 500 ms or more.
+After a short press ended privacy, the sound driver never heard that the
+microphones were back, kept their enable line off and the microphone
+FPGA lost its firmware, so every recording read zeros until a reboot.
+
+When a short press finds the circuit ungated while the driver still has
+it gated, report the ungated state as a long press would.
+---
+diff --git a/drivers/misc/gating.c b/drivers/misc/gating.c
+index 3e6364a3..89fd9236 100644
+--- a/drivers/misc/gating.c
++++ b/drivers/misc/gating.c
+@@ -180,8 +180,24 @@ static void handle_gating_button_event(struct gating_input_event *input,
+ 
+ 	delay = input->last_event_time + LONG_PRESS_DURATION;
+ 	/* if it is long press, it is a gating event */
+-	if (!time_before(delay, jiffies))
++	if (!time_before(delay, jiffies)) {
++		/*
++		 * Any press ungates the circuit, a short one too. Tell the
++		 * listeners when that ended a gated state, or the microphones
++		 * stay off: only a long press told them before.
++		 */
++		mutex_lock(&priv->mutex);
++		if (priv->cur_state == GATED && priv->req_state == NONE &&
++		    __gating_state(priv) == UNGATED) {
++			priv->cur_state = UNGATED;
++			priv->req_state = UNGATED;
++			mutex_unlock(&priv->mutex);
++			schedule_work(&priv->priv_update);
++			goto out;
++		}
++		mutex_unlock(&priv->mutex);
+ 		goto out;
++	}
+ 
+ 	cancel_work_sync(&priv->priv_update);
+ 

@@ -48,6 +48,7 @@ KS_PACKAGE = "me.jxl.kiosk_satellite"
 DEVICES = {
     "crown": {"name": "Echo Show 8 (1st gen)", "kind": "show", "channels": 6, "mics": 4},
     "cronos": {"name": "Echo Show 5 (2nd gen)", "kind": "show", "channels": 4, "mics": 2},
+    "checkers": {"name": "Echo Show 5 (1st gen)", "kind": "show", "channels": 4, "mics": 2},
     "biscuit": {"name": "Echo Dot (2nd gen)", "kind": "dot", "channels": 9, "mics": 7},
 }
 

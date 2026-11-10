@@ -61,6 +61,59 @@ The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 </details>
 
 <details>
+<summary><h2 id="echo-show-5-1st-gen">Echo Show 5 (1st gen)</h2></summary>
+
+Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5 (1st gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/). Its `fastbrick` script unlocks the Show over USB and writes TWRP 3.7.0_9-0, which is what the image needs.
+
+> [!WARNING]
+> Use only the package for the Echo Show 5 (1st gen), `amonet-checkers-v2.0.1.zip`. The packages for the other Shows have the same file names inside, and the wrong one leaves the Show stuck in a boot loop.
+
+### What you need
+
+- The Echo Show 5 (1st gen), its power adapter and a micro USB cable that carries data.
+- A computer with Linux or Windows. The package brings its own `fastboot`. On Windows, also install the Amazon Fire or Google USB driver, as the XDA thread shows.
+
+### Check the bootloader first
+
+`fastbrick` does not support every bootloader the Show has shipped with. Check yours before you run it.
+
+1. Put the Show in fastboot mode. Unplug its power, then hold **Volume Down**, **Volume Up** and the **microphone off** button together, plug the power back in and keep holding until `=> FASTBOOT mode...` shows on the screen. Connect the Show to your computer.
+2. Read the bootloader version and restart the Show:
+
+   ```sh
+   fastboot getvar product
+   fastboot getvar lk_build_desc
+   fastboot reboot
+   ```
+
+   `product` must be `AEOCH`. If `lk_build_desc` starts with a 2019 date, such as `cd178e6-20190703`, `fastbrick` cannot unlock it yet. Set the Show up in the Alexa app, let Fire OS install every update it finds and check again. The XDA thread covers the other way, a test point inside the case. A Show on the bootloader from 2024, `44072a3-20240709`, is ready as it is.
+
+### Run fastbrick
+
+1. Download `amonet-checkers-v2.0.1.zip` from the XDA thread and extract it.
+2. Put the Show in fastboot mode again, with its power plugged in and USB connected.
+3. From the extracted folder, run `./fastbrick.sh` on Linux. On Windows, run `fastbrick.bat`. Type `YES` when it asks.
+
+`fastbrick` rewrites the Show's bootloader, so never unplug the Show while it runs. It can take up to five minutes, then `fastbrick` restarts the Show into TWRP. After the unlock, hold **Volume Up** while plugging in the power to start TWRP. Hold **Volume Down** to start fastboot.
+
+### Updating an older amonet
+
+A Show unlocked earlier with amonet 1 does not have the TWRP the image needs. `fastbrick` does not run on a Show that is already unlocked. Install the amonet package from TWRP instead:
+
+1. Download `amonet-checkers-v2.0.1.zip` from the XDA thread. Do not extract it.
+2. Connect the Show over USB and start TWRP. [Getting into TWRP](twrp.md#echo-show-5-1st-gen) covers it.
+3. Copy the zip to the Show and install it:
+
+   ```sh
+   adb push amonet-checkers-v2.0.1.zip /sdcard/
+   adb shell twrp install /sdcard/amonet-checkers-v2.0.1.zip
+   ```
+
+The system that was on the Show does not boot on amonet 2, so install the image right after.
+
+</details>
+
+<details>
 <summary><h2 id="echo-show-5-2nd-gen">Echo Show 5 (2nd gen)</h2></summary>
 
 Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5 (2nd gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-2nd-gen-2021-cronos.4772596/). Its `fastbrick` script unlocks the Show over USB and writes TWRP 3.7.0_9-0, which is what the image needs. A Show that runs R0rt1z2's LineageOS 18.1 image v0.5 or later is already on amonet 2 and ready as it is.

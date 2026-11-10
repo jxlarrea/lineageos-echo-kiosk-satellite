@@ -14,8 +14,8 @@ DEVICE="${DEVICE:-}"
 OUT="$TREE/out/target/product/$DEVICE"
 
 case "$DEVICE" in
-  biscuit|crown|cronos) ;;
-  *) echo "ERROR: set DEVICE to biscuit, crown or cronos" >&2; exit 2 ;;
+  biscuit|crown|cronos|checkers) ;;
+  *) echo "ERROR: set DEVICE to biscuit, crown, cronos or checkers" >&2; exit 2 ;;
 esac
 
 TARGET_FILES="${1:-$(ls "$OUT"/obj/PACKAGING/target_files_intermediates/lineage_"$DEVICE"-target_files-*.zip 2>/dev/null | head -n 1)}"
@@ -179,6 +179,17 @@ case "$DEVICE" in
     expect prop ro.vendor.amznaec.engine 2
     expect prop ro.config.media_vol_default 10
     [[ "$(asr_passthrough)" == true ]] || fail "asp.cfg has the ASR pipeline on, which is the Echo Show 8's"
+    wrapper_has_asr_capture && fail "the audio HAL wrapper has the Echo Show 8's ASR capture"
+    boot_animation 480
+    ;;
+  checkers)
+    expect default_prop ro.echo.hostname echo-show-5-g1-ks
+    expect default_prop ro.echo.privacy_hold 1
+    expect default_prop persist.sys.audio.noise_suppression 0
+    expect prop ro.vendor.audio.asr_capture ""
+    expect prop ro.vendor.amznaec.enable 0
+    expect prop ro.vendor.amznaec.engine 2
+    expect prop ro.config.media_vol_default 10
     wrapper_has_asr_capture && fail "the audio HAL wrapper has the Echo Show 8's ASR capture"
     boot_animation 480
     ;;

@@ -1,6 +1,6 @@
 # Getting into TWRP
 
-Every image installs from the TWRP that comes with the device's amonet. [Unlocking](unlocking.md) installs both. This page covers the Echo Dot (2nd gen), the Echo Show 5 (2nd gen) and the Echo Show 8 (1st gen).
+Every image installs from the TWRP that comes with the device's amonet. [Unlocking](unlocking.md) installs both. This page covers the Echo Dot (2nd gen), both Echo Show 5 generations and the Echo Show 8 (1st gen).
 
 ## Echo Dot (2nd gen)
 
@@ -50,6 +50,34 @@ The image never writes TWRP, the bootloader or the partition table, so a Dot tha
 5. **Use the Preloader's download mode.** If `adb devices -l` never lists TWRP, unplug the Dot, hold only the **mute** button and plug it back in. Your computer then sees a `PWNED MT8163 Preloader`. amonet v2 uses this mode to repair a Dot that no longer boots. Follow the Important Notes in the [amonet thread on XDA](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-dot-2nd-gen-2016-biscuit.4761416/) for the rest of the procedure. If the Dot shows no light at all, see the test point section of firebreak's [README](https://github.com/bboe/firebreak#run-it).
 
 If you ask for help, include what both `twrp install` runs and `bcbtool get_active` printed. Say whether adb ever shows the Dot during a restart.
+
+## Echo Show 5 (1st gen)
+
+The image installs from TWRP 3.7.0_9-0, the recovery that comes with amonet 2.
+
+### Starting TWRP
+
+If the Show is running, connect it over USB and run:
+
+```sh
+adb reboot recovery
+```
+
+Within about half a minute, `adb devices -l` lists the Show as `recovery`. TWRP has a touch screen on the Show, but the guide runs everything over `adb shell`. The `twrp` command does what its buttons do, such as `twrp install` and `twrp wipe`. TWRP has no adb over Wi-Fi, so connect the Show over USB even if you use adb over Wi-Fi in Android.
+
+If the Show does not boot, unplug its power, hold **Volume Up** and plug the power back in. That starts TWRP.
+
+### Checking the version
+
+```sh
+adb shell getprop ro.twrp.version
+```
+
+It must print `3.7.0_9-0`. A Show that prints anything else is on an older amonet. [Updating an older amonet](unlocking.md#updating-an-older-amonet) covers the update.
+
+### One slot
+
+The Show has one copy of each partition, with no slots. An install replaces the system that was there, so if it fails, only TWRP starts until an install succeeds. TWRP's `wipe data` keeps the internal storage in `/sdcard`.
 
 ## Echo Show 5 (2nd gen)
 

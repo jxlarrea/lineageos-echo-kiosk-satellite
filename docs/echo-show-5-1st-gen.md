@@ -1,0 +1,385 @@
+# Echo Show 5 (1st gen)
+
+A LineageOS 18.1 (Android 11) image for the 1st generation Echo Show 5 (`checkers`), tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) on its screen for Home Assistant. It is the LineageOS 18.1 port for the Echo Show 5 (1st gen) in [amazon-oss](https://github.com/amazon-oss), by [R0rt1z2](https://github.com/R0rt1z2) and [bengris32](https://github.com/bengris32), which brings the screen, camera and Bluetooth, with the Kiosk Satellite Edition layer on top.
+
+This guide is for the Echo Show 5 from 2019. The [Echo Show 5 (2nd gen)](echo-show-5.md) from 2021 has its own image. To move a Show from another LineageOS image, see [Moving from another image](#moving-from-another-image).
+
+## What the image does
+
+- **A raw microphone for Kiosk Satellite.** Kiosk Satellite hears microphone 0 as captured, with no processing from Amazon's audio HAL or the image. Its own echo canceller then sees the speaker's echo at a fixed delay. See [Volume](#volume) for the levels that work best.
+- **Kiosk Satellite on first boot.** Once the Show is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. Kiosk Satellite then makes itself the home launcher and reports the Show's real Wi-Fi MAC address to Home Assistant.
+- **No on-screen onboarding.** There is no setup wizard and no lock screen. adb works over USB from the first boot, so a computer only has to be allowed on the screen once. Allowed computers do not expire. Android's screen timeout is set to never, so only Kiosk Satellite dims the screen or turns it off.
+- **Set up from adb.** `echo_service` joins Wi-Fi, sets the time and time zone from your computer and changes the Show's settings without touching the screen. See [Device commands](#device-commands).
+- **Privacy and the screen on separate presses.** Press the button briefly to turn the screen on or off. Hold it for about a second and a half to turn privacy on or off. See [The button](#the-button).
+- **Double tap to wake.** Double tap the screen while it is off to turn it back on. The touch driver in amazon-oss's kernel ignored every tap while the screen was off. See [Screen](#screen).
+- **Bluetooth both ways.** Phones can play to the Show as a Bluetooth speaker. The Show's audio can also go to Bluetooth headphones and speakers. See [Bluetooth](#bluetooth).
+- **System updates.** EchoService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
+- **Steady Wi-Fi.** Android keeps the access point it joined instead of moving between mesh nodes or scanning while connected. It picks one by signal strength, preferring 5 GHz. The image also connects to a network in WPA2/WPA3 transition mode with WPA2, including one that also offers WPA2 with SHA256. `echo_service wifi connect` joins a WPA3-only network with WPA3.
+- **More free memory.** With Kiosk Satellite on screen for over an hour, about 400 MB of the Show's 1 GB stays available.
+
+## Before you start
+
+- **An unlocked Show with TWRP.** The image needs amonet 2 and its TWRP 3.7.0_9-0. Follow [Unlocking the Echo Show 5](unlocking.md#echo-show-5-1st-gen), then [Getting into TWRP](twrp.md#echo-show-5-1st-gen).
+- **adb** on your computer and a USB cable that carries data.
+- **Your Wi-Fi name and password.**
+
+## Installing
+
+1. Download the `.zip` file of the newest [Echo Show 5 (1st gen) release](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=checkers), the release titled **Echo Show 5 (1st gen)** with the highest version.
+2. Start TWRP:
+
+   ```sh
+   adb reboot recovery
+   ```
+
+   Run `adb devices -l` until it lists the Show as `recovery`. Then check the TWRP version:
+
+   ```sh
+   adb shell getprop ro.twrp.version
+   ```
+
+   It must print `3.7.0_9-0`. If it prints anything else, stop here and see [Getting into TWRP](twrp.md#echo-show-5-1st-gen).
+
+3. Erase the Show and install the image. Replace `<image>.zip` with the file you downloaded:
+
+   ```sh
+   adb shell twrp wipe cache
+   adb shell twrp wipe data
+   adb push <image>.zip /sdcard/update.zip
+   adb shell twrp install /sdcard/update.zip
+   ```
+
+   The zip goes to `/sdcard`, the Show's internal storage, because it is larger than the memory TWRP keeps `/tmp` in. `twrp wipe data` leaves `/sdcard` as it is.
+
+   If the install prints an error or `assert failed`, stop here and do not reboot. TWRP is still running, so nothing is lost yet. Otherwise remove the zip and reboot:
+
+   ```sh
+   adb shell rm /sdcard/update.zip
+   adb reboot
+   ```
+
+4. **Allow your computer.** The first boot takes about a minute and a half. Then Android asks on the screen whether to allow USB debugging. Check **Always allow from this computer** and tap **Allow**. It has booted once this prints `1`:
+
+   ```sh
+   adb shell getprop sys.boot_completed
+   ```
+
+## After installing
+
+1. **Set the time and time zone** from your computer. Pick the line for your computer:
+
+   ```sh
+   # Linux
+   adb shell echo_service time sync $(date +%s) $(timedatectl show -p Timezone --value)
+   # macOS
+   adb shell echo_service time sync $(date +%s) $(readlink /etc/localtime | sed 's#.*zoneinfo/##')
+   ```
+
+   On Windows, in PowerShell:
+
+   ```powershell
+   adb shell echo_service time sync ([DateTimeOffset]::UtcNow.ToUnixTimeSeconds()) "'$((Get-TimeZone).Id)'"
+   ```
+
+   Once the Show is online, Android keeps the time from the network. [Time](#time) covers using your own NTP server.
+
+2. **Join Wi-Fi.** The second command shows the Show's IP address:
+
+   ```sh
+   adb shell "echo_service wifi connect '<ssid>' '<password>'"
+   adb shell echo_service wifi
+   ```
+
+   Keep the double quotes around the whole command. Without them, `adb shell` splits a Wi-Fi name or password with spaces into separate words before it reaches the Show. If the name or password has a `!`, a `$`, a single quote, a backslash or other characters your computer's shell treats specially, run the command from a shell on the Show instead, as the [Echo Dot guide](echo-dot.md#after-installing) shows for the Dot. Inside the double quotes, bash and zsh read a `!` as a history command and a `$` as a variable, so a name like `FRITZ!Box 7590` fails with `event not found` before it reaches the Show.
+
+   If your router offers separate 2.4 GHz and 5 GHz networks, join the 5 GHz one. On 2.4 GHz, Bluetooth takes airtime from Wi-Fi and can slow voice audio a lot. See [Bluetooth](#bluetooth).
+
+3. **Wait for Kiosk Satellite.** Once the Show is on Wi-Fi, Kiosk Satellite is downloaded and installed automatically. Follow the progress with:
+
+   ```sh
+   adb logcat -s ks-install
+   ```
+
+   It prints `downloading`, `installed Kiosk Satellite`, `Kiosk Satellite is the device owner` and `permissions granted`. This takes a couple of minutes. Kiosk Satellite then opens on the screen.
+
+   If it prints `download failed`, the installer stops and tries again at the next boot, so restart the Show with `adb reboot`. If the download keeps failing, download the APK from the URL in the `downloading` line on your computer and install it from there. At the next boot the installer makes it the device owner and gives it its permissions:
+
+   ```sh
+   adb install <kiosk-satellite>.apk
+   adb reboot
+   ```
+
+4. **Set up Kiosk Satellite.** Go through its setup wizard on the screen or at `http://<show ip>:2324` in a browser: an admin password, your Home Assistant connection and the wake word. Then add the Show in Home Assistant under **Settings > Devices & services**, where Home Assistant lists it as discovered.
+
+EchoService names the Show `echo-show-5-g1-ks` and the last three characters of its serial, `echo-show-5-g1-ks-qr1` for example, so your router lists it under its own name. Android reports it as an **Echo Show 5 1st Gen (KS)**.
+
+## Moving from another image
+
+To move a Show from another LineageOS 18.1 image to this one, install it by hand. Step 2 of [Installing](#installing) checks the TWRP version.
+
+1. **Back up Kiosk Satellite.** In its remote admin, use **Export configuration** and keep the file.
+2. **Install the image** with the steps in [Installing](#installing), `twrp wipe data` included.
+3. **Set the time, join Wi-Fi and wait for Kiosk Satellite** as in [After installing](#after-installing).
+4. **Restore the backup.** In the setup wizard, choose **Restore from configuration file** and pick the file you exported.
+
+Nothing from the other image carries over. GApps, Magisk and anything else it installed through `addon.d` are gone after the install, so there is no need to wipe the system partition first.
+
+A Show that was unlocked with an older amonet needs amonet 2 first. [Updating an older amonet](unlocking.md#updating-an-older-amonet) covers it.
+
+## Updating
+
+EchoService installs new releases of this image. Home Assistant shows a new release on the Show's **Firmware** update entity. Kiosk Satellite shows it under **About > System** in its remote admin and on the Overview. Install it from either place.
+
+EchoService downloads the release and checks it against GitHub's checksum and the release signature. Then it restarts the Show into TWRP, which installs the release and starts Android again. The Show has one copy of the system, so this takes it offline for a few minutes, once. Kiosk Satellite and its settings stay.
+
+EchoService checks for a new release a minute after every boot. Kiosk Satellite asks it to check again twice a day. [Updates from your own server](offline-updates.md) covers a Show on a network without Internet access. [System updates](#system-updates) covers the same from adb.
+
+If installing an update from Home Assistant or Kiosk Satellite does nothing, check that Kiosk Satellite is the device owner. EchoService only takes an update from the device owner:
+
+```sh
+adb shell echo_service status
+```
+
+The Kiosk Satellite line must end in `device owner`. Android only makes an app the device owner while the Show has no accounts, so a Google account, for example from GApps, keeps it from happening. Remove the account and restart the Show. The [Kiosk Satellite installer](#kiosk-satellite-installer) makes Kiosk Satellite the device owner at the next boot.
+
+## Settings
+
+### Volume
+
+Keep the Show's master volume at 70% and Kiosk Satellite's media player and assistant volumes at 100%. That fills a room. The Echo Show 5 (2nd gen) has the same speaker, and over music its wake word worked 9 times out of 10 even one step higher, at 75%. A fresh install sets these levels: master volume 10 of 15, which Kiosk Satellite shows as 70%, with Kiosk Satellite's own volumes at their defaults.
+
+```sh
+adb shell echo_service volume
+adb shell echo_service volume music 10
+```
+
+To check that both microphones work:
+
+1. Turn off **Enable Voice Satellite** in Kiosk Satellite's Voice Satellite settings, since Kiosk Satellite holds the microphones while it listens.
+2. The test needs `adb root` to open the microphones. Allow it and print the level of each channel over 4 seconds:
+
+   ```sh
+   adb shell echo_service adb root on
+   adb root
+   adb shell echo_mic_test 4
+   ```
+
+3. Turn **Enable Voice Satellite** back on and switch root off again:
+
+   ```sh
+   adb unroot
+   adb shell echo_service adb root off
+   ```
+
+Channels 0 and 1 are the microphones and should read within a few dB of each other. Channels 2 and 3 are the speaker and read very low when nothing plays.
+
+### The button
+
+The microphone off button on top of the Show is also its power button. Whatever Android does, the privacy chip turns privacy on when the button is released after a hold of about a second and a half. Any press turns privacy off again. So the image keeps the two apart:
+
+- **A short press** turns the screen on and off.
+- **Holding it for about a second and a half** turns privacy on and off. The red light shows when it is on. Android does nothing on a hold.
+- **While privacy is on,** a press only turns privacy off and leaves the screen as it is.
+
+`echo_service privacy` says whether privacy is on. To get Android's usual button back, where a short press turns the screen off and holding it opens the power menu, run the first command. The second goes back:
+
+```sh
+adb shell echo_service button menu
+adb shell echo_service button press
+```
+
+With `menu`, a hold still turns privacy on or off as well.
+
+### Privacy timeout
+
+`echo_service privacy on` turns privacy on from adb. Only the button turns it off again, so no command can turn the microphones on.
+
+To keep the microphones off unless someone just held the button, set a timeout. Once the microphones have been on for that many seconds, EchoService turns privacy back on. This one turns it back on after 2 minutes:
+
+```sh
+adb shell echo_service privacy timeout 120
+```
+
+`echo_service privacy` shows how long until privacy goes back on. `echo_service privacy timeout off` stops it. The timeout stays across restarts and updates. Its countdown starts again at every boot. The countdown does not wait for the assistant, so it can cut off a conversation that runs past it.
+
+### Screen
+
+- **The screen timeout is never,** so only Kiosk Satellite dims the screen or turns it off. `echo_service screen timeout <seconds>` sets one.
+- **No clock on a sleeping screen.** LineageOS's ambient display is off, so the screen shows nothing while it is off. `echo_service screen ambient on` brings the clock back.
+- **No lock screen.** `echo_service lockscreen on` turns the swipe lock screen on.
+- **Double tap to wake.** A double tap on the screen while it is off turns it back on. A single tap leaves it off. No touch reaches Kiosk Satellite while the screen is off. Android does not tell Kiosk Satellite what woke the screen, so **Wake to screensaver** counts a double tap as **Power button**. To turn it off, run the first command. The second turns it back on:
+
+  ```sh
+  adb shell settings put secure double_tap_to_wake 0
+  adb shell settings put secure double_tap_to_wake 1
+  ```
+
+### Bluetooth
+
+Bluetooth is on. Android 11 can either take audio from phones or play to headphones and speakers, not both at once, so EchoService sets the Show up for one or the other. The last choice stays across reboots. A fresh Show takes audio from phones.
+
+- **As a Bluetooth speaker.** Make the Show discoverable for five minutes, then pair your phone with **Echo Show 5** and accept the pairing on the Show's screen:
+
+  ```sh
+  adb shell echo_service bt pair
+  ```
+
+- **With Bluetooth headphones or a speaker.** Put them in pairing mode, then run the command below. EchoService pairs the Show with the first ones it finds or with the first whose name has the text you give. Then the Show's audio plays through them. With a name, ones paired before reconnect without pairing mode:
+
+  ```sh
+  adb shell echo_service bt connect
+  adb shell echo_service bt connect '<name>'
+  ```
+
+  Without a name, EchoService takes any headphones or speaker nearby that is in pairing mode, so give a name where neighbors have Bluetooth audio.
+
+Switching between the two restarts Bluetooth, which drops what was connected. `adb logcat -s EchoBluetooth` shows how a `bt connect` went. Kiosk Satellite's Bluetooth proxy for Home Assistant keeps scanning in both.
+
+To turn Bluetooth off and back on:
+
+```sh
+adb shell echo_service bt off
+adb shell echo_service bt on
+```
+
+Bluetooth stays off across reboots. `bt on` keeps the Show set up as it was and does not make it discoverable. Kiosk Satellite's Bluetooth proxy for Home Assistant needs Bluetooth on.
+
+> [!WARNING]
+> Bluetooth and 2.4 GHz Wi-Fi share one radio on the Show. With Bluetooth on, Wi-Fi gets less airtime even with nothing paired. On a 2.4 GHz network, pings to the Show can take much longer and voice audio can reach Home Assistant slower than real time, so speech to text answers late or times out. Join a 5 GHz network or turn Bluetooth off if you do not use the Show as a speaker, with headphones or as a Bluetooth proxy.
+
+### Time
+
+- **Network time.** Android sets the clock over NTP from `time.android.com` at every boot and once a day after that. To use another NTP server, such as your router or a time server on your network, set its name or IP address:
+
+  ```sh
+  adb shell settings put global ntp_server 192.168.1.1
+  ```
+
+  Wait a few seconds, then restart the Show with `adb reboot`. Android saves the setting a moment after it changes, so a restart right away can lose it. Android reads the setting the next time it syncs, so the new server takes over at the restart. Android does not use an NTP server your router hands out over DHCP. To go back to `time.android.com`, run:
+
+  ```sh
+  adb shell settings delete global ntp_server
+  ```
+
+- **Time zone.** A Show has no mobile network, so Android cannot find the time zone by itself. [After installing](#after-installing) sets it from your computer. To change it later, run `echo_service time zone` with a zone from the [tz database](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones):
+
+  ```sh
+  adb shell echo_service time zone 'America/New_York'
+  ```
+
+### Network
+
+- **2.4 GHz after a boot.** Android's first scan after a boot can miss a radio, so Android can join the 2.4 GHz radio of a network that also has 5 GHz. About 30 seconds after the first connection of a boot, EchoService scans once. If the same network has a 5 GHz radio that Android would pick, EchoService reconnects so Android can choose again. Wi-Fi drops for a few seconds when that happens. A network locked to one access point stays where it is.
+- **WPA3.** `echo_service wifi connect` scans for the network first, which can take up to 15 seconds. It saves a network that only offers WPA3 as WPA3 and any other network as WPA2, including a network in WPA2/WPA3 transition mode. It replaces a saved network of the same name that uses the other kind.
+- **adb works over Wi-Fi** on port 5555. A computer still has to be allowed on the Show's screen once before it can connect. To turn it off, run the first command. The second turns it back on:
+
+  ```sh
+  adb shell echo_service adb wifi off
+  adb shell echo_service adb wifi on
+  ```
+
+- **Allowed computers do not expire.** Android otherwise forgets a computer after 7 days without a connection, which would need a tap on the screen again. `echo_service adb keys expire on` brings the 7 days back.
+- **adb root is off,** as LineageOS 18.1 ships it. To use `adb root`, allow it first:
+
+  ```sh
+  adb shell echo_service adb root on
+  adb root
+  ```
+
+  `adb unroot` goes back to a normal shell. `echo_service adb root off` stops `adb root` from working again. A root shell can change anything on the Show, so turn it off when you are done.
+
+### Amazon's wake word engine
+
+The image does not include Amazon's wake word engine (Pryon) or its wake word models. If you have them, put them in `/data/pryon` on the Show. pryond, a service in the image, then runs them for Kiosk Satellite, and Kiosk Satellite 2026.11.14 or newer offers **Amazon** as a wake word engine with the wake words and locales you installed. pryond reads this layout:
+
+```
+/data/pryon/lib/              Pryon's libraries
+/data/pryon/models/<model>/   one model per folder, with its pryon.manifest
+/data/pryon/locales.txt       one line per locale: the locale, then its models
+```
+
+A line in `locales.txt` looks like `en-US alexa-en-US echo-en-US`. Kiosk Satellite does not offer a model that `locales.txt` leaves out. Some models load `libtvm_modelops_ww_v5_cnet.so` from `/system/lib`. The image links that path to `/data/pryon/lib`, so put that library there with the others.
+
+Amazon's models count "stop" only right after the wake word. So that saying "stop" by itself ends a ringing timer or a reply, pryond loads each model from its own copy in `/data/pryond`. In that copy the stop word counts without the wake word and needs a lower score. pryond never changes your files in `/data/pryon`.
+
+Copying files to `/data/pryon` needs `adb root` (see [Network](#network)). pryond runs as the `nobody` user, so make the files readable to every user:
+
+```sh
+adb shell chmod -R a+rX /data/pryon
+```
+
+Then check what pryond found:
+
+```sh
+adb shell pryond status
+```
+
+It prints one line. `"available":true` means Kiosk Satellite can listen with the engine. `missing` names the libraries pryond could not read and `skipped` names the models it cannot use, with the reason. Restart the Show afterward so Kiosk Satellite sees the change. System updates keep `/data/pryon`. `twrp wipe data` erases it.
+
+### Kiosk Satellite installer
+
+On every boot the image makes sure Kiosk Satellite is installed and has its permissions. To run the Show without Kiosk Satellite, turn that off:
+
+```sh
+adb shell setprop persist.echo.ks_install 0
+```
+
+## Device commands
+
+`echo_service` sets up and controls the Show from `adb shell`. Kiosk Satellite handles most of this once it runs, so these are mainly for setup and troubleshooting. `echo_service` alone prints every command.
+
+```sh
+adb shell echo_service status
+adb shell "echo_service wifi connect '<ssid>' '<password>'"
+adb shell echo_service wifi on|off
+adb shell echo_service bt pair
+adb shell echo_service bt connect '<name>'
+adb shell echo_service bt on|off
+adb shell echo_service time sync '<seconds>' '<zone>'
+adb shell echo_service time zone '<zone>'
+adb shell echo_service time auto on|off
+adb shell echo_service adb wifi on|off
+adb shell echo_service adb root on|off
+adb shell echo_service adb keys expire on|off
+adb shell echo_service lockscreen on|off
+adb shell echo_service privacy
+adb shell echo_service privacy on
+adb shell echo_service privacy timeout '<seconds>'|off
+adb shell echo_service button press|menu
+adb shell echo_service locale '<tag>'
+adb shell echo_service screen on|off
+adb shell echo_service screen brightness '<0..255>'|auto
+adb shell echo_service screen timeout '<seconds>'|never
+adb shell echo_service screen stay-awake on|off
+adb shell echo_service screen ambient on|off
+adb shell echo_service volume '<stream>' '<level>'
+adb shell echo_service hostname '<name>'
+adb shell echo_service ks status|install|update|restart
+adb shell echo_service logs
+```
+
+`echo_service logs` packs the Show's logs into one file to attach to an issue and prints the `adb pull` command that copies it to your computer. Run `adb root` first to include the kernel's messages.
+
+### System updates
+
+```sh
+adb shell echo_service update status
+adb shell echo_service update check
+adb shell echo_service update install
+```
+
+`update status` prints the installed release, the newest one and what the update is doing. `update check` asks GitHub for a newer release right away.
+
+`update install` downloads the newest release to `/data` and checks it against GitHub's checksum and the release signature. Then it restarts the Show into TWRP, which installs the release and starts Android again. Kiosk Satellite and its settings stay. If the install fails while TWRP writes the system, TWRP stays on screen instead of starting a system that may not boot. Install the release by hand from there with the steps in [Installing](#installing), leaving out `twrp wipe data`.
+
+If an install fails, `update status` says why. TWRP's side of the install is in `/data/system/echo-ota/twrp.log`.
+
+## What the image leaves out
+
+The image is a debloated LineageOS installation, which leaves more free memory for Kiosk Satellite.
+
+Bloat removed:
+
+- **Phone features:** telephony, contacts and the Bluetooth profiles for phone books, messages, file transfer and tethering.
+- **Apps a kiosk does not use:** calendar, contacts, the clock, music, the gallery, the calculator, the browser, the camera app, the recorder, the LineageOS updater, AudioFX, printing, backup and the wallet.
+- **Background services:** the notification assistant, autofill, system tracing and the metrics, incident, storage statistics and credential services.

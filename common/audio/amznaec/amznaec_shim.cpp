@@ -95,14 +95,20 @@
  *                                         while the speaker plays
  *   persist.vendor.amznaec.log        0   1 = log levels every 5 s, with the longest gap
  *                                         between the HAL's reads and the longest
- *                                         processing time
+ *                                         processing time. With processing off, only
+ *                                         the gap, checked about once a second
  *   persist.vendor.amznaec.replay     ""  debug: path of a raw S24_3LE file in the stream's shape
  *                                         whose frames replace the captured ones
  *                                         (looped), so settings can be compared on
  *                                         identical audio
  *   persist.vendor.amznaec.dump       ""  debug: path prefix; the frames entering the
  *                                         processing go to <prefix>.in.raw and the
- *                                         frames returned to the blob to <prefix>.out.raw
+ *                                         frames returned to the blob to <prefix>.out.raw.
+ *                                         With processing off, both get the frames as
+ *                                         captured, and the path is checked about once a
+ *                                         second while the blob reads: the Echo Show 5
+ *                                         (1st gen)'s blob opens the microphones once at
+ *                                         boot and never closes them.
  */
 
 #define LOG_TAG "amznaec"
@@ -179,6 +185,14 @@ struct State {
     FILE* replay = nullptr;    /* debug replay source, see the header */
     FILE* dump_in = nullptr;   /* debug dumps, see the header */
     FILE* dump_out = nullptr;
+    /* The microphone PCM while processing is off, and its dump. */
+    struct pcm* raw = nullptr;
+    FILE* raw_in = nullptr;
+    FILE* raw_out = nullptr;
+    char raw_path[PROPERTY_VALUE_MAX] = "";
+    int64_t raw_checked_ns = 0;
+    bool raw_log = false;
+    int64_t raw_logged_ns = 0;
     std::vector<uint8_t> in;   /* raw frames waiting for a full block */
     std::vector<uint8_t> out;  /* processed frames waiting to be returned */
     float near_[kMics][kBlock];
@@ -322,6 +336,55 @@ int64_t now_ns() {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     return ts.tv_sec * 1000000000LL + ts.tv_nsec;
+}
+
+void close_raw_dump_l() {
+    if (g.raw_in) { fclose(g.raw_in); g.raw_in = nullptr; }
+    if (g.raw_out) { fclose(g.raw_out); g.raw_out = nullptr; }
+    if (g.raw_path[0]) ALOGW("stopped dumping to %s.{in,out}.raw", g.raw_path);
+    g.raw_path[0] = 0;
+}
+
+/* Processing is off: the frames go to the dump as captured, while
+ * persist.vendor.amznaec.dump names one, and with persist.vendor.amznaec.log
+ * the longest gap between the blob's reads is logged every 5 s. */
+void raw_read_l(const void* data, unsigned count, int64_t start) {
+    if (g.last_read_ns) {
+        double gap = (start - g.last_read_ns) / 1e6;
+        if (gap > g.max_gap_ms) g.max_gap_ms = gap;
+        if (gap > 250) ALOGW("the HAL did not read the microphones for %.0f ms", gap);
+    }
+    g.last_read_ns = start;
+    int64_t now = now_ns();
+    if (g.raw_log && now - g.raw_logged_ns >= 5000000000LL) {
+        if (g.raw_logged_ns) ALOGI("5s: processing off, longest read gap %.0f ms", g.max_gap_ms);
+        g.raw_logged_ns = now;
+        g.max_gap_ms = 0;
+    }
+    if (now - g.raw_checked_ns >= 1000000000LL) {
+        g.raw_checked_ns = now;
+        bool log = property_get_bool("persist.vendor.amznaec.log", false);
+        if (log != g.raw_log) {
+            g.raw_log = log;
+            g.raw_logged_ns = 0;
+            g.max_gap_ms = 0;
+        }
+        char path[PROPERTY_VALUE_MAX];
+        property_get("persist.vendor.amznaec.dump", path, "");
+        if (strcmp(path, g.raw_path)) {
+            close_raw_dump_l();
+            if (path[0]) {
+                std::string a = std::string(path) + ".in.raw", b = std::string(path) + ".out.raw";
+                g.raw_in = fopen(a.c_str(), "wb");
+                g.raw_out = fopen(b.c_str(), "wb");
+                strlcpy(g.raw_path, path, sizeof(g.raw_path));
+                ALOGW("dumping the unprocessed microphones to %s.{in,out}.raw: %s", path,
+                      (g.raw_in && g.raw_out) ? "ok" : "open failed");
+            }
+        }
+    }
+    if (g.raw_in) fwrite(data, 1, count, g.raw_in);
+    if (g.raw_out) fwrite(data, 1, count, g.raw_out);
 }
 
 inline int32_t s24(const uint8_t* p) {
@@ -563,11 +626,15 @@ extern "C" struct pcm* pcm_open(unsigned int card, unsigned int device, unsigned
 
     pthread_mutex_lock(&g.lock);
     teardown_l();
+    close_raw_dump_l();
+    g.raw = nullptr;
     g.s = read_settings();
     g.mics = (int)config->channels - 2;
     g.frame_bytes = config->channels * 3;
     g.block_bytes = kBlock * g.frame_bytes;
     if (!g.s.enable) {
+        g.raw = pcm;
+        g.last_read_ns = 0;
         ALOGI("mic PCM %u:%u opened, processing disabled by property", card, device);
         pthread_mutex_unlock(&g.lock);
         return pcm;
@@ -651,6 +718,12 @@ extern "C" int pcm_read(struct pcm* pcm, void* data, unsigned int count) {
     resolve();
     int64_t start = now_ns();
     int rc = real_pcm_read(pcm, data, count);
+    if (rc == 0 && pcm && pcm == g.raw && count) {
+        pthread_mutex_lock(&g.lock);
+        if (pcm == g.raw) raw_read_l(data, count, start);
+        pthread_mutex_unlock(&g.lock);
+        return rc;
+    }
     if (rc != 0 || pcm != g.pcm || count == 0 || (count % g.frame_bytes) != 0) return rc;
 
     pthread_mutex_lock(&g.lock);
@@ -695,6 +768,11 @@ extern "C" int pcm_read(struct pcm* pcm, void* data, unsigned int count) {
 extern "C" int pcm_close(struct pcm* pcm) {
     resolve();
     pthread_mutex_lock(&g.lock);
+    if (pcm == g.raw) {
+        close_raw_dump_l();
+        g.raw = nullptr;
+        g.last_read_ns = 0;
+    }
     if (pcm == g.pcm) {
         ALOGI("mic PCM closed after %u blocks", g.blocks);
         teardown_l();

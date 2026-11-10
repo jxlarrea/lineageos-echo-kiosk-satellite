@@ -1,0 +1,17 @@
+checkers: Use the Kiosk Satellite Edition OTA hooks
+
+They keep mt8163-common's by-name links and add the release the package
+holds, which EchoService checks before it installs a system update.
+
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -40,5 +40,9 @@
+ # Inherit from mt8163-common
+ include device/amazon/mt8163-common/BoardConfigCommon.mk
+ 
++# Kiosk Satellite Edition: mt8163-common's OTA hooks plus the release the
++# package holds, for system updates.
++TARGET_RELEASETOOLS_EXTENSIONS := vendor/kiosk-satellite/releasetools
++
+ # Inherit the proprietary files
+ include vendor/amazon/checkers/BoardConfigVendor.mk

@@ -16,7 +16,7 @@ inherits() {
 inherits biscuit | grep -q 'vendor/kiosk-satellite/config/common.mk' || fail "biscuit does not inherit common.mk"
 ! inherits biscuit | grep -q 'vendor/kiosk-satellite/config/show.mk' || fail "biscuit inherits the Echo Shows' show.mk"
 ! grep -rq 'kiosk-satellite/config/show.mk' device/biscuit sources/device/amazon/biscuit || fail "the Dot's layer pulls in show.mk"
-for show in crown cronos; do
+for show in crown cronos checkers; do
   inherits "$show" | grep -q 'vendor/kiosk-satellite/config/common.mk' || fail "$show does not inherit common.mk"
   inherits "$show" | grep -q 'vendor/kiosk-satellite/config/show.mk' || fail "$show does not inherit show.mk"
 done
@@ -26,6 +26,10 @@ inherits crown | grep -q 'device/kiosk-satellite/crown/device.mk' || fail "crown
 inherits cronos | grep -q 'device/kiosk-satellite/cronos/device.mk' || fail "cronos does not inherit its device layer"
 ! inherits crown | grep -q 'kiosk-satellite/cronos' || fail "crown inherits the Echo Show 5's layer"
 ! inherits cronos | grep -q 'kiosk-satellite/crown' || fail "cronos inherits the Echo Show 8's layer"
+inherits checkers | grep -q 'device/kiosk-satellite/checkers/device.mk' || fail "checkers does not inherit its device layer"
+! inherits checkers | grep -q -E 'kiosk-satellite/(crown|cronos)' || fail "checkers inherits another Echo Show's layer"
+! inherits crown | grep -q 'kiosk-satellite/checkers' || fail "crown inherits the checkers layer"
+! inherits cronos | grep -q 'kiosk-satellite/checkers' || fail "cronos inherits the checkers layer"
 
 # One Show's settings in neither shared layer.
 for part in ro.echo.hostname= asr_capture ro.vendor.amznaec.engine= ro.vendor.amznaec.enable= \

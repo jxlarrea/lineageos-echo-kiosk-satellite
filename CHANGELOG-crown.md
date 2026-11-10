@@ -1,6 +1,11 @@
 # Echo Show 8 (1st gen) changelog
 
-All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md) and [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) have their own.
+All notable changes to the Echo Show 8 (1st gen) (`crown`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (1st gen)](CHANGELOG-checkers.md) and [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) have their own.
+
+## Unreleased
+
+### Changed
+- **The microphone dump and read-gap log work with processing off.** `persist.vendor.amznaec.dump` and `persist.vendor.amznaec.log` only worked while the image's echo canceller processed the microphones. With it off, as on a fresh install, the dump now gets the microphones as captured and the log reports the longest gap between the audio HAL's reads every 5 seconds. Neither changes what Kiosk Satellite hears.
 
 ## 2026.11.4 - 2026-11-09
 

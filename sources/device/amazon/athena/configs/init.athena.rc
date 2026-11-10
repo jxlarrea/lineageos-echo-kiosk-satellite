@@ -1,3 +1,11 @@
+# The image's Wi-Fi and Bluetooth modules. Fire OS's vendor init scripts load
+# their own from /vendor/lib/modules at the same point, which fails: those
+# are for Fire OS's 32-bit kernel.
+on post-fs-data
+    insmod /system/lib/modules/wlan_mt76x3_sdio_prealloc.ko
+    insmod /system/lib/modules/wlan_mt76x3_sdio.ko
+    insmod /system/lib/modules/btmtksdio.ko
+
 # The image's own wpa_supplicant in place of the one on Fire OS's vendor
 # partition, with the arguments its init.connectivity.rc gives it.
 service wpa_supplicant /system/bin/hw/wpa_supplicant \
@@ -37,3 +45,11 @@ on property:init.svc.wlan_stats=running
 
 on property:init.svc.touchlogger=running
     stop touchlogger
+
+# The recovery partition holds the TWRP the unlock put there. Nothing in
+# the image installs a recovery, and this keeps a service that would from
+# ever running.
+service vendor_flash_recovery /system/bin/true
+    class main
+    oneshot
+    disabled

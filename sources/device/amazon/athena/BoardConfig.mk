@@ -26,6 +26,11 @@ TARGET_KERNEL_CLANG_COMPILE := false
 TARGET_KERNEL_CROSS_COMPILE_PREFIX := $(shell pwd)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
 
+# The Wi-Fi and Bluetooth drivers are kernel modules. They go in the system
+# image, since the vendor partition stays Fire OS's, whose own modules are
+# for its 32-bit kernel.
+NEED_KERNEL_MODULE_SYSTEM := true
+
 # The bootloader loops at the logo on a boot image without a ramdisk, though
 # it tells the kernel to skip it (skip_initramfs) and mount system as the
 # root. So the boot image carries an empty one.
@@ -56,7 +61,11 @@ BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
 TARGET_COPY_OUT_VENDOR := vendor
 TARGET_USERIMAGES_USE_EXT4 := true
-TARGET_NO_RECOVERY := true
+# The build makes a recovery image because the update zip needs one to be
+# defined. No release installs it: the Show keeps the TWRP its unlock put in
+# the recovery partition, and init.athena.rc keeps Android from writing one.
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 41943040
+TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/configs/fstab.mt8183
 TARGET_RELEASETOOLS_EXTENSIONS := vendor/kiosk-satellite/releasetools
 

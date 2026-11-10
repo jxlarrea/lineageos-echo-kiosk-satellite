@@ -10,7 +10,7 @@ All notable changes to the Echo Show 5 (1st gen) (`checkers`) image are document
 - **Privacy and the screen on separate presses.** The privacy chip works as the Echo Show 8's: it turns privacy on at the release of a hold of about a second and a half, and any press turns it off. A short press turns the screen on and off. Android does nothing on a hold. While privacy is on, Android leaves the press to the chip.
 - **Double tap to wake.** The touch driver ignored every tap while the screen was off. A double tap now turns the screen back on, and a single tap leaves it off.
 - **70% master volume on a fresh install.** A fresh install starts at master volume 10 of 15, which Kiosk Satellite shows as 70%, the Echo Show 5 (2nd gen)'s level, since both have the same speaker.
-- **The Echo Show 5 (1st gen) guide.** [docs/echo-show-5-1st-gen.md](docs/echo-show-5-1st-gen.md) covers installing, setting up and updating the Show, its button, volume, Bluetooth and device commands. Unlocking and Getting into TWRP have sections for it, including the bootloader check before `fastbrick`.
+- **The Echo Show 5 (1st gen) guide.** [docs/echo-show-5-1st-gen.md](docs/echo-show-5-1st-gen.md) covers installing, setting up and updating the Show, its button, volume, Bluetooth and device commands. Unlocking and Getting into TWRP have sections for it: unlocking with `amonet-checkers-v2.0.2.zip`, including the bootloader check before `fastbrick`.
 - **Release checks for the Echo Show 5 (1st gen).** `make check` checks its hostname, button, audio settings, volume and boot animation. `make test` fails if it inherits another Show's device layer or another Show inherits its own.
 
 ### Fixed

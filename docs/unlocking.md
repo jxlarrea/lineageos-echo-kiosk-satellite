@@ -66,7 +66,7 @@ The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5 (1st gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/). Its `fastbrick` script unlocks the Show over USB and writes TWRP 3.7.0_9-0, which is what the image needs.
 
 > [!WARNING]
-> Use only the package for the Echo Show 5 (1st gen), `amonet-checkers-v2.0.1.zip`. The packages for the other Shows have the same file names inside, and the wrong one leaves the Show stuck in a boot loop.
+> Use only the package for the Echo Show 5 (1st gen), `amonet-checkers-v2.0.2.zip`. The packages for the other Shows have the same file names inside, and the wrong one leaves the Show stuck in a boot loop.
 
 ### What you need
 
@@ -90,7 +90,7 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5
 
 ### Run fastbrick
 
-1. Download `amonet-checkers-v2.0.1.zip` from the XDA thread and extract it.
+1. Download `amonet-checkers-v2.0.2.zip` from the XDA thread and extract it.
 2. Put the Show in fastboot mode again, with its power plugged in and USB connected.
 3. From the extracted folder, run `./fastbrick.sh` on Linux. On Windows, run `fastbrick.bat`. Type `YES` when it asks.
 
@@ -100,13 +100,13 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5
 
 A Show unlocked earlier with amonet 1 does not have the TWRP the image needs. `fastbrick` does not run on a Show that is already unlocked. Install the amonet package from TWRP instead:
 
-1. Download `amonet-checkers-v2.0.1.zip` from the XDA thread. Do not extract it.
+1. Download `amonet-checkers-v2.0.2.zip` from the XDA thread. Do not extract it.
 2. Connect the Show over USB and start TWRP. [Getting into TWRP](twrp.md#echo-show-5-1st-gen) covers it.
 3. Copy the zip to the Show and install it:
 
    ```sh
-   adb push amonet-checkers-v2.0.1.zip /sdcard/
-   adb shell twrp install /sdcard/amonet-checkers-v2.0.1.zip
+   adb push amonet-checkers-v2.0.2.zip /sdcard/
+   adb shell twrp install /sdcard/amonet-checkers-v2.0.2.zip
    ```
 
 The system that was on the Show does not boot on amonet 2, so install the image right after.

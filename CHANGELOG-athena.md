@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Show 8 (2nd gen) (`athena`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (1st gen)](CHANGELOG-checkers.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.11.1 - 2026-11-10
 
 ### Added
 - **A first LineageOS 18.1 port for the Echo Show 8 (2nd gen).** The repository has its own device tree in `sources/device/amazon/athena`. The image is a system for the vendor partition Fire OS 7 left on the Show, with a 32-bit userspace on an arm64 kernel built from Amazon's Fire OS 7.5.7.1 source release. It boots to the home screen with the display, touch, sound, Wi-Fi and adb. SELinux is permissive, as on the other Echos. The kernel is in [android_kernel_amazon_mt8183](https://github.com/jxlarrea/android_kernel_amazon_mt8183), which the manifest pulls in.

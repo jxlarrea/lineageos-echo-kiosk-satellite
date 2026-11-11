@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Show 8 (2nd gen) (`athena`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (1st gen)](CHANGELOG-checkers.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
-## Unreleased
+## 2026.11.2 - 2026-11-11
 
 ### Fixed
 - **The image did not boot on a Show that ran R0rt1z2's LineageOS image before** ([#47](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/47)). After the install the Show stopped at the fastboot screen. R0rt1z2's image puts its own files on the vendor partition, where the hardware drivers are, and release 2026.11.1 did not write that partition: it expected Fire OS's files there. The image now ships the vendor partition of Fire OS 7575.1 (PS75751/7809) as Amazon built it, and every install and update writes it. That also puts every Show on the vendor files the image is tested with, whatever Fire OS version it was unlocked from. The build takes the vendor image from a partition dump through `scripts/athena-vendor.sh`, checked against the checksum in `blobs/athena`, and `make check` fails if a release carries another one.

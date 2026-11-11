@@ -31,6 +31,27 @@ inherits checkers | grep -q 'device/kiosk-satellite/checkers/device.mk' || fail 
 ! inherits crown | grep -q 'kiosk-satellite/checkers' || fail "crown inherits the checkers layer"
 ! inherits cronos | grep -q 'kiosk-satellite/checkers' || fail "cronos inherits the checkers layer"
 
+# The Echo Show 8 (2nd gen) has a device tree of its own in sources/, which
+# inherits the layers itself instead of through a patch.
+ATHENA_MK=sources/device/amazon/athena/lineage_athena.mk
+grep -q 'vendor/kiosk-satellite/config/common.mk' "$ATHENA_MK" || fail "athena does not inherit common.mk"
+grep -q 'vendor/kiosk-satellite/config/show.mk' "$ATHENA_MK" || fail "athena does not inherit show.mk"
+grep -q 'device/kiosk-satellite/athena/device.mk' "$ATHENA_MK" || fail "athena does not inherit its device layer"
+! grep -q -E 'kiosk-satellite/(biscuit|crown|cronos|checkers)' "$ATHENA_MK" || fail "athena inherits another Echo's layer"
+for other in biscuit crown cronos checkers; do
+  ! inherits "$other" | grep -q 'kiosk-satellite/athena' || fail "$other inherits the athena layer"
+done
+# Only athena's image has no vendor partition, so only it moves the Wi-Fi
+# overlay to product and leaves out the echo canceller for Amazon's MT8163
+# audio HAL. Both switches are set before the layers are inherited.
+for switch in 'ECHO_WIFI_OVERLAY_IN_PRODUCT := true' 'ECHO_SHOW_AMZNAEC := false'; do
+  grep -Fq "$switch" "$ATHENA_MK" || fail "athena does not set $switch"
+  [[ "$(grep -n -F "$switch" "$ATHENA_MK" | cut -d: -f1)" -lt \
+     "$(grep -n 'vendor/kiosk-satellite/config/common.mk' "$ATHENA_MK" | cut -d: -f1)" ]] ||
+    fail "athena sets $switch after it inherits the layers"
+  ! grep -rFq "$switch" patches device common || fail "$switch is set outside athena's device tree"
+done
+
 # One Show's settings in neither shared layer.
 for part in ro.echo.hostname= asr_capture ro.vendor.amznaec.engine= ro.vendor.amznaec.enable= \
     media_vol_default noise_suppression privacy_hold; do

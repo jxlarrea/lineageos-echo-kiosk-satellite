@@ -14,8 +14,8 @@ DEVICE="${DEVICE:-}"
 OUT="$TREE/out/target/product/$DEVICE"
 
 case "$DEVICE" in
-  biscuit|crown|cronos|checkers) ;;
-  *) echo "ERROR: set DEVICE to biscuit, crown, cronos or checkers" >&2; exit 2 ;;
+  biscuit|crown|cronos|checkers|athena) ;;
+  *) echo "ERROR: set DEVICE to biscuit, crown, cronos, checkers or athena" >&2; exit 2 ;;
 esac
 
 TARGET_FILES="${1:-$(ls "$OUT"/obj/PACKAGING/target_files_intermediates/lineage_"$DEVICE"-target_files-*.zip 2>/dev/null | head -n 1)}"
@@ -65,7 +65,17 @@ default_prop() {
 # Every Echo: the Wi-Fi overlay and pryond, the service that runs Amazon's
 # wake word engine from files the user installs (common.mk). The image ships
 # none of Amazon's libraries or models, under any path.
-must_have "vendor/overlay/EchoWifiOverlay\.apk" "bin/pryond$" "etc/init/pryond\.rc$"
+must_have "bin/pryond$" "etc/init/pryond\.rc$"
+# The overlay is on the vendor partition, or on the product partition of the
+# Echo Show 8 (2nd gen), whose image ships no vendor partition. Never both:
+# they are the same package.
+if [[ "$DEVICE" == athena ]]; then
+  must_have "product/overlay/EchoWifiOverlayProduct\.apk"
+  must_not_have "vendor/overlay/EchoWifiOverlay\.apk"
+else
+  must_have "vendor/overlay/EchoWifiOverlay\.apk"
+  must_not_have "product/overlay/EchoWifiOverlayProduct\.apk"
+fi
 must_not_have "bin/biscuit-pryond$" "etc/init/biscuit-pryond\.rc$" "lib/pryon/" "etc/pryon/" \
   "(.*/)?lib(pryon|pryonConfig|watermars|AFEMetadataDecoder|NeMoRt|nemort-cnpy|acsl|blu_native_toolkit|grxml_parser)\.so$" \
   "(.*/)?(pryon\.manifest|pryon\.config|kw\.cfg\.json|op\.cfg\.json|words\.shrunk\.txt)$"
@@ -155,7 +165,43 @@ boot_animation() {
   expect default_prop ro.config.wallpaper /system/media/wallpaper.png
 }
 
+# What only the Echo Show 8 (2nd gen) has: its image runs on Fire OS's vendor
+# partition, so the volume curves, wpa_supplicant and the Wi-Fi and Bluetooth
+# modules are in system. The other Shows have the image's echo canceller in
+# Amazon's MT8163 audio HAL instead, which it leaves out.
+ATHENA_PARTS=(
+  "etc/audio_policy_engine_configuration\.xml$"
+  "etc/audio_policy_engine_stream_volumes\.xml$"
+  "bin/hw/wpa_supplicant$"
+  "lib/modules/wlan_mt76x3_sdio\.ko$"
+  "lib/modules/btmtksdio\.ko$"
+  "etc/init/init\.athena\.rc$"
+)
+AMZNAEC_PARTS=(
+  "(.*/)?libamznaec_shim\.so$"
+  "(.*/)?init\.kiosk-satellite\.audio\.rc$"
+)
 case "$DEVICE" in
+  athena) must_have "${ATHENA_PARTS[@]}"; must_not_have "${AMZNAEC_PARTS[@]}" ;;
+  biscuit) must_not_have "${ATHENA_PARTS[@]}" ;;
+  *) must_have "${AMZNAEC_PARTS[@]}"; must_not_have "${ATHENA_PARTS[@]}" ;;
+esac
+
+case "$DEVICE" in
+  athena)
+    expect default_prop ro.echo.hostname echo-show-8-g2-ks
+    expect default_prop ro.echo.privacy_hold ""
+    expect default_prop persist.sys.audio.noise_suppression ""
+    expect prop ro.vendor.audio.asr_capture ""
+    expect prop ro.vendor.amznaec.enable ""
+    expect prop ro.vendor.amznaec.engine ""
+    expect prop ro.config.media_vol_default 18
+    # The image ships no vendor partition: /system/vendor is only the link.
+    grep -q '^SYSTEM/vendor/' <<<"$FILES" && fail "has files under vendor, which the image does not ship"
+    grep -q '^VENDOR/' <<<"$FILES" && fail "has a vendor image, which the image does not ship"
+    unzip -Z1 "$OTA" | grep -q '^vendor\.' && fail "the OTA zip writes the vendor partition"
+    boot_animation 800
+    ;;
   crown)
     expect default_prop ro.echo.hostname echo-show-8-ks
     expect default_prop ro.echo.privacy_hold 1

@@ -60,3 +60,10 @@ DEVICE_PACKAGE_OVERLAYS += \
 PRODUCT_PACKAGES += \
     InProcessNetworkStack \
     com.android.tethering.inprocess
+
+# Apps compiled in full at build and install time, as on the Echo Show 8
+# (1st gen). The default waits for usage profiles a kiosk never builds up.
+PRODUCT_DEX_PREOPT_DEFAULT_COMPILER_FILTER := speed
+PRODUCT_PRODUCT_PROPERTIES += \
+    pm.dexopt.bg-dexopt=speed \
+    pm.dexopt.install=speed

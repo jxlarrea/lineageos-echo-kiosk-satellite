@@ -31,6 +31,10 @@ BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
 # for its 32-bit kernel.
 NEED_KERNEL_MODULE_SYSTEM := true
 
+# The layer's board settings, which name the kernel after the image and its
+# release.
+include vendor/kiosk-satellite/config/BoardConfig.mk
+
 # The bootloader loops at the logo on a boot image without a ramdisk, though
 # it tells the kernel to skip it (skip_initramfs) and mount system as the
 # root. So the boot image carries an empty one.

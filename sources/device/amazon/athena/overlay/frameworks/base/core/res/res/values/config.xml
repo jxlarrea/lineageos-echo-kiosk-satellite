@@ -16,6 +16,10 @@
          screen on. -->
     <bool name="config_unplugTurnsOnScreen">true</bool>
 
+    <!-- Tap to wake in Settings > Display, which EchoService copies to the
+         touch driver's double tap switch. -->
+    <bool name="config_supportDoubleTapWake">true</bool>
+
     <!-- Automatic brightness from the light sensor behind the screen, with
          the Echo Show 8 (1st gen)'s levels. -->
     <bool name="config_automatic_brightness_available">true</bool>

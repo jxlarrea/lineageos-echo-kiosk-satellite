@@ -2,7 +2,7 @@
 
 A LineageOS 18.1 (Android 11) image for the 1st generation Echo Show 8 (`crown`), tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) on its screen for Home Assistant. It is [R0rt1z2](https://github.com/R0rt1z2)'s LineageOS 18.1 port for the Echo Show 8 in [amazon-oss](https://github.com/amazon-oss), which brings the screen, camera and Bluetooth, with the Kiosk Satellite Edition layer on top.
 
-To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#moving-from-r0rt1z2s-image).
+This guide is for the Echo Show 8 from 2019. The [Echo Show 8 (2nd gen)](echo-show-8-2nd-gen.md) from 2021 has its own image. To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#moving-from-r0rt1z2s-image).
 
 ## What the image does
 

@@ -134,3 +134,31 @@ It must print `3.7.0_9-0`. A Show that prints `3.2.3-0` is still on amonet 1. [U
 ### One slot
 
 The Show has one copy of each partition, with no slots. An install replaces the system that was there, so if it fails, only TWRP starts until an install succeeds. TWRP's `wipe data` keeps the internal storage in `/sdcard`.
+
+## Echo Show 8 (2nd gen)
+
+The image installs from TWRP 3.7.0_9-0, the recovery that comes with the saiyaku unlock.
+
+### Starting TWRP
+
+If the Show is running, connect it over USB and run:
+
+```sh
+adb reboot recovery
+```
+
+Within about half a minute, `adb devices -l` lists the Show as `recovery`. TWRP has a touch screen on the Show, but the guide runs everything over `adb shell`. The `twrp` command does what its buttons do, such as `twrp install` and `twrp wipe`. TWRP has no adb over Wi-Fi, so connect the Show over USB even if you use adb over Wi-Fi in Android.
+
+If the Show does not boot, unplug its power, hold **Volume Up** and plug the power back in. Keep holding until TWRP shows. R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-2nd-gen-2021-athena.4804958/) covers unbricking it over USB.
+
+### Checking the version
+
+```sh
+adb shell getprop ro.twrp.version
+```
+
+It must print `3.7.0_9-0`.
+
+### One slot
+
+The Show has one copy of each partition, with no slots. An install replaces the system that was there, so if it fails, only TWRP starts until an install succeeds. TWRP's `wipe data` keeps the internal storage in `/sdcard`. The image never writes the recovery partition, so TWRP stays as the unlock installed it.

@@ -19,7 +19,7 @@
 <a href="https://buymeacoffee.com/jxlarrea"><img src="https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=black" alt="Buy Me A Coffee"></a>
 </p>
 
-LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) for Home Assistant. The Echo Shows run the full Kiosk Satellite experience on their screens. The Echo Dot has no screen, so it runs Kiosk Satellite headless as a voice satellite, intercom and speaker. Every image is built from one shared base, [R0rt1z2](https://github.com/R0rt1z2)'s LineageOS 18.1 port for the MT8163 Echos in [amazon-oss](https://github.com/amazon-oss), with a Kiosk Satellite Edition layer on top.
+LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) for Home Assistant. The Echo Shows run the full Kiosk Satellite experience on their screens. The Echo Dot has no screen, so it runs Kiosk Satellite headless as a voice satellite, intercom and speaker. The images for the MT8163 Echos are built from one shared base, [R0rt1z2](https://github.com/R0rt1z2)'s LineageOS 18.1 port in [amazon-oss](https://github.com/amazon-oss). The Echo Show 8 (2nd gen) has a different chip and runs this repository's own port. Every image has the Kiosk Satellite Edition layer on top.
 
 | Device | Codename | Status | Guide |
 | --- | --- | --- | --- |
@@ -27,8 +27,8 @@ LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk 
 | Echo Dot (3rd gen) | `donut` | Work in progress | Not yet |
 | Echo Show 5 (1st gen) | `checkers` | Ready | [Echo Show 5 (1st gen)](docs/echo-show-5-1st-gen.md) |
 | Echo Show 5 (2nd gen) | `cronos` | Ready | [Echo Show 5 (2nd gen)](docs/echo-show-5.md) |
-| Echo Show 8 (1st gen) | `crown` | Ready | [Echo Show 8](docs/echo-show-8.md) |
-| Echo Show 8 (2nd gen) | `athena` | Work in progress | Not yet |
+| Echo Show 8 (1st gen) | `crown` | Ready | [Echo Show 8 (1st gen)](docs/echo-show-8.md) |
+| Echo Show 8 (2nd gen) | `athena` | Work in progress | [Echo Show 8 (2nd gen)](docs/echo-show-8-2nd-gen.md) |
 
 Each image leaves out what Kiosk Satellite never uses on that device, installs Kiosk Satellite on its first boot with every permission it needs and installs new releases of the image from this repository. The device's guide lists everything its image does.
 
@@ -57,7 +57,7 @@ Thank you to everyone who supports my work through [Buy Me a Coffee](https://buy
 
 ## Credits
 
-- [R0rt1z2](https://github.com/R0rt1z2), for the LineageOS 18.1 port for the MT8163 Echos in [amazon-oss](https://github.com/amazon-oss) that every image builds on, the Echo Show 5 (2nd gen) and the Echo Show 8 (1st gen) included. Also for amonet on the Echo Dot and the Echo Shows with its TWRP.
+- [R0rt1z2](https://github.com/R0rt1z2), for the LineageOS 18.1 port for the MT8163 Echos in [amazon-oss](https://github.com/amazon-oss) that the MT8163 images build on, the Echo Show 5 (2nd gen) and the Echo Show 8 (1st gen) included. Also for amonet on the Echo Dot and the Echo Shows with its TWRP and for the saiyaku unlock and TWRP on the Echo Show 8 (2nd gen).
 - [hkfuertes](https://github.com/hkfuertes), for the [CM14.1 port](https://github.com/hkfuertes/amazon_device_biscuit) of the Echo Dot. BiscuitService, the light ring daemon, the audio route and the light sensor HAL came from it.
 - [meiser79](https://github.com/meiser79), who brought the Echo Dot up on LineageOS 18.1 first. [Their port](https://github.com/meiser79/android_device_amazon_biscuit) guided the Echo Dot image.
 - xyz and k4y0z for amonet and its first Echo Dot port. k4y0z also made `fastbrick` with R0rt1z2.

@@ -1,6 +1,6 @@
 # Echo Show 8 (2nd gen)
 
-A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Show 8 (`athena`), tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) on its screen for Home Assistant. It is this repository's own port: a LineageOS system on the vendor partition Fire OS left on the Show, with a kernel built from Amazon's source release in [android_kernel_amazon_mt8183](https://github.com/jxlarrea/android_kernel_amazon_mt8183) and the Kiosk Satellite Edition layer on top.
+A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Show 8 (`athena`), tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) on its screen for Home Assistant. It is [jxlarrea](https://github.com/jxlarrea)'s own port: LineageOS 18.1 with a kernel built from Amazon's source release in [android_kernel_amazon_mt8183](https://github.com/jxlarrea/android_kernel_amazon_mt8183), the hardware drivers that are already on the Show and the Kiosk Satellite Edition layer on top.
 
 This guide is for the Echo Show 8 from 2021. The [Echo Show 8 (1st gen)](echo-show-8.md) from 2019 has its own image.
 
@@ -20,7 +20,7 @@ This guide is for the Echo Show 8 from 2021. The [Echo Show 8 (1st gen)](echo-sh
 ## Before you start
 
 - **An unlocked Show with TWRP.** The image needs R0rt1z2's saiyaku unlock and its TWRP 3.7.0_9-0. Follow [Unlocking the Echo Show 8 (2nd gen)](unlocking.md#echo-show-8-2nd-gen), then [Getting into TWRP](twrp.md#echo-show-8-2nd-gen).
-- **Fire OS's vendor partition as the unlock left it.** The image only writes the system and boot partitions and uses the drivers on Fire OS's vendor partition. It is tested on a Show that was on Fire OS 7575.1 (PS75751/7809) when it was unlocked. If another system wrote the vendor partition since, the image may not boot.
+- **The vendor partition as the unlock left it.** The image only writes the system and boot partitions. The Show's hardware drivers stay where they already are, on its vendor partition. It is tested on a Show that was on Fire OS 7575.1 (PS75751/7809) when it was unlocked. If another system wrote the vendor partition since, the image may not boot.
 - **adb** on your computer and a USB cable that carries data.
 - **Your Wi-Fi name and password.**
 
@@ -353,7 +353,7 @@ Bloat removed:
 
 ## What the image leaves alone
 
-- **The vendor partition.** Fire OS's drivers and firmware stay as the unlock left them. The image stops the Amazon services there that LineageOS has no use for, without changing a file.
+- **The vendor partition.** The Show's hardware drivers and firmware stay as the unlock left them. The image stops the Amazon services there that LineageOS has no use for, without changing a file.
 - **The recovery partition.** An install or an update never writes it, so TWRP stays as the unlock installed it.
 - **The bootloader.** Nothing in the image writes it.
 

@@ -12,6 +12,7 @@
 <a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=checkers"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22checkers-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Checkers&style=for-the-badge&cacheSeconds=3600&color=9FA0FF" alt="Echo Dot (1st gen) release"></a>    
 <a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=cronos"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22cronos-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Cronos&style=for-the-badge&cacheSeconds=3600&color=18bcf2" alt="Echo Show 5 (2nd gen) release"></a><br/>
 <a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=crown"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22crown-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Crown&style=for-the-badge&cacheSeconds=3600&color=e8604c" alt="Echo Show 8 (1st gen) release"></a>
+<a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=athena"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22athena-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Athena&style=for-the-badge&cacheSeconds=3600&color=c77dff" alt="Echo Show 8 (2nd gen) release"></a>
 <a href="https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/releases?q=biscuit"><img src="https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fapi.github.com%2Frepos%2Fjxlarrea%2Flineageos-echo-kiosk-satellite%2Freleases%3Fper_page%3D100&search=%22tag_name%22%3A%5Cs%2A%22biscuit-%28%5B0-9.%5D%2B%29%22&replace=%241&label=Biscuit&style=for-the-badge&cacheSeconds=3600&color=5da3a6" alt="Echo Dot (2nd gen) release"></a>
 </p>
 
@@ -28,7 +29,7 @@ LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk 
 | Echo Show 5 (1st gen) | `checkers` | Ready | [Echo Show 5 (1st gen)](docs/echo-show-5-1st-gen.md) |
 | Echo Show 5 (2nd gen) | `cronos` | Ready | [Echo Show 5 (2nd gen)](docs/echo-show-5.md) |
 | Echo Show 8 (1st gen) | `crown` | Ready | [Echo Show 8 (1st gen)](docs/echo-show-8.md) |
-| Echo Show 8 (2nd gen) | `athena` | Work in progress | [Echo Show 8 (2nd gen)](docs/echo-show-8-2nd-gen.md) |
+| Echo Show 8 (2nd gen) | `athena` | Ready | [Echo Show 8 (2nd gen)](docs/echo-show-8-2nd-gen.md) |
 
 Each image leaves out what Kiosk Satellite never uses on that device, installs Kiosk Satellite on its first boot with every permission it needs and installs new releases of the image from this repository. The device's guide lists everything its image does.
 

@@ -22,6 +22,8 @@
 
 LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) for Home Assistant. The Echo Shows run the full Kiosk Satellite experience on their screens. The Echo Dot has no screen, so it runs Kiosk Satellite headless as a voice satellite, intercom and speaker. The images for the MT8163 Echos are built from one shared base, [R0rt1z2](https://github.com/R0rt1z2)'s LineageOS 18.1 port in [amazon-oss](https://github.com/amazon-oss). The Echo Show 8 (2nd gen) has a different chip and runs this repository's own port. Every image has the Kiosk Satellite Edition layer on top.
 
+<div align="center">
+
 | Device | Codename | Status | Guide |
 | --- | --- | --- | --- |
 | Echo Dot (2nd gen) | `biscuit` | Ready | [Echo Dot](docs/echo-dot.md) |
@@ -30,6 +32,8 @@ LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk 
 | Echo Show 5 (2nd gen) | `cronos` | Ready | [Echo Show 5 (2nd gen)](docs/echo-show-5.md) |
 | Echo Show 8 (1st gen) | `crown` | Ready | [Echo Show 8 (1st gen)](docs/echo-show-8.md) |
 | Echo Show 8 (2nd gen) | `athena` | Ready | [Echo Show 8 (2nd gen)](docs/echo-show-8-2nd-gen.md) |
+
+</div>
 
 Each image leaves out what Kiosk Satellite never uses on that device, installs Kiosk Satellite on its first boot with every permission it needs and installs new releases of the image from this repository. The device's guide lists everything its image does.
 

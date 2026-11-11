@@ -150,10 +150,10 @@ If an update fails with `TWRP did not run the update`, check the Dot's power fir
 
 ### Volume
 
-Keep the Dot's master volume at 75% and Kiosk Satellite's media player and assistant volumes at 100%. A fresh install sets these levels: master volume 11 of 15, which Kiosk Satellite shows as 75%, with Kiosk Satellite's own volumes at their defaults. Turn music down in Kiosk Satellite or Music Assistant rather than with the Dot's master volume.
+Keep the Dot's master volume at 100% and Kiosk Satellite's assistant and intercom volumes at 100%, with its media player volume at 85%. These levels are for Kiosk Satellite's equalizer, which is on by default on the Dot. Kiosk Satellite sets these levels on a fresh install. Turn music down in Kiosk Satellite or Music Assistant rather than with the Dot's master volume.
 
 ```sh
-adb shell biscuit_service volume set 11
+adb shell biscuit_service volume set 15
 ```
 
 ### Voice

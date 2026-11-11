@@ -200,6 +200,12 @@ case "$DEVICE" in
     grep -q '^SYSTEM/vendor/' <<<"$FILES" && fail "has files under vendor, which the image does not ship"
     grep -q '^VENDOR/' <<<"$FILES" && fail "has a vendor image, which the image does not ship"
     unzip -Z1 "$OTA" | grep -q '^vendor\.' && fail "the OTA zip writes the vendor partition"
+    # The recovery partition holds the TWRP the unlock installed. The zip must
+    # not write it and the image must carry nothing that would at boot.
+    unzip -Z1 "$OTA" | grep -qi 'recovery' && fail "the OTA zip has a recovery file"
+    unzip -p "$OTA" META-INF/com/google/android/updater-script | grep -qi 'recovery' &&
+      fail "the OTA zip's updater-script touches recovery"
+    must_not_have "(.*/)?install-recovery\.sh$" "(.*/)?recovery-from-boot\.p$" "(.*/)?recovery\.img$"
     boot_animation 800
     ;;
   crown)

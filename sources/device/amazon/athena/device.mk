@@ -4,8 +4,9 @@
 #
 
 # The Echo Show 8 (2nd gen) shipped with Android 9 and a Treble vendor
-# partition. The image is a system for that partition as Fire OS left it: it
-# builds no vendor image and brings the VNDK 28 libraries Fire OS's HALs
+# partition. The image is a system for Fire OS 7575.1's vendor image, which
+# it ships as Amazon built it (BOARD_PREBUILT_VENDORIMAGE): it builds no
+# vendor image of its own and brings the VNDK 28 libraries Fire OS's HALs
 # link against.
 PRODUCT_SHIPPING_API_LEVEL := 28
 PRODUCT_EXTRA_VNDK_VERSIONS := 28

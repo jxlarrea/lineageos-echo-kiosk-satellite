@@ -43,6 +43,19 @@ The build container gets half of the host's CPUs and half of its memory without 
 
 `scripts/extract-biscuit-blobs.sh` downloads the Fire OS 6.5.7.4 OTA, unpacks its system image and copies every file `blobs/biscuit/*.txt` lists, after checking its size and checksum. It also applies the fixups the Fire OS audio libraries need on Android 11. Staging runs it.
 
+## The Echo Show 8 (2nd gen)'s vendor image
+
+The Echo Show 8 (2nd gen) image ships the vendor partition of Fire OS 7575.1 (PS75751/7809) as Amazon built it, and its update zip writes it. The repository does not hold that image. `scripts/athena-vendor.sh` takes it from a dump of the vendor partition, checks it against the checksum in `blobs/athena/vendor.img.sha256` and puts it in the tree as `vendor/amazon/athena/vendor.img`. Without it, `make athena` stops with an error.
+
+Dump the partition from TWRP, on a Show that was on Fire OS 7575.1 when it was unlocked and whose vendor partition nothing wrote since. Then run the script:
+
+```sh
+adb exec-out 'dd if=/dev/block/platform/bootdevice/by-name/vendor bs=4194304 2>/dev/null' > vendor-dump.img
+scripts/athena-vendor.sh vendor-dump.img
+```
+
+The script only keeps the file system Amazon's build put in the partition, so every dump of that Fire OS version gives the same image. `make check DEVICE=athena` fails if the build or the zip has another one.
+
 ## WebView
 
 The Echo Shows ship LineageOS's prebuilt Chromium WebView (`external/chromium-webview/prebuilt/arm`), which LineageOS keeps current on its `main` branch for every release. Before each release, set that project's revision in `manifest/lock.xml` to the newest commit on `main` and sync, so the Shows ship the newest WebView. The Echo Dot has no screen and ships no WebView.

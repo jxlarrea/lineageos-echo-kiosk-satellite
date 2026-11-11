@@ -10,6 +10,8 @@ before they install it: the system image is block based, so its build.prop
 cannot be read from the zip.
 """
 
+import os
+
 import common
 
 BLOCK_DEVICE_DIR = "/dev/block/platform/soc/11230000.mmc/"
@@ -33,7 +35,30 @@ def IncrementalOTA_Assertions(info):
     _setup_block_device_paths(info)
 
 
+# A device whose vendor image is a prebuilt one, as the Echo Show 8 (2nd
+# gen)'s is (BOARD_PREBUILT_VENDORIMAGE). Android 11's releasetools only put
+# a vendor image they built into the package, so this adds the prebuilt one
+# and writes it. It goes last: if the write fails, the system is already
+# written, so the system update script keeps TWRP on screen.
+_VENDOR_IMAGE = "vendor.img"
+_VENDOR_DEVICE = "/dev/block/platform/bootdevice/by-name/vendor"
+
+
+def _write_prebuilt_vendor(info):
+    names = info.input_zip.namelist()
+    if "IMAGES/vendor.img" not in names or "VENDOR/" in names:
+        return
+    common.ZipWrite(info.output_zip, os.path.join(info.input_tmp, "IMAGES", "vendor.img"),
+                    _VENDOR_IMAGE)
+    info.script.Print("Writing the vendor image...")
+    info.script.AppendExtra('ifelse(is_mounted("/vendor"), unmount("/vendor"));')
+    info.script.AppendExtra(
+        'package_extract_file("{}", "{}") || abort("E2001: Failed to write the vendor image.");'
+        .format(_VENDOR_IMAGE, _VENDOR_DEVICE))
+
+
 def FullOTA_InstallEnd(info):
+    _write_prebuilt_vendor(info)
     build_prop = info.info_dict["build.prop"]
     release = build_prop.GetProp("ro.echo.release")
     if not release:

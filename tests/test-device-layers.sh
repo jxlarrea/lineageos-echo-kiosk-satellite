@@ -41,7 +41,7 @@ grep -q 'device/kiosk-satellite/athena/device.mk' "$ATHENA_MK" || fail "athena d
 for other in biscuit crown cronos checkers; do
   ! inherits "$other" | grep -q 'kiosk-satellite/athena' || fail "$other inherits the athena layer"
 done
-# Only athena's image has no vendor partition, so only it moves the Wi-Fi
+# Only athena's vendor image is a prebuilt one, so only it moves the Wi-Fi
 # overlay to product and leaves out the echo canceller for Amazon's MT8163
 # audio HAL. Both switches are set before the layers are inherited.
 for switch in 'ECHO_WIFI_OVERLAY_IN_PRODUCT := true' 'ECHO_SHOW_AMZNAEC := false'; do

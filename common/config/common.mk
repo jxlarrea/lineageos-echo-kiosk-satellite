@@ -5,9 +5,9 @@
 #
 
 # WPA2/WPA3 transition mode networks join with WPA2 (rro/Wifi).
-# The overlay goes on the vendor partition. An Echo whose image ships none
-# sets ECHO_WIFI_OVERLAY_IN_PRODUCT to true before it inherits this file and
-# gets it on the product partition.
+# The overlay goes on the vendor partition. An Echo whose vendor image the
+# build cannot add to sets ECHO_WIFI_OVERLAY_IN_PRODUCT to true before it
+# inherits this file and gets it on the product partition.
 ifeq ($(ECHO_WIFI_OVERLAY_IN_PRODUCT),true)
 PRODUCT_PACKAGES += \
     EchoWifiOverlayProduct

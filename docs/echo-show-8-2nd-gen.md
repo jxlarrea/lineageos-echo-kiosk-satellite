@@ -2,7 +2,7 @@
 
 A LineageOS 18.1 (Android 11) image for the 2nd generation Echo Show 8 (`athena`), tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) on its screen for Home Assistant. It is [jxlarrea](https://github.com/jxlarrea)'s own port: LineageOS 18.1 with a kernel built from Amazon's source release in [android_kernel_amazon_mt8183](https://github.com/jxlarrea/android_kernel_amazon_mt8183), the hardware drivers that are already on the Show and the Kiosk Satellite Edition layer on top.
 
-This guide is for the Echo Show 8 from 2021. The [Echo Show 8 (1st gen)](echo-show-8.md) from 2019 has its own image.
+This guide is for the Echo Show 8 from 2021. The [Echo Show 8 (1st gen)](echo-show-8.md) from 2019 has its own image. To move a Show from R0rt1z2's own image, see [Moving from R0rt1z2's image](#moving-from-r0rt1z2s-image).
 
 ## What the image does
 
@@ -20,7 +20,6 @@ This guide is for the Echo Show 8 from 2021. The [Echo Show 8 (1st gen)](echo-sh
 ## Before you start
 
 - **An unlocked Show with TWRP.** The image needs R0rt1z2's saiyaku unlock and its TWRP 3.7.0_9-0. Follow [Unlocking the Echo Show 8 (2nd gen)](unlocking.md#echo-show-8-2nd-gen), then [Getting into TWRP](twrp.md#echo-show-8-2nd-gen).
-- **The vendor partition as the unlock left it.** The image only writes the system and boot partitions. The Show's hardware drivers stay where they already are, on its vendor partition. It is tested on a Show that was on Fire OS 7575.1 (PS75751/7809) when it was unlocked. If another system wrote the vendor partition since, the image may not boot.
 - **adb** on your computer and a USB cable that carries data.
 - **Your Wi-Fi name and password.**
 
@@ -113,6 +112,19 @@ This guide is for the Echo Show 8 from 2021. The [Echo Show 8 (1st gen)](echo-sh
 4. **Set up Kiosk Satellite.** Go through its setup wizard on the screen or at `http://<show ip>:2324` in a browser: an admin password, your Home Assistant connection and the wake word. Then add the Show in Home Assistant under **Settings > Devices & services**, where Home Assistant lists it as discovered.
 
 EchoService names the Show `echo-show-8-g2-ks` and the last three characters of its serial, `echo-show-8-g2-ks-6g0` for example, so your router lists it under its own name. Android reports it as an **Echo Show 8 2nd Gen (KS)**.
+
+## Moving from R0rt1z2's image
+
+To move a Show from [R0rt1z2](https://github.com/R0rt1z2)'s LineageOS 18.1 image to this one, install it by hand. Step 2 of [Installing](#installing) checks the TWRP version.
+
+1. **Back up Kiosk Satellite.** In its remote admin, use **Export configuration** and keep the file.
+2. **Install the image** with the steps in [Installing](#installing), `twrp wipe data` included.
+3. **Set the time, join Wi-Fi and wait for Kiosk Satellite** as in [After installing](#after-installing).
+4. **Restore the backup.** In the setup wizard, choose **Restore from configuration file** and pick the file you exported.
+
+Use release 2026.11.2 or later. R0rt1z2's image puts its own files on the Show's vendor partition, where the hardware drivers are. Release 2026.11.1 did not write that partition, so on a Show coming from R0rt1z2's image it stopped at the fastboot screen ([#47](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/47)). From 2026.11.2, every install and update writes the vendor partition too. If your Show is stuck there, unplug its power, hold **Volume Up** and plug the power back in to start TWRP, then install 2026.11.2 or later.
+
+Nothing from R0rt1z2's image carries over. GApps, Magisk and anything else it installed through `addon.d` are gone after the install, so there is no need to wipe the system partition first.
 
 ## Updating
 
@@ -353,8 +365,9 @@ Bloat removed:
 
 ## What the image leaves alone
 
-- **The vendor partition.** The Show's hardware drivers and firmware stay as the unlock left them. The image stops the Amazon services there that LineageOS has no use for, without changing a file.
 - **The recovery partition.** An install or an update never writes it, so TWRP stays as the unlock installed it.
 - **The bootloader.** Nothing in the image writes it.
+
+An install or an update writes the system, boot and vendor partitions. The vendor partition gets the hardware drivers and firmware of Fire OS 7575.1 (PS75751/7809) as Amazon built them, whatever Fire OS version or other system the Show had before. The image stops the Amazon services there that LineageOS has no use for, without changing a file.
 
 SELinux is permissive, as on the other Echo images.

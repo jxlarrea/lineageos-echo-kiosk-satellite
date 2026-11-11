@@ -28,8 +28,8 @@ service wpa_supplicant /system/bin/hw/wpa_supplicant \
     oneshot
 
 # Fire OS's vendor partition starts Amazon services LineageOS has no use
-# for. init stops each as it starts, which leaves the vendor partition as it
-# is: the two neural network HALs (about 25 MB, nothing on the Show uses
+# for. init stops each as it starts, which leaves the vendor image as
+# Amazon built it: the two neural network HALs (about 25 MB, nothing on the Show uses
 # NNAPI), Ring's halo service, Amazon's device health attestation and its
 # Wi-Fi and touch statistics loggers.
 on property:init.svc.neuralnetworks_hal_service_gpunn=running

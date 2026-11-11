@@ -67,7 +67,7 @@ default_prop() {
 # none of Amazon's libraries or models, under any path.
 must_have "bin/pryond$" "etc/init/pryond\.rc$"
 # The overlay is on the vendor partition, or on the product partition of the
-# Echo Show 8 (2nd gen), whose image ships no vendor partition. Never both:
+# Echo Show 8 (2nd gen), whose vendor image the build cannot add to. Never both:
 # they are the same package.
 if [[ "$DEVICE" == athena ]]; then
   must_have "product/overlay/EchoWifiOverlayProduct\.apk"
@@ -165,8 +165,8 @@ boot_animation() {
   expect default_prop ro.config.wallpaper /system/media/wallpaper.png
 }
 
-# What only the Echo Show 8 (2nd gen) has: its image runs on Fire OS's vendor
-# partition, so the volume curves, wpa_supplicant and the Wi-Fi and Bluetooth
+# What only the Echo Show 8 (2nd gen) has: its vendor image is Fire OS's as
+# built, so the volume curves, wpa_supplicant and the Wi-Fi and Bluetooth
 # modules are in system. The other Shows have the image's echo canceller in
 # Amazon's MT8163 audio HAL instead, which it leaves out.
 ATHENA_PARTS=(
@@ -196,10 +196,20 @@ case "$DEVICE" in
     expect prop ro.vendor.amznaec.enable ""
     expect prop ro.vendor.amznaec.engine ""
     expect prop ro.config.media_vol_default 18
-    # The image ships no vendor partition: /system/vendor is only the link.
-    grep -q '^SYSTEM/vendor/' <<<"$FILES" && fail "has files under vendor, which the image does not ship"
-    grep -q '^VENDOR/' <<<"$FILES" && fail "has a vendor image, which the image does not ship"
-    unzip -Z1 "$OTA" | grep -q '^vendor\.' && fail "the OTA zip writes the vendor partition"
+    # The vendor image is Fire OS 7575.1's as Amazon built it, by checksum
+    # (blobs/athena, scripts/athena-vendor.sh). The build adds nothing to
+    # it, and the OTA zip writes exactly that image, so the Show boots
+    # whatever system wrote its vendor partition before.
+    grep -q '^SYSTEM/vendor/' <<<"$FILES" && fail "has files under system/vendor, which is only the link to the vendor partition"
+    grep -q '^VENDOR/' <<<"$FILES" && fail "has a vendor image the build made, not Fire OS's"
+    read -r VENDOR_SUM VENDOR_SIZE <"$REPO_ROOT/blobs/athena/vendor.img.sha256"
+    [[ "$(unzip -p "$TARGET_FILES" IMAGES/vendor.img | sha256sum | cut -d' ' -f1)" == "$VENDOR_SUM" ]] ||
+      fail "the vendor image is not the one in blobs/athena/vendor.img.sha256"
+    [[ "$(unzip -p "$OTA" vendor.img | sha256sum | cut -d' ' -f1)" == "$VENDOR_SUM" ]] ||
+      fail "the OTA zip does not carry the vendor image in blobs/athena/vendor.img.sha256"
+    unzip -p "$OTA" META-INF/com/google/android/updater-script |
+      grep -q 'package_extract_file("vendor.img", "/dev/block/platform/bootdevice/by-name/vendor")' ||
+      fail "the OTA zip does not write the vendor partition"
     # The recovery partition holds the TWRP the unlock installed. The zip must
     # not write it and the image must carry nothing that would at boot.
     unzip -Z1 "$OTA" | grep -qi 'recovery' && fail "the OTA zip has a recovery file"

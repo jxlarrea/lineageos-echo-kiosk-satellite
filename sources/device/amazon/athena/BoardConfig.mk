@@ -27,7 +27,7 @@ TARGET_KERNEL_CROSS_COMPILE_PREFIX := $(shell pwd)/prebuilts/gcc/linux-x86/aarch
 BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
 
 # The Wi-Fi and Bluetooth drivers are kernel modules. They go in the system
-# image, since the vendor partition stays Fire OS's, whose own modules are
+# image, since the vendor image is Fire OS's as built, whose own modules are
 # for its 32-bit kernel.
 NEED_KERNEL_MODULE_SYSTEM := true
 
@@ -54,7 +54,10 @@ BOARD_MKBOOTIMG_ARGS += --second_offset $(BOARD_SECOND_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --header_version $(BOARD_BOOTIMG_HEADER_VERSION)
 BOARD_MKBOOTIMG_ARGS += --ramdisk $(DEVICE_PATH)/prebuilt/empty-ramdisk.gz
 
-# Partitions. System is the root, and vendor stays Fire OS's.
+# Partitions. System is the root. The vendor partition is Fire OS 7575.1's
+# (PS75751/7809), as Amazon built it: the update zip writes it, so the image
+# installs whatever system was on the Show before. scripts/athena-vendor.sh
+# puts that image in the tree, since the repository does not hold it.
 BOARD_BUILD_SYSTEM_ROOT_IMAGE := true
 BOARD_FLASH_BLOCK_SIZE := 131072
 BOARD_BOOTIMAGE_PARTITION_SIZE := 16777216
@@ -64,6 +67,11 @@ BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_CACHEIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
 TARGET_COPY_OUT_VENDOR := vendor
+BOARD_PREBUILT_VENDORIMAGE := vendor/amazon/athena/vendor.img
+BOARD_VENDORIMAGE_PARTITION_SIZE := 299892736
+ifeq ($(wildcard $(BOARD_PREBUILT_VENDORIMAGE)),)
+$(error $(BOARD_PREBUILT_VENDORIMAGE) is missing. Run scripts/athena-vendor.sh, see docs/building.md)
+endif
 TARGET_USERIMAGES_USE_EXT4 := true
 # The build makes a recovery image because the update zip needs one to be
 # defined. No release installs it: the Show keeps the TWRP its unlock put in
@@ -85,8 +93,8 @@ BOARD_MEDIATEK_COMBO_CHIP := mt76xx
 WPA_SUPPLICANT_IN_SYSTEM := true
 
 # Properties. A Treble product puts PRODUCT_PROPERTY_OVERRIDES in
-# vendor/build.prop, which this image does not ship: the vendor partition
-# stays Fire OS's. So they go in system/build.prop.
+# vendor/build.prop, which this image cannot add to: the vendor image is
+# Fire OS's as built. So they go in system/build.prop.
 BOARD_PROPERTY_OVERRIDES_SPLIT_ENABLED := false
 TARGET_PRODUCT_PROP += $(DEVICE_PATH)/product.prop
 

@@ -14,8 +14,8 @@ DEVICE="${DEVICE:-}"
 OUT="$TREE/out/target/product/$DEVICE"
 
 case "$DEVICE" in
-  biscuit|crown|cronos|checkers|athena) ;;
-  *) echo "ERROR: set DEVICE to biscuit, crown, cronos, checkers or athena" >&2; exit 2 ;;
+  biscuit|donut|crown|cronos|checkers|athena) ;;
+  *) echo "ERROR: set DEVICE to biscuit, donut, crown, cronos, checkers or athena" >&2; exit 2 ;;
 esac
 
 TARGET_FILES="${1:-$(ls "$OUT"/obj/PACKAGING/target_files_intermediates/lineage_"$DEVICE"-target_files-*.zip 2>/dev/null | head -n 1)}"
@@ -110,7 +110,7 @@ SHOW_PARTS=(
   "etc/echo-ota/"
 )
 
-if [[ "$DEVICE" == biscuit ]]; then
+if [[ "$DEVICE" == biscuit || "$DEVICE" == donut ]]; then
   must_have "${DOT_PARTS[@]}"
   must_not_have "${SHOW_PARTS[@]}"
   RELEASE_PROP_NAME=ro.biscuit.release
@@ -184,6 +184,10 @@ AMZNAEC_PARTS=(
 case "$DEVICE" in
   athena) must_have "${ATHENA_PARTS[@]}"; must_not_have "${AMZNAEC_PARTS[@]}" ;;
   biscuit) must_not_have "${ATHENA_PARTS[@]}" ;;
+  # The Echo Dot (3rd gen) has the MT7668's Bluetooth module too.
+  donut) for part in "${ATHENA_PARTS[@]}"; do
+      [[ "$part" == *btmtksdio* ]] || must_not_have "$part"
+    done ;;
   *) must_have "${AMZNAEC_PARTS[@]}"; must_not_have "${ATHENA_PARTS[@]}" ;;
 esac
 
@@ -255,7 +259,36 @@ case "$DEVICE" in
     wrapper_has_asr_capture && fail "the audio HAL wrapper has the Echo Show 8's ASR capture"
     boot_animation 480
     ;;
-  biscuit)
+  biscuit|donut)
+    # The recovery partition holds the TWRP the unlock installed. The zip
+    # writes the boot and system partitions of the slot TWRP booted on,
+    # through TWRP's links, and nothing else. The image carries nothing that
+    # would write recovery at boot.
+    unzip -Z1 "$OTA" | grep -qi 'recovery' && fail "the OTA zip has a recovery file"
+    SCRIPT="$(unzip -p "$OTA" META-INF/com/google/android/updater-script)"
+    grep -qi 'recovery' <<<"$SCRIPT" && fail "the OTA zip's updater-script touches recovery"
+    grep -q 'block_image_update("/dev/block/current-system"' <<<"$SCRIPT" ||
+      fail "the OTA zip does not write system through /dev/block/current-system"
+    grep -q 'package_extract_file("boot.img", "/dev/block/current-boot")' <<<"$SCRIPT" ||
+      fail "the OTA zip does not write boot through /dev/block/current-boot"
+    grep -oE '"/dev/block/[^"]*"' <<<"$SCRIPT" | sort -u |
+      grep -vxE '"/dev/block/current-(system|boot)"|"/dev/block/mmcblk0p1[0134]"' | grep -q . &&
+      fail "the OTA zip's updater-script names a partition other than the slot's boot and system"
+    # The build leaves a copy of its recovery image in vendor/etc, which
+    # nothing installs: the script that would is not in the image.
+    must_not_have "(.*/)?install-recovery\.sh$" "(.*/)?recovery-from-boot\.p$"
+    if [[ "$DEVICE" == donut ]]; then
+      unzip -p "$TARGET_FILES" SYSTEM/vendor/etc/init/hw/init.mt8167.rc |
+        grep -A1 '^service vendor_flash_recovery /system/bin/true' | grep -q override ||
+        fail "init does not turn off vendor_flash_recovery"
+      # No vendor partition: everything the image needs is in system, which
+      # the zip always writes.
+      grep -q '^VENDOR/' <<<"$FILES" && fail "has a vendor image, but the Dot has no vendor partition"
+      unzip -Z1 "$OTA" | grep -q '^vendor' && fail "the OTA zip has a vendor image"
+      must_have "vendor/lib/hw/audio\.primary\.donut\.so$" "vendor/lib/hw/sensors\.biscuit\.so$" \
+        "lib/modules/wlan_mt76x8_sdio\.ko$" "bin/biscuit-ledd$"
+      expect prop ro.biscuit.ota.dir /data/biscuit-ota
+    fi
     must_not_have "media/wallpaper\.png$"
     expect default_prop ro.config.wallpaper ""
     for height in 480 800; do

@@ -1,0 +1,25 @@
+stagefright: Build the codec list without an OMX store
+
+The Echo Dot (2nd gen) leaves out the OMX service. OmxInfoBuilder then
+failed with NO_INIT, MediaCodecList dropped every codec with it, the
+Codec2 software codecs included, and MediaCodecList.getCodecCount()
+crashed apps in JNI. Without a store there are just no OMX codecs.
+
+diff --git a/media/libstagefright/OmxInfoBuilder.cpp b/media/libstagefright/OmxInfoBuilder.cpp
+index 79ffdeb..e622c12 100644
+--- a/media/libstagefright/OmxInfoBuilder.cpp
++++ b/media/libstagefright/OmxInfoBuilder.cpp
+@@ -95,8 +95,11 @@ status_t OmxInfoBuilder::buildMediaCodecList(MediaCodecListWriter* writer) {
+     // Obtain IOmxStore
+     sp<IOmxStore> omxStore = IOmxStore::getService();
+     if (omxStore == nullptr) {
+-        ALOGE("Cannot find an IOmxStore service.");
+-        return NO_INIT;
++        // A device without OMX codecs, like the Echo Dot (2nd gen), still
++        // has the Codec2 software ones. Failing here would leave no codec
++        // list at all.
++        ALOGI("No IOmxStore service, so no OMX codecs.");
++        return OK;
+     }
+ 
+     // List service attributes (global settings)

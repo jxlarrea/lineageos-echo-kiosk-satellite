@@ -2,3 +2,5 @@
 /dev/block/platform/soc/11120000.mmc/by-name/boot_b      0640    root    system
 /dev/block/platform/soc/11120000.mmc/by-name/misc        0660    root    system
 /dev/ion                  0666   root       root
+/dev/stpbt                0660   bluetooth  bluetooth
+/dev/rfkill               0660   root       bluetooth

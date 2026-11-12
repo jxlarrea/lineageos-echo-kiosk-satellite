@@ -14,6 +14,10 @@ TARGET_CPU_ABI2 := armeabi
 TARGET_CPU_VARIANT := cortex-a53
 TARGET_USES_64_BIT_BINDER := true
 
+# Bluetooth (MT7668, libbt-vendor from hardware/mediatek/mt76xx)
+BOARD_HAVE_BLUETOOTH := true
+BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := $(DEVICE_PATH)/bluetooth
+
 TARGET_NO_BOOTLOADER := true
 TARGET_BOOTLOADER_BOARD_NAME := donut
 TARGET_BOARD_PLATFORM := mt8167
@@ -27,6 +31,10 @@ TARGET_KERNEL_CONFIG := lineage_donut_defconfig
 TARGET_KERNEL_CLANG_COMPILE := false
 TARGET_KERNEL_CROSS_COMPILE_PREFIX := $(shell pwd)/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/bin/aarch64-linux-android-
 BOARD_KERNEL_IMAGE_NAME := Image.gz-dtb
+
+# The Wi-Fi and Bluetooth drivers are kernel modules, built from Amazon's
+# sources in the kernel tree (drivers/amazon). init.mt8167.rc loads them.
+NEED_KERNEL_MODULE_SYSTEM := true
 
 # Boot image, at Fire OS 6's addresses. The bootloader drops what an image
 # adds to the command line, so the kernel config carries the image's own
@@ -70,6 +78,16 @@ TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 
 # Properties. Without a vendor partition they all go in system/build.prop.
 TARGET_SYSTEM_PROP += $(DEVICE_PATH)/system.prop $(DEVICE_PATH)/vendor.prop
+
+# Wi-Fi (MT7668, the HAL from hardware/mediatek/mt76xx)
+BOARD_WLAN_DEVICE := MediaTek
+BOARD_MEDIATEK_COMBO_CHIP := mt76xx
+WPA_SUPPLICANT_VERSION := VER_0_8_X
+BOARD_WPA_SUPPLICANT_DRIVER := NL80211
+BOARD_HOSTAPD_DRIVER := NL80211
+BOARD_WPA_SUPPLICANT_PRIVATE_LIB := lib_driver_cmd_mtk
+BOARD_HOSTAPD_PRIVATE_LIB := lib_driver_cmd_mtk
+WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
 
 # HIDL
 DEVICE_MANIFEST_FILE += $(DEVICE_PATH)/manifest.xml

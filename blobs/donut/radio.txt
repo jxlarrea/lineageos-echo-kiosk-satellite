@@ -1,0 +1,10 @@
+# source:destination:sha256:size
+# The MT7668 Wi-Fi and Bluetooth firmware, calibration and settings from
+# Fire OS 6 (NS6575 build 8349) on the Echo Dot (3rd gen). The drivers load
+# them from /vendor/firmware.
+system/vendor/firmware/EEPROM_MT7668.bin:vendor/firmware/EEPROM_MT7668.bin:836cf1851067d00f96fc5dbe79bbfb979b86aa1b985dc770a83b4ab6e570835a:1024
+system/vendor/firmware/mt7668_patch_e2_hdr.bin:vendor/firmware/mt7668_patch_e2_hdr.bin:578ccde3ba137015e4681f987e433d1b29cf5b1901ba01581083ccb765fa2228:204862
+system/vendor/firmware/TxPwrLimit_MT76x8.dat:vendor/firmware/TxPwrLimit_MT76x8.dat:fe9a33d42f702356ff9b458c4f9ad9d96be8a63869bacd9c59fd00176dcbe229:74513
+system/vendor/firmware/wifi.cfg:vendor/firmware/wifi.cfg:1a97dfd343fc7b7635cab4b45bd638003320c371d9331d18a4d1d3e13d55a5b0:1066
+system/vendor/firmware/WIFI_RAM_CODE2_SDIO_MT7668.bin:vendor/firmware/WIFI_RAM_CODE2_SDIO_MT7668.bin:35faff6a613fefcbe33a6f6d8df885be76c546f9e78ba8ab93056a816ad87254:51816
+system/vendor/firmware/WIFI_RAM_CODE_MT7668.bin:vendor/firmware/WIFI_RAM_CODE_MT7668.bin:9240c5182c89bdd98bda2655e01053ef8ea06afd45d61cf6ada3f11d65956e7d:459528

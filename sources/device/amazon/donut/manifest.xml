@@ -14,6 +14,11 @@
         <fqname>@2.0::IEffectsFactory/default</fqname>
     </hal>
     <hal format="hidl">
+        <name>android.hardware.bluetooth</name>
+        <transport>hwbinder</transport>
+        <fqname>@1.0::IBluetoothHci/default</fqname>
+    </hal>
+    <hal format="hidl">
         <name>android.hardware.graphics.allocator</name>
         <transport>hwbinder</transport>
         <fqname>@2.0::IAllocator/default</fqname>

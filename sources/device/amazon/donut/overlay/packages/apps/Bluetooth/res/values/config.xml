@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    SPDX-FileCopyrightText: 2026 The LineageOS Project
+    SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- A Bluetooth speaker: phones play to it and it can play to others. -->
+    <bool name="profile_supported_a2dp">true</bool>
+    <bool name="profile_supported_a2dp_sink">true</bool>
+    <bool name="profile_supported_avrcp_controller">true</bool>
+    <bool name="profile_supported_avrcp_target">true</bool>
+    <bool name="a2dp_sink_automatically_request_audio_focus">true</bool>
+
+    <!-- Nothing for calls, contacts, messages, tethering or file transfer:
+         the Dot has no modem, no contacts provider and no screen to accept
+         a file on. -->
+    <bool name="profile_supported_hs_hfp">false</bool>
+    <bool name="profile_supported_hid_device">false</bool>
+    <bool name="profile_supported_map">false</bool>
+    <bool name="profile_supported_opp">false</bool>
+    <bool name="profile_supported_pan">false</bool>
+    <bool name="profile_supported_pbap">false</bool>
+</resources>

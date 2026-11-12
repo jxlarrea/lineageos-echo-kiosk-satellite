@@ -10,6 +10,11 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/generic_no_telephony.mk)
 $(call inherit-product, device/amazon/donut/device.mk)
 $(call inherit-product, vendor/lineage/config/common_mini_tablet_wifionly.mk)
 
+# The Kiosk Satellite Edition layer every Echo inherits: the Wi-Fi overlay
+# and pryond. The Dot's own layer comes later in the port.
+$(call inherit-product, vendor/kiosk-satellite/config/common.mk)
+$(call inherit-product, device/kiosk-satellite/donut/device.mk)
+
 PRODUCT_NAME := lineage_donut
 PRODUCT_DEVICE := donut
 PRODUCT_MANUFACTURER := Amzn

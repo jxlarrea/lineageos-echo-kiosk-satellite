@@ -34,9 +34,34 @@ PRODUCT_COPY_FILES += \
     frameworks/av/services/audiopolicy/config/audio_policy_volumes.xml:$(TARGET_COPY_OUT_VENDOR)/etc/audio_policy_volumes.xml \
     frameworks/av/services/audiopolicy/config/default_volume_tables.xml:$(TARGET_COPY_OUT_VENDOR)/etc/default_volume_tables.xml
 
+# Bluetooth
+# The profile overlay goes into the Bluetooth app itself, as on the Echo Dot
+# (2nd gen): as a runtime overlay the sink services resolve as disabled while
+# the profile list expects them.
+DEVICE_PACKAGE_OVERLAYS += \
+    $(LOCAL_PATH)/overlay
+
+PRODUCT_ENFORCE_RRO_EXCLUDED_OVERLAYS += \
+    $(LOCAL_PATH)/overlay/packages/apps/Bluetooth
+
+PRODUCT_PACKAGES += \
+    android.hardware.bluetooth@1.0-impl \
+    android.hardware.bluetooth@1.0-service \
+    donut-btmac \
+    libbt-vendor
+
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.bluetooth.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth.xml \
+    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml
+
 # Buttons
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/keylayout/gpio-keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/gpio-keys.kl
+
+# No configstore HAL: SurfaceFlinger takes its settings from properties.
+# The service has nothing to register here and crash-looped.
+PRODUCT_PACKAGES += \
+    disable_configstore
 
 # Display
 # The Dot has no screen and no GPU driver. hwcomposer.donut reports one
@@ -70,8 +95,10 @@ PRODUCT_PACKAGES += \
 # Init
 PRODUCT_PACKAGES += \
     init.mt8167.rc \
-    init.mt8167.usb.rc \
-    ueventd.mt8167.rc
+    init.mt8167.usb.rc
+
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/init/ueventd.mt8167.rc:$(TARGET_COPY_OUT_VENDOR)/ueventd.rc
 
 # Screen
 TARGET_SCREEN_DENSITY := 213
@@ -85,11 +112,32 @@ PRODUCT_SHIPPING_API_LEVEL := 25
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH)
 
+# The network stack and tethering inside system_server, as on the other
+# Echos, and the device name as the DHCP hostname (rro/NetworkStack).
+PRODUCT_PACKAGES += \
+    InProcessNetworkStack \
+    com.android.tethering.inprocess \
+    DonutNetworkStackOverlay
+
 # USB
 PRODUCT_PACKAGES += \
     android.hardware.usb@1.0-service.basic
 
 PRODUCT_COPY_FILES += \
-    frameworks/native/data/etc/android.hardware.usb.accessory.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.accessory.xml \
+    frameworks/native/data/etc/android.hardware.usb.accessory.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.usb.accessory.xml
+
+# Wi-Fi
+PRODUCT_PACKAGES += \
+    android.hardware.wifi@1.0-service-lazy \
+    hostapd \
+    libwifi-hal \
+    wpa_supplicant
+
+PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.wifi.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.wifi.xml \
-    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml
+    $(LOCAL_PATH)/configs/wifi/wpa_supplicant.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/wpa_supplicant.conf \
+    $(LOCAL_PATH)/configs/wifi/wpa_supplicant_overlay.conf:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/wpa_supplicant_overlay.conf
+
+# The proprietary files: the MT7668's firmware (blobs/donut,
+# scripts/extract-donut-blobs.sh).
+$(call inherit-product, vendor/amazon/donut/donut-vendor.mk)

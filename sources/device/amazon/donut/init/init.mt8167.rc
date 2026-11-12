@@ -11,6 +11,7 @@ on early-init
 
 on init
     chmod 0666 /dev/ion
+    chmod 0660 /dev/rfkill
     write /proc/sys/net/core/wmem_max 8388608
     write /proc/sys/net/core/rmem_max 8388608
 
@@ -28,6 +29,18 @@ on late-fs
 
 on post-fs-data
     setrlimit 8 -1 -1
+
+    mkdir /data/vendor/wifi 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa 0770 wifi wifi
+    mkdir /data/vendor/wifi/wpa/sockets 0770 wifi wifi
+    mkdir /data/vendor/bluedroid 0771 bluetooth bluetooth
+    exec - root bluetooth -- /vendor/bin/donut-btmac
+
+    # The MT7668's Wi-Fi and Bluetooth drivers. They take their firmware
+    # from /vendor/firmware (firmware_class.path on the kernel command line).
+    insmod /system/lib/modules/wlan_mt76x8_sdio_prealloc.ko
+    insmod /system/lib/modules/wlan_mt76x8_sdio.ko
+    insmod /system/lib/modules/btmtksdio.ko
 
 on boot
     # adb over the network, as on the other Echos.

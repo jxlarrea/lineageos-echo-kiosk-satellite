@@ -17,9 +17,8 @@ prebuilt_etc {
     vendor: true,
 }
 
-prebuilt_etc {
-    name: "ueventd.mt8167.rc",
-    filename: "ueventd.rc",
-    src: "ueventd.mt8167.rc",
+sh_binary {
+    name: "donut-btmac",
+    src: "donut-btmac.sh",
     vendor: true,
 }

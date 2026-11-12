@@ -130,6 +130,13 @@ PRODUCT_PACKAGES += \
     com.android.tethering.inprocess \
     DonutNetworkStackOverlay
 
+# Android's features, from the tablet list the Echo Dot (2nd gen) also has.
+# Without android.software.device_admin Kiosk Satellite cannot become the
+# device owner. The Dots' layer takes out the ones that only cost memory
+# (vendor/kiosk-satellite/dot/permissions).
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/tablet_core_hardware.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/tablet_core_hardware.xml
+
 # USB
 PRODUCT_PACKAGES += \
     android.hardware.usb@1.0-service.basic

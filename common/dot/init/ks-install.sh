@@ -69,9 +69,16 @@ done
 # which starting itself again from the background needs, changing system
 # settings, usage access for the foreground app sensor and installing its
 # own updates.
+restored=false
 for op in MANAGE_EXTERNAL_STORAGE SYSTEM_ALERT_WINDOW WRITE_SETTINGS GET_USAGE_STATS \
         REQUEST_INSTALL_PACKAGES; do
-    appops set "$PKG" "$op" allow 2>/dev/null
+    # Only what is not allowed yet. On FUSE shared storage Android kills the
+    # app each time REQUEST_INSTALL_PACKAGES is set, even to the same value,
+    # which took Kiosk Satellite down right after every boot.
+    if ! appops get "$PKG" "$op" 2>/dev/null | grep -q ": allow"; then
+        appops set "$PKG" "$op" allow 2>/dev/null
+        restored=true
+    fi
 done
 dumpsys deviceidle whitelist "+$PKG" >/dev/null
 
@@ -88,4 +95,12 @@ fi
 # delivers the boot broadcast.
 if $fresh; then
     am start -n "$PKG/.ProvisionActivity" >/dev/null 2>&1
+elif $restored; then
+    # An app op someone took away is back. If that stopped Kiosk Satellite
+    # after it started at boot, start it again.
+    sleep 5
+    pidof "$PKG" >/dev/null || {
+        log "starting Kiosk Satellite again after restoring its app ops"
+        am start -n "$PKG/.MainActivity" >/dev/null 2>&1
+    }
 fi

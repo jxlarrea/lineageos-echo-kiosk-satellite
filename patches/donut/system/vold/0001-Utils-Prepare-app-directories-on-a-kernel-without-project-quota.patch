@@ -1,0 +1,52 @@
+Utils: Prepare app directories on a kernel without project quota
+
+Android 11 keeps shared storage on FUSE and tags each app's directories
+with an ext4 project id for the storage statistics. ext4 got project
+quota in Linux 4.5. On an older kernel without sdcardfs, such as the Echo
+Dot (3rd gen)'s 4.4.22, FS_IOC_FSGETXATTR answers ENOTTY, vold gave up on
+the directory and no app got its Android/data folder.
+
+Treat ENOTTY and EOPNOTSUPP from the project quota ioctls as a kernel
+without the feature and carry on without project ids.
+
+diff --git a/Utils.cpp b/Utils.cpp
+index 8ce1370..5cbfd1c 100644
+--- a/Utils.cpp
++++ b/Utils.cpp
+@@ -198,6 +198,20 @@ int SetDefaultAcl(const std::string& path, mode_t mode, uid_t uid, gid_t gid,
+     return ret;
+ }
+ 
++// A kernel older than 4.5 has no project quota in ext4: the ioctls that set a
++// project id answer ENOTTY or EOPNOTSUPP. Project ids only attribute shared
++// storage use to apps for the storage statistics, so such a kernel goes
++// without them instead of failing to prepare every app directory.
++static bool IsProjectQuotaMissing() {
++    if (errno != ENOTTY && errno != EOPNOTSUPP) return false;
++    static bool logged = false;
++    if (!logged) {
++        LOG(WARNING) << "The kernel has no project quota, leaving project ids unset";
++        logged = true;
++    }
++    return true;
++}
++
+ int SetQuotaInherit(const std::string& path) {
+     unsigned long flags;
+ 
+@@ -216,6 +230,7 @@ int SetQuotaInherit(const std::string& path) {
+     flags |= FS_PROJINHERIT_FL;
+ 
+     ret = ioctl(fd, FS_IOC_SETFLAGS, &flags);
++    if (ret == -1 && IsProjectQuotaMissing()) return 0;
+     if (ret == -1) {
+         PLOG(ERROR) << "Failed to set flags for " << path << " to set project id inheritance.";
+         return ret;
+@@ -234,6 +249,7 @@ int SetQuotaProjectId(const std::string& path, long projectId) {
+     }
+ 
+     int ret = ioctl(fd, FS_IOC_FSGETXATTR, &fsx);
++    if (ret == -1 && IsProjectQuotaMissing()) return 0;
+     if (ret == -1) {
+         PLOG(ERROR) << "Failed to get extended attributes for " << path << " to get project id.";
+         return ret;

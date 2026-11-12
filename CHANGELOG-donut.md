@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Dot (3rd gen) (`donut`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (1st gen)](CHANGELOG-checkers.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md), [Echo Show 8 (1st gen)](CHANGELOG-crown.md) and [Echo Show 8 (2nd gen)](CHANGELOG-athena.md) have their own.
 
-## Unreleased
+## 2026.11.1 - 2026-11-12
 
 ### Added
 - **A first LineageOS 18.1 port for the Echo Dot (3rd gen).** The repository has its own device tree in `sources/device/amazon/donut`, since amazon-oss has none for the Dot's MT8167 chip. The image boots to adb over USB on the Dot, with no screen and software rendering as on the Echo Dot (2nd gen). 

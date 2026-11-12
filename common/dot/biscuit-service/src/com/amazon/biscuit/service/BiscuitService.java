@@ -34,7 +34,9 @@ import android.provider.Settings;
 import android.util.Slog;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -307,6 +309,7 @@ public final class BiscuitService extends Service {
     public void onCreate() {
         super.onCreate();
         mMicMuted = ((AudioManager) getSystemService(AUDIO_SERVICE)).isMicrophoneMute();
+        if (hasPrivacySwitch() && privacySwitchOn()) setRealMicMuted(true);
         IntentFilter filter = new IntentFilter(VOLUME_CHANGED);
         filter.addAction(AudioManager.ACTION_MICROPHONE_MUTE_CHANGED);
         registerReceiver(mAudioReceiver, filter);
@@ -343,7 +346,12 @@ public final class BiscuitService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && MIC_MUTE_TOGGLE.equals(intent.getAction())) {
-            setRealMicMuted(!mMicMuted);
+            if (hasPrivacySwitch() && intent.getBooleanExtra(EXTRA_FROM_BUTTON, false)) {
+                // The button has already switched: follow it.
+                setRealMicMuted(privacySwitchOn());
+            } else {
+                setRealMicMuted(!mMicMuted);
+            }
         } else if (intent != null && BLUETOOTH_PAIRING_MODE.equals(intent.getAction())) {
             startBluetoothPairingMode();
         } else if (intent != null && BLUETOOTH_ON.equals(intent.getAction())) {
@@ -454,7 +462,31 @@ public final class BiscuitService extends Service {
         return timeout + " s, muting again in " + left + " s";
     }
 
+    // The Echo Dot (3rd gen)'s privacy button is a hardware switch: it cuts
+    // the microphones without Android and only the button turns it off again.
+    // The kernel shows its state here and sends the mute key when it changes.
+    // The Echo Dot (2nd gen) has no such file and its button is only a key.
+    private static final File PRIVACY_SWITCH = new File("/sys/devices/platform/gpio-privacy/state");
+
+    private static boolean hasPrivacySwitch() {
+        return PRIVACY_SWITCH.canRead();
+    }
+
+    private static boolean privacySwitchOn() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(PRIVACY_SWITCH))) {
+            String line = reader.readLine();
+            return line != null && line.trim().equals("1");
+        } catch (IOException e) {
+            return false;
+        }
+    }
+
     private void setRealMicMuted(boolean muted) {
+        // Nothing unmutes the microphones while the privacy switch is on.
+        if (!muted && hasPrivacySwitch() && privacySwitchOn()) {
+            Slog.i(TAG, "the privacy switch is on, the microphones stay muted");
+            muted = true;
+        }
         ((AudioManager) getSystemService(AUDIO_SERVICE)).setMicrophoneMute(muted);
         mMicMuted = muted;
     }

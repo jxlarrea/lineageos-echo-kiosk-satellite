@@ -5,7 +5,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OTA="$REPO_ROOT/device/biscuit/ota"
-SERVICE="$REPO_ROOT/device/biscuit/biscuit-service"
+SERVICE="$REPO_ROOT/common/dot/biscuit-service"
 SRC="$SERVICE/src/com/amazon/biscuit/service"
 TMPDIR="$(TMPDIR=/tmp mktemp -d)"
 trap 'rm -rf "$TMPDIR"' EXIT

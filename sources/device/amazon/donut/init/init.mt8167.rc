@@ -57,3 +57,9 @@ service biscuit-ledd /system/bin/biscuit-ledd
 
 on property:sys.boot_completed=1
     start biscuit-ledd
+
+# Rooted adb on debuggable builds. LineageOS keeps the switch in
+# /data/adbroot/enabled, set from Settings, which nobody can reach on the Dot.
+on post-fs-data && property:ro.debuggable=1
+    mkdir /data/adbroot 0700 root root encryption=Require
+    write /data/adbroot/enabled 1

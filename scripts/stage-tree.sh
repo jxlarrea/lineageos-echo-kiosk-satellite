@@ -102,7 +102,7 @@ copy_sources() {
   copy_dir "$REPO_ROOT/common" "$TREE/vendor/kiosk-satellite"
   # Only the device being built, so two devices never define the same module.
   mkdir -p "$TREE/device/kiosk-satellite"
-  rsync -a --delete --exclude .git --include "/$DEVICE/***" --exclude '*' \
+  rsync -a --delete --delete-excluded --exclude .git --include "/$DEVICE/***" --exclude '*' \
     "$REPO_ROOT/device/" "$TREE/device/kiosk-satellite/"
   while IFS= read -r tree; do
     copy_dir "$REPO_ROOT/sources/$tree" "$TREE/$tree"

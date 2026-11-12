@@ -1,7 +1,7 @@
 #
 # The Kiosk Satellite Edition layer every Echo Show inherits on top of
 # common.mk. The Echo Dot does not: it has BiscuitService and its own
-# ks-install, init and defaults (device/biscuit). stage-tree.sh copies
+# ks-install, init and defaults (dot.mk). stage-tree.sh copies
 # common/ to vendor/kiosk-satellite in the tree.
 #
 

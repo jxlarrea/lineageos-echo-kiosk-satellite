@@ -15,7 +15,25 @@ inherits() {
 
 inherits biscuit | grep -q 'vendor/kiosk-satellite/config/common.mk' || fail "biscuit does not inherit common.mk"
 ! inherits biscuit | grep -q 'vendor/kiosk-satellite/config/show.mk' || fail "biscuit inherits the Echo Shows' show.mk"
-! grep -rq 'kiosk-satellite/config/show.mk' device/biscuit sources/device/amazon/biscuit || fail "the Dot's layer pulls in show.mk"
+! grep -rq 'kiosk-satellite/config/show.mk' device/biscuit device/donut common/dot common/config/dot.mk \
+    sources/device/amazon/biscuit sources/device/amazon/donut || fail "a Dot's layer pulls in show.mk"
+
+# Both Echo Dots inherit dot.mk through their own device layer, and no Echo
+# Show does. The Echo Dot (3rd gen) has a device tree of its own in sources/.
+DONUT_MK=sources/device/amazon/donut/lineage_donut.mk
+grep -q 'vendor/kiosk-satellite/config/common.mk' "$DONUT_MK" || fail "donut does not inherit common.mk"
+grep -q 'device/kiosk-satellite/donut/device.mk' "$DONUT_MK" || fail "donut does not inherit its device layer"
+! grep -q -E 'kiosk-satellite/(config/show.mk|biscuit|athena|crown|cronos|checkers)' "$DONUT_MK" || fail "donut inherits another Echo's layer"
+for dot in biscuit donut; do
+  grep -q 'vendor/kiosk-satellite/config/dot.mk' "device/$dot/device.mk" || fail "$dot does not inherit dot.mk"
+done
+! grep -rq 'kiosk-satellite/config/dot.mk' device/crown device/cronos device/checkers device/athena \
+    common/config/common.mk common/config/show.mk sources/device/amazon/athena || fail "an Echo Show pulls in dot.mk"
+# One Dot's settings are not in the layer both share.
+for part in ro.biscuit.ota ro.biscuit.release media_vol_default flinger_standbytime wall_powered biscuit-ota \
+    persist.sys.fuse; do
+  ! grep -Fq "$part" common/config/dot.mk || fail "dot.mk has $part, which each Dot sets"
+done
 for show in crown cronos checkers; do
   inherits "$show" | grep -q 'vendor/kiosk-satellite/config/common.mk' || fail "$show does not inherit common.mk"
   inherits "$show" | grep -q 'vendor/kiosk-satellite/config/show.mk' || fail "$show does not inherit show.mk"

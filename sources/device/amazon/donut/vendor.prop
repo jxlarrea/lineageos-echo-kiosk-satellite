@@ -22,3 +22,6 @@ ro.bt.bdaddr_path=/data/vendor/bluedroid/macbt
 # The Bluetooth vendor library does not look for an rfkill switch, as on
 # the Echo Show 8 (1st gen). The driver powers the MT7668 itself.
 ro.vendor.rfkilldisabled=1
+
+# Sensors
+ro.hardware.sensors=biscuit

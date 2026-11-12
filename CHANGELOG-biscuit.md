@@ -9,6 +9,8 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 - **The ring daemon moved to the shared layer.** `biscuit-ledd`, `biscuit-ledctl` and the animations are now in `common/leds`, where the Echo Dot (3rd gen) uses them too. Nothing changes on the Dot.
 - **The Dot's Kiosk Satellite Edition layer moved to the shared layer.** BiscuitService, the empty launcher, `ks-install`, the stopped services and the defaults are now in `common/dot` behind `common/config/dot.mk`, which both Echo Dots inherit. `device/biscuit` keeps what only this Dot has: system updates, the volume default, the speaker standby setting and sdcardfs storage. Nothing changes on the Dot.
 - **`ks-install` sets only the app ops Kiosk Satellite does not have yet.** It set all of them on every boot. Nothing changes on the Dot. On the Echo Dot (3rd gen) setting them again took Kiosk Satellite down after each boot.
+- **BiscuitService looks for releases under the Dot's own codename**, read from `ro.product.device`, since the Echo Dot (3rd gen) runs the same service. Nothing changes on the Dot.
+- **The light sensor HAL moved to the shared layer** (`common/sensors`), where it also reads the Echo Dot (3rd gen)'s sensor. Nothing changes on the Dot.
 - **Staging removes the other devices' layers from the tree.** `stage-tree.sh` left every device's layer it had ever staged in the build tree, which its own comment said it did not.
 
 ## 2026.11.3 - 2026-11-09

@@ -88,9 +88,10 @@ final class SystemUpdate {
     private static final String METADATA = "META-INF/com/android/metadata";
     // Written by releasetools.py: the release the zip holds.
     private static final String RELEASE_PROP = "META-INF/com/amazon/biscuit/release.prop";
-    private static final String DEVICE = "biscuit";
-    // Each Echo has releases of its own, tagged with its codename: the Dot's
-    // are biscuit-2026.10.6 and on.
+    // The Dot's codename: biscuit for the Echo Dot (2nd gen), donut for the
+    // Echo Dot (3rd gen). Each Echo has releases of its own, tagged with its
+    // codename, such as biscuit-2026.10.6, so one Dot never takes the other's.
+    private static final String DEVICE = SystemProperties.get("ro.product.device", "biscuit");
     private static final String TAG_PREFIX = DEVICE + "-";
 
     // Time on slot A before installing into slot B, so a release that boots
@@ -357,6 +358,9 @@ final class SystemUpdate {
     }
 
     private void fetchReleases() throws IOException, JSONException {
+        // An image without the TWRP script cannot install an update, so it
+        // offers none.
+        if (!SCRIPT.exists()) return;
         int[] current = parseVersion(mCurrent);
         String source = SystemProperties.get(RELEASES_PROPERTY, "");
         if (source.isEmpty()) source = RELEASES;

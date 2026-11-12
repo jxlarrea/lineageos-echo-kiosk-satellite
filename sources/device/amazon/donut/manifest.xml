@@ -38,4 +38,9 @@
         <transport>hwbinder</transport>
         <fqname>@1.0::IUsb/default</fqname>
     </hal>
+    <hal format="hidl">
+        <name>android.hardware.sensors</name>
+        <transport>hwbinder</transport>
+        <fqname>@1.0::ISensors/default</fqname>
+    </hal>
 </manifest>

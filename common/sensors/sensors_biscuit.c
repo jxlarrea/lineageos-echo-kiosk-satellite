@@ -4,8 +4,10 @@
  */
 
 /*
- * The Echo Dot's ambient light sensor, a TSL2584TSV or a TSL2540 depending
- * on the Dot. The TSL2584TSV reports through IIO (illuminance0_input). The
+ * The Echo Dots' ambient light sensor. The Echo Dot (2nd gen) has a
+ * TSL2584TSV or a TSL2540 depending on the Dot, and the Echo Dot (3rd gen) a
+ * TSL2572. The TSL2584TSV reports through IIO (illuminance0_input) and the
+ * TSL2572 too, under the name its newer driver gives (in_illuminance0_input). The
  * TSL2540 publishes als_lux on its I2C device and only measures while
  * als_power_state is 1, so the HAL powers it with the sensor's activation.
  * The HAL lists the sensor even before its driver has probed and finds the
@@ -80,7 +82,9 @@ static void tsl2540_power(int on)
 
 static int find_lux_path(char *out, size_t out_len, int *tsl2540)
 {
+    static const char *const names[] = { "illuminance0_input", "in_illuminance0_input" };
     const char *fixed = IIO_DIR "/iio:device0/illuminance0_input";
+    size_t n;
     *tsl2540 = 0;
     if (access(fixed, R_OK) == 0) {
         strlcpy(out, fixed, out_len);
@@ -93,11 +97,13 @@ static int find_lux_path(char *out, size_t out_len, int *tsl2540)
         while ((de = readdir(dir)) != NULL) {
             if (strncmp(de->d_name, "iio:device", 10) != 0) continue;
             char path[PATH_MAX];
-            snprintf(path, sizeof(path), IIO_DIR "/%s/illuminance0_input", de->d_name);
-            if (access(path, R_OK) == 0) {
-                strlcpy(out, path, out_len);
-                closedir(dir);
-                return 0;
+            for (n = 0; n < sizeof(names) / sizeof(names[0]); n++) {
+                snprintf(path, sizeof(path), IIO_DIR "/%s/%s", de->d_name, names[n]);
+                if (access(path, R_OK) == 0) {
+                    strlcpy(out, path, out_len);
+                    closedir(dir);
+                    return 0;
+                }
             }
         }
         closedir(dir);

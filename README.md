@@ -27,7 +27,7 @@ LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk 
 | Device | Codename | Status | Guide |
 | --- | --- | --- | --- |
 | Echo Dot (2nd gen) | `biscuit` | Ready | [Echo Dot](docs/echo-dot.md) |
-| Echo Dot (3rd gen) | `donut` | Work in progress | Not yet |
+| Echo Dot (3rd gen) | `donut` | Work in progress | [Echo Dot (3rd gen)](docs/echo-dot-3rd-gen.md) |
 | Echo Show 5 (1st gen) | `checkers` | Ready | [Echo Show 5 (1st gen)](docs/echo-show-5-1st-gen.md) |
 | Echo Show 5 (2nd gen) | `cronos` | Ready | [Echo Show 5 (2nd gen)](docs/echo-show-5.md) |
 | Echo Show 8 (1st gen) | `crown` | Ready | [Echo Show 8 (1st gen)](docs/echo-show-8.md) |

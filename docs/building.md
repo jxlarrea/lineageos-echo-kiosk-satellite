@@ -43,6 +43,10 @@ The build container gets half of the host's CPUs and half of its memory without 
 
 `scripts/extract-biscuit-blobs.sh` downloads the Fire OS 6.5.7.4 OTA, unpacks its system image and copies every file `blobs/biscuit/*.txt` lists, after checking its size and checksum. It also applies the fixups the Fire OS audio libraries need on Android 11. Staging runs it.
 
+## The Echo Dot (3rd gen)'s firmware files
+
+`scripts/extract-donut-blobs.sh` takes the Wi-Fi and Bluetooth firmware and calibration files `blobs/donut/radio.txt` lists from a dump of the Dot's Fire OS 6 system partition, after checking each file's size and checksum. Staging runs it. Everything else in the image is built from source, the kernel included ([android_kernel_amazon_mt8167](https://github.com/jxlarrea/android_kernel_amazon_mt8167)).
+
 ## The Echo Show 8 (2nd gen)'s vendor image
 
 The Echo Show 8 (2nd gen) image ships the vendor partition of Fire OS 7575.1 (PS75751/7809) as Amazon built it, and its update zip writes it. The repository does not hold that image. `scripts/athena-vendor.sh` takes it from a dump of the vendor partition, checks it against the checksum in `blobs/athena/vendor.img.sha256` and puts it in the tree as `vendor/amazon/athena/vendor.img`. Without it, `make athena` stops with an error.

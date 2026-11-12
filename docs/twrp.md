@@ -51,6 +51,55 @@ The image never writes TWRP, the bootloader or the partition table, so a Dot tha
 
 If you ask for help, include what both `twrp install` runs and `bcbtool get_active` printed. Say whether adb ever shows the Dot during a restart.
 
+## Echo Dot (3rd gen)
+
+The image installs from TWRP 3.7.0_9-0, the recovery that comes with R0rt1z2's unlock.
+
+### Starting TWRP
+
+If the Dot is running, connect it over USB and run:
+
+```sh
+adb reboot recovery
+```
+
+Within about half a minute, `adb devices -l` lists the Dot as `recovery`.
+
+If the Dot does not boot, R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-dot-3rd-gen-2018-donut.4801400/) covers starting TWRP and repairing a Dot from outside Android.
+
+TWRP has no screen on the Dot. Everything runs over `adb shell`. The `twrp` command does what its buttons would on a phone, such as `twrp install` and `twrp wipe`.
+
+### Checking the version
+
+```sh
+adb shell getprop ro.twrp.version
+```
+
+It must print `3.7.0_9-0`.
+
+### Leaving TWRP
+
+```sh
+adb reboot
+```
+
+Run `adb devices -l` after about half a minute. If it lists the Dot as `recovery` again, run `adb reboot` once more. After a stay in TWRP of more than a few seconds, the Dot's bootloader often starts TWRP a second time. The reboot after that one starts Android. Nothing is wrong with the Dot or the install when this happens.
+
+System updates handle this themselves: the update leaves TWRP a script that reboots.
+
+### The two slots
+
+The Dot has two slots, A and B. The [installation](echo-dot-3rd-gen.md#installing) installs the image into both. The bootloader starts the active slot, with that slot's kernel and system. These commands show and switch the active slot from TWRP:
+
+```sh
+adb shell bcbtool get_active
+adb shell bcbtool set_active b
+```
+
+After switching, reboot into TWRP and run `get_active` again before installing. The installer checks that TWRP points at the active slot and stops with `assert failed` if it does not.
+
+TWRP is in a partition of its own, outside both slots. The image never writes it, the bootloader or the partition table. If a slot does not boot after an install, start TWRP, switch to the other slot with `bcbtool set_active` and reboot.
+
 ## Echo Show 5 (1st gen)
 
 The image installs from TWRP 3.7.0_9-0, the recovery that comes with amonet 2.

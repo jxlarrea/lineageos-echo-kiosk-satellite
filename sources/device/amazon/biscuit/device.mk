@@ -44,13 +44,14 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/keylayout/keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/keys.kl \
     $(LOCAL_PATH)/keylayout/mtk-kpd.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/mtk-kpd.kl
 
-# LED ring: biscuit-ledd and its animations, biscuit-ledctl to drive it.
+# LED ring: biscuit-ledd and its animations, biscuit-ledctl to drive it. Both
+# Echo Dots share them (vendor/kiosk-satellite/leds).
 PRODUCT_PACKAGES += \
     biscuit-ledctl \
     biscuit-ledd
 
 PRODUCT_COPY_FILES += \
-    $(call find-copy-subdir-files,*.animation,$(LOCAL_PATH)/leds/animations,$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ledd)
+    $(call find-copy-subdir-files,*.animation,vendor/kiosk-satellite/leds/animations,$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ledd)
 
 # The device name as the DHCP hostname (rro/NetworkStack).
 PRODUCT_PACKAGES += \

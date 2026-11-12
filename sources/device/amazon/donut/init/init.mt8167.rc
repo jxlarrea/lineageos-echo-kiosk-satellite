@@ -45,3 +45,15 @@ on post-fs-data
 on boot
     # adb over the network, as on the other Echos.
     setprop service.adb.tcp.port 5555
+
+# Light ring. biscuit-ledd stops the kernel's boot animation once Android is
+# up and takes commands on /dev/socket/biscuit-ledd.
+service biscuit-ledd /system/bin/biscuit-ledd
+    class main
+    user root
+    group system
+    socket biscuit-ledd stream 0660 system system
+    disabled
+
+on property:sys.boot_completed=1
+    start biscuit-ledd

@@ -6,6 +6,7 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 
 ### Changed
 - **New recommended volumes in the guide.** With Kiosk Satellite's equalizer, which is on by default on the Dot, the guide recommends master volume 100%, Kiosk Satellite's assistant and intercom volumes at 100% and its media player volume at 85%. It recommended master volume 75% before. Kiosk Satellite sets the new levels on a fresh install and moves a Dot that is already set up to them.
+- **The ring daemon moved to the shared layer.** `biscuit-ledd`, `biscuit-ledctl` and the animations are now in `common/leds`, where the Echo Dot (3rd gen) uses them too. Nothing changes on the Dot.
 
 ## 2026.11.3 - 2026-11-09
 

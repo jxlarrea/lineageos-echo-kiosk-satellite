@@ -56,7 +56,8 @@ PRODUCT_COPY_FILES += \
 
 # Buttons
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/keylayout/gpio-keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/gpio-keys.kl
+    $(LOCAL_PATH)/keylayout/gpio-keys.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/gpio-keys.kl \
+    $(LOCAL_PATH)/keylayout/gpio-privacy.kl:$(TARGET_COPY_OUT_SYSTEM)/usr/keylayout/gpio-privacy.kl
 
 # No configstore HAL: SurfaceFlinger takes its settings from properties.
 # The service has nothing to register here and crash-looped.
@@ -111,6 +112,16 @@ PRODUCT_SHIPPING_API_LEVEL := 25
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH)
+
+# Light ring: the ring daemon, its animations and biscuit-ledctl to drive it,
+# shared with the Echo Dot (2nd gen) (vendor/kiosk-satellite/leds). Both
+# Dots have the same IS31FL3236 driver interface for 12 LEDs.
+PRODUCT_PACKAGES += \
+    biscuit-ledctl \
+    biscuit-ledd
+
+PRODUCT_COPY_FILES += \
+    $(call find-copy-subdir-files,*.animation,vendor/kiosk-satellite/leds/animations,$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ledd)
 
 # The network stack and tethering inside system_server, as on the other
 # Echos, and the device name as the DHCP hostname (rro/NetworkStack).

@@ -1,0 +1,4 @@
+# The privacy button. It is a hardware switch: it cuts the microphones and
+# lights its own LED without Android. The kernel sends this key once each
+# time the state changes.
+key 113   MUTE

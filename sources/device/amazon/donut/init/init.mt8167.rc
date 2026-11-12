@@ -71,3 +71,12 @@ on boot
     write /sys/kernel/mm/ksm/pages_to_scan 100
     write /sys/kernel/mm/ksm/sleep_millisecs 500
     write /sys/kernel/mm/ksm/run 1
+
+# The recovery partitions hold the TWRP the unlock installed. Never let
+# install-recovery.sh replace it with the LineageOS recovery, whatever
+# persist.vendor.recovery_update says.
+service vendor_flash_recovery /system/bin/true
+    override
+    class main
+    oneshot
+    disabled

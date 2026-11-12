@@ -13,15 +13,19 @@
  *    converters deliver the four microphones in the first four of eight
  *    32-bit channels at 16 kHz.
  *
+ *  - The line out jack: the MT8167's own codec, which gets the same stream.
+ *    While something is plugged in, the jack plays and the speaker is off.
+ *
  * Android gets one microphone as captured, with no processing, as on the
- * other Echos: Kiosk Satellite's own echo canceller then sees the speaker's
- * echo at a fixed delay. persist.donut.mic picks the microphone, 0 to 3.
- * A stereo capture gets that microphone and the next one.
+ * Echo Dot (2nd gen): Kiosk Satellite's own echo canceller then sees the
+ * speaker's echo at a fixed delay. persist.donut.mic picks the microphone,
+ * 0 to 3. A stereo capture gets that microphone and the next one.
  */
 
 #define LOG_TAG "audio.donut"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -93,7 +97,25 @@ static const struct mixer_setting kMixerSettings[] = {
         {"ADC_B Right Mute", NULL, 0},
 };
 
-static void apply_mixer_settings(void) {
+/*
+ * The line out jack. The speaker amplifier hangs on the playback stream
+ * itself, so no route takes the speaker out: its digital volume does, at
+ * -127.5 dB. The jack plays from the MT8167's own codec, whose headphone
+ * outputs stay open until something is plugged in.
+ */
+static const struct mixer_setting kJackInSettings[] = {
+        {"HPOUT Mux", "AUDIO_AMP", 0},
+        {"HP Ext Amp Switch", NULL, 1},
+        {"PCM Playback Volume", NULL, 0},
+};
+
+static const struct mixer_setting kJackOutSettings[] = {
+        {"PCM Playback Volume", NULL, 255},
+        {"HP Ext Amp Switch", NULL, 0},
+        {"HPOUT Mux", "OPEN", 0},
+};
+
+static void apply_mixer_settings(const struct mixer_setting* settings, size_t count) {
     struct mixer* mixer = mixer_open(CARD);
     size_t i;
 
@@ -101,8 +123,8 @@ static void apply_mixer_settings(void) {
         ALOGE("cannot open the mixer of card %d", CARD);
         return;
     }
-    for (i = 0; i < sizeof(kMixerSettings) / sizeof(kMixerSettings[0]); i++) {
-        const struct mixer_setting* s = &kMixerSettings[i];
+    for (i = 0; i < count; i++) {
+        const struct mixer_setting* s = &settings[i];
         struct mixer_ctl* ctl = mixer_get_ctl_by_name(mixer, s->name);
         unsigned int n;
         int ret = 0;
@@ -121,6 +143,42 @@ static void apply_mixer_settings(void) {
         if (ret != 0) ALOGW("cannot set \"%s\": %d", s->name, ret);
     }
     mixer_close(mixer);
+}
+
+#define SETTINGS(x) (x), sizeof(x) / sizeof((x)[0])
+
+/* The kernel's jack detection: 0 with nothing plugged in. */
+#define JACK_STATE "/sys/class/switch/h2w/state"
+
+static bool jack_plugged(void) {
+    char state = '0';
+    int fd = open(JACK_STATE, O_RDONLY | O_CLOEXEC);
+
+    if (fd < 0) return false;
+    if (read(fd, &state, 1) != 1) state = '0';
+    close(fd);
+    return state != '0';
+}
+
+/* Follows the jack for as long as the audio service runs. */
+static void* jack_thread(void* arg __unused) {
+    bool plugged = false;
+
+    for (;;) {
+        bool now = jack_plugged();
+
+        if (now != plugged) {
+            ALOGI("line out %s", now ? "plugged in, the speaker is off" : "unplugged");
+            if (now) {
+                apply_mixer_settings(SETTINGS(kJackInSettings));
+            } else {
+                apply_mixer_settings(SETTINGS(kJackOutSettings));
+            }
+            plugged = now;
+        }
+        usleep(500000);
+    }
+    return NULL;
 }
 
 struct donut_device {
@@ -626,7 +684,17 @@ static int adev_open(const struct hw_module_t* module, const char* name,
     d->close_input_stream = adev_close_input_stream;
     d->dump = adev_dump;
 
-    apply_mixer_settings();
+    apply_mixer_settings(SETTINGS(kMixerSettings));
+    apply_mixer_settings(SETTINGS(kJackOutSettings));
+    {
+        pthread_t thread;
+
+        if (pthread_create(&thread, NULL, jack_thread, NULL) == 0) {
+            pthread_detach(thread);
+        } else {
+            ALOGW("cannot follow the line out jack");
+        }
+    }
     *device = &d->common;
     return 0;
 }

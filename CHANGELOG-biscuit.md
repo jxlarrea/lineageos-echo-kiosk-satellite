@@ -11,6 +11,7 @@ All notable changes to the Echo Dot (2nd gen) (`biscuit`) image are documented h
 - **`ks-install` sets only the app ops Kiosk Satellite does not have yet.** It set all of them on every boot. Nothing changes on the Dot. On the Echo Dot (3rd gen) setting them again took Kiosk Satellite down after each boot.
 - **BiscuitService looks for releases under the Dot's own codename**, read from `ro.product.device`, since the Echo Dot (3rd gen) runs the same service. Nothing changes on the Dot.
 - **The light sensor HAL moved to the shared layer** (`common/sensors`), where it also reads the Echo Dot (3rd gen)'s sensor. Nothing changes on the Dot.
+- **The updater moved to the shared layer** (`common/dot/ota`, `common/dot/releasetools`), where the Echo Dot (3rd gen) uses it too. The TWRP script works from the folder it was copied to and BiscuitService can download to another folder than `/cache/biscuit-ota` (`ro.biscuit.ota.dir`). Nothing changes on the Dot.
 - **Staging removes the other devices' layers from the tree.** `stage-tree.sh` left every device's layer it had ever staged in the build tree, which its own comment said it did not.
 
 ## 2026.11.3 - 2026-11-09

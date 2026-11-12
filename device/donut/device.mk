@@ -15,14 +15,6 @@ LOCAL_PATH := device/kiosk-satellite/donut
 # Shared storage stays on FUSE, unlike on the Echo Dot (2nd gen): Amazon's
 # kernel release for this Dot has no sdcardfs source.
 
-# Kiosk Satellite applies its settings for an Echo image, such as the Dot's
-# microphone gain, when the image says it takes system updates through
-# BiscuitService. The Dot has no update script yet (ota/ on the Echo Dot
-# (2nd gen)), and without one BiscuitService offers no update.
-# scripts/build.sh sets BISCUIT_RELEASE from CHANGELOG-donut.md.
+# System updates are downloaded to /data: the Dot's /cache holds 27 MB.
 PRODUCT_PROPERTY_OVERRIDES += \
-    ro.biscuit.ota=1
-ifneq ($(BISCUIT_RELEASE),)
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.biscuit.release=$(BISCUIT_RELEASE)
-endif
+    ro.biscuit.ota.dir=/data/biscuit-ota

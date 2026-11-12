@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OTA="$REPO_ROOT/device/biscuit/ota"
+OTA="$REPO_ROOT/common/dot/ota"
 SERVICE="$REPO_ROOT/common/dot/biscuit-service"
 SRC="$SERVICE/src/com/amazon/biscuit/service"
 TMPDIR="$(TMPDIR=/tmp mktemp -d)"
@@ -92,12 +92,12 @@ expect "failed b TWRP 3.7.0_9-bboe2 cannot install this image, update to amonet 
 # The build ships the script and key, stamps the release and puts it in the
 # zip.
 grep -Fq '$(LOCAL_PATH)/ota/twrp-update.sh:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/twrp-update.sh' \
-    "$REPO_ROOT/device/biscuit/device.mk"
+    "$REPO_ROOT/common/config/dot.mk"
 grep -Fq '$(LOCAL_PATH)/ota/release-key.pem:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/release-key.pem' \
-    "$REPO_ROOT/device/biscuit/device.mk"
-grep -Fq 'ro.biscuit.release=$(BISCUIT_RELEASE)' "$REPO_ROOT/device/biscuit/device.mk"
+    "$REPO_ROOT/common/config/dot.mk"
+grep -Fq 'ro.biscuit.release=$(BISCUIT_RELEASE)' "$REPO_ROOT/common/config/dot.mk"
 grep -Fq 'META-INF/com/amazon/biscuit/release.prop' \
-    "$REPO_ROOT/sources/device/amazon/biscuit/releasetools/releasetools.py"
+    "$REPO_ROOT/common/dot/releasetools/releasetools.py"
 grep -Fq 'META-INF/com/amazon/biscuit/release.prop' "$SRC/SystemUpdate.java"
 grep -Fq "export BISCUIT_RELEASE='\$BISCUIT_RELEASE'" "$REPO_ROOT/scripts/build.sh"
 eval "$(sed -n '/^device_name()/,/^}/p;/^release_version()/,/^}/p' "$REPO_ROOT/scripts/build.sh")"

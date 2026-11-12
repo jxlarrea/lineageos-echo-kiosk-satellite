@@ -30,8 +30,7 @@ done
 ! grep -rq 'kiosk-satellite/config/dot.mk' device/crown device/cronos device/checkers device/athena \
     common/config/common.mk common/config/show.mk sources/device/amazon/athena || fail "an Echo Show pulls in dot.mk"
 # One Dot's settings are not in the layer both share.
-for part in ro.biscuit.ota ro.biscuit.release media_vol_default flinger_standbytime wall_powered biscuit-ota \
-    persist.sys.fuse; do
+for part in ro.biscuit.ota.dir media_vol_default flinger_standbytime wall_powered persist.sys.fuse; do
   ! grep -Fq "$part" common/config/dot.mk || fail "dot.mk has $part, which each Dot sets"
 done
 for show in crown cronos checkers; do

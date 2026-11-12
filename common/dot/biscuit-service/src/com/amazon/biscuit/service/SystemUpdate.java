@@ -49,7 +49,7 @@ import java.util.zip.ZipFile;
  * release, such as biscuit-2026.10.6. A Dot release carries the OTA zip and a
  * SHA256withRSA signature of it, made with the key whose public half ships in
  * /system/etc/biscuit-ota. It is downloaded to
- * /cache/biscuit-ota and checked against GitHub's digest and that signature.
+ * /cache/biscuit-ota (or the folder ro.biscuit.ota.dir names) and checked against GitHub's digest and that signature.
  * twrp-update.sh then installs it, run by TWRP from an openrecoveryscript.
  * The bootloader always starts boot_a, so slot A gets the update first. Once
  * Android boots from it, slot B gets it too, the same order the README gives
@@ -72,12 +72,18 @@ final class SystemUpdate {
     private static final String RELEASES_PROPERTY = "persist.biscuit.ota.releases";
     private static final File KEY = new File("/system/etc/biscuit-ota/release-key.pem");
     private static final File SCRIPT = new File("/system/etc/biscuit-ota/twrp-update.sh");
-    private static final File DIR = new File("/cache/biscuit-ota");
+    // Where the release is downloaded to and TWRP finds it. The Echo Dot
+    // (2nd gen) uses /cache. The Echo Dot (3rd gen)'s /cache holds 27 MB, so
+    // its image names a folder on /data, which its TWRP mounts too.
+    private static final File DIR =
+            new File(SystemProperties.get("ro.biscuit.ota.dir", "/cache/biscuit-ota"));
     private static final File ZIP = new File(DIR, "update.zip");
     private static final File PART = new File(DIR, "update.zip.part");
     private static final File UPDATER = new File(DIR, "update-binary");
     private static final File STEP_SCRIPT = new File(DIR, "twrp-update.sh");
     private static final File SLOT = new File(DIR, "slot");
+    // The codename, for twrp-update.sh to tell the Dot's own image in a slot.
+    private static final File DEVICE_FILE = new File(DIR, "device");
     private static final File RESULT = new File(DIR, "result");
     private static final File PENDING = new File(DIR, "pending");
     private static final File ERROR = new File(DIR, "error");
@@ -515,6 +521,7 @@ final class SystemUpdate {
         RESULT.delete();
         trimTwrpLog();
         writeText(SLOT, slot + "\n");
+        writeText(DEVICE_FILE, DEVICE + "\n");
         writeText(ORS, ORS_TEXT);
         setState("installing", -1);
         Log.i(TAG, "rebooting into TWRP to install into slot " + slot);

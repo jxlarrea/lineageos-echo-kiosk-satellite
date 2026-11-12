@@ -12,22 +12,6 @@ $(call inherit-product, vendor/kiosk-satellite/config/dot.mk)
 
 LOCAL_PATH := device/kiosk-satellite/biscuit
 
-# System updates from this repository's GitHub releases through BiscuitService
-# and TWRP (biscuit-service/SystemUpdate.java, ota/). scripts/build.sh sets
-# BISCUIT_RELEASE from the newest release heading in CHANGELOG-biscuit.md,
-# with -dev after it while an Unreleased heading is above it.
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/ota/twrp-update.sh:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/twrp-update.sh \
-    $(LOCAL_PATH)/ota/release-key.pem:$(TARGET_COPY_OUT_SYSTEM)/etc/biscuit-ota/release-key.pem
-
-# In system/build.prop, where releasetools.py reads the release from.
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.biscuit.ota=1
-ifneq ($(BISCUIT_RELEASE),)
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.biscuit.release=$(BISCUIT_RELEASE)
-endif
-
 # Media volume 11 of 15 on a fresh install, which Kiosk Satellite shows as
 # 75%. With Kiosk Satellite's media player and assistant volumes at their
 # default 100, that is the level that works best for the wake word.

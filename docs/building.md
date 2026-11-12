@@ -85,7 +85,7 @@ To make a release, here of the Echo Dot. For an Echo Show, use its codename and 
    sha256sum lineageos-echo-kiosk-satellite-2026.10.12-biscuit.zip > lineageos-echo-kiosk-satellite-2026.10.12-biscuit.zip.sha256
    ```
 
-   The private key stays outside the repository, in `~/.config/biscuit-ota/release-key.pem` unless `BISCUIT_OTA_KEY` says otherwise. The Echo Dot image ships the public half from `device/biscuit/ota/release-key.pem` and the Echo Show images from `common/ota/release-key.pem`.
+   The private key stays outside the repository, in `~/.config/biscuit-ota/release-key.pem` unless `BISCUIT_OTA_KEY` says otherwise. The Echo Dot image ships the public half from `common/dot/ota/release-key.pem` and the Echo Show images from `common/ota/release-key.pem`.
 
 5. Test the signed zip as an update on a device first. Serve it with a releases list in GitHub's format from your computer and point the device at the list with `setprop persist.biscuit.ota.releases <url>` on the Echo Dot or `setprop persist.echo.ota.releases <url>` on an Echo Show. Set it back to `""` afterward.
 6. Publish a GitHub release tagged `biscuit-2026.10.12` and titled `Echo Dot (2nd gen) 2026.10.12`. Attach the zip, its `.sig` and its `.sha256`.

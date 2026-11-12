@@ -169,4 +169,4 @@ BOARD_RAMDISK_OFFSET := 0x03f88000
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/configs/recovery.fstab
 
 # Releasetools (instead of mt8163-common's)
-TARGET_RELEASETOOLS_EXTENSIONS := $(DEVICE_PATH)/releasetools
+TARGET_RELEASETOOLS_EXTENSIONS := vendor/kiosk-satellite/dot/releasetools

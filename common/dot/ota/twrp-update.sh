@@ -5,20 +5,24 @@
 #
 # Kiosk Satellite Edition: install a system update from inside TWRP.
 #
-# BiscuitService copies this to /cache/biscuit-ota with the release zip and
-# its update-binary, names the slot to install into in /cache/biscuit-ota/slot
+# BiscuitService copies this to its update folder (/cache/biscuit-ota, or
+# /data/biscuit-ota on the Echo Dot (3rd gen)) with the release zip and its
+# update-binary, names the slot to install into in the folder's slot file
 # and reboots into recovery with an openrecoveryscript that runs this and then
 # reboots. TWRP's own install command stops the script when an install fails
 # and leaves the Dot waiting in TWRP, so this runs the zip's updater itself
-# and always exits 0. The result goes to /cache/biscuit-ota/result for
+# and always exits 0. The result goes to the folder's result file for
 # BiscuitService to read once Android is back. Android deletes everything in
 # /cache/recovery but the last_* files at boot, so nothing goes there.
 #
-# The bootloader always starts boot_a, whatever slot is active. Slot A gets
+# The Echo Dot (2nd gen)'s bootloader always starts boot_a, whatever slot is
+# active. The Echo Dot (3rd gen)'s starts the active slot. Slot A gets
 # the update first and stays active. Slot B gets it once slot A has booted,
 # and slot A is made active again afterwards.
 
-DIR=${BISCUIT_OTA_DIR:-/cache/biscuit-ota}
+# The folder this script was copied to: /cache/biscuit-ota on the Echo Dot
+# (2nd gen), /data/biscuit-ota on the Echo Dot (3rd gen).
+DIR=${BISCUIT_OTA_DIR:-$(cd "$(dirname "$0")" && pwd)}
 BCB=${BISCUIT_OTA_BCB:-/sbin/amzn_bcbtool}
 BY_NAME=${BISCUIT_OTA_BY_NAME:-/dev/block/platform/bootdevice/by-name}
 LINKS=${BISCUIT_OTA_LINKS:-/dev/block}
@@ -57,11 +61,15 @@ has_image() {
     mkdir -p "$TMP/biscuit-ota-system"
     mount -t ext4 -o ro "$BY_NAME/system_$1" "$TMP/biscuit-ota-system" 2>/dev/null || return 1
     cat "$TMP/biscuit-ota-system/system/build.prop" "$TMP/biscuit-ota-system/build.prop" 2>/dev/null |
-        grep -q '^ro.product.device=biscuit$'
+        grep -q "^ro.product.device=$DEVICE\$"
     found=$?
     umount "$TMP/biscuit-ota-system"
     return $found
 }
+
+# The Dot this is: biscuit unless BiscuitService names another.
+DEVICE=$(cat "$DIR/device" 2>/dev/null)
+DEVICE=${DEVICE:-biscuit}
 
 slot=$(cat "$DIR/slot" 2>/dev/null)
 case "$slot" in
@@ -69,13 +77,17 @@ case "$slot" in
     *) finish "failed $slot no slot to install into" ;;
 esac
 
-# Only TWRP 3.7.0_9-0, the recovery amonet v2 installs, is known to install
+# Only TWRP 3.7.0_9-0, the recovery amonet v2 installs and the one the Echo
+# Dot (3rd gen)'s unlock installs, is known to install
 # this image. An update from TWRP 3.2.3, amonet 1's recovery, left an Echo
 # Show in a boot loop (issue #13). With any other TWRP this writes nothing and
 # Android starts again, where BiscuitService reports why.
 twrp=$($GETPROP ro.twrp.version 2>/dev/null)
 [ "$twrp" = "$TWRP_VERSION" ] ||
-    finish "failed $slot TWRP ${twrp:-of unknown version} cannot install this image, update to amonet v2 and TWRP $TWRP_VERSION"
+    case "$DEVICE" in
+        biscuit) finish "failed $slot TWRP ${twrp:-of unknown version} cannot install this image, update to amonet v2 and TWRP $TWRP_VERSION" ;;
+        *) finish "failed $slot TWRP ${twrp:-of unknown version} cannot install this image, it needs TWRP $TWRP_VERSION" ;;
+    esac
 
 [ -f "$DIR/update.zip" ] || finish "failed $slot update.zip is missing"
 cp "$DIR/update-binary" "$UPDATER" && chmod 0755 "$UPDATER" ||

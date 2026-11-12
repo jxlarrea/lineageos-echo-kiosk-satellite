@@ -76,6 +76,9 @@ TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/configs/recovery.fstab
 TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 
+# Releasetools: the Echo Dots' update zip rules.
+TARGET_RELEASETOOLS_EXTENSIONS := vendor/kiosk-satellite/dot/releasetools
+
 # Properties. Without a vendor partition they all go in system/build.prop.
 TARGET_SYSTEM_PROP += $(DEVICE_PATH)/system.prop $(DEVICE_PATH)/vendor.prop
 

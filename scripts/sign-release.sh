@@ -2,7 +2,7 @@
 # Sign an Echo release zip for system updates: writes <zip>.sig, a
 # SHA256withRSA signature that the Echo checks against the public key its
 # image ships before it installs the zip. That is BiscuitService and
-# device/biscuit/ota/release-key.pem on the Echo Dot, EchoService and
+# common/dot/ota/release-key.pem on the Echo Dots, EchoService and
 # common/ota/release-key.pem on the Echo Shows. A release without the .sig
 # is only installed by hand. Name the zip with the device's codename in it,
 # as the build does, since each Echo only takes its own.
@@ -18,10 +18,10 @@ KEY="${BISCUIT_OTA_KEY:-$HOME/.config/biscuit-ota/release-key.pem}"
 [[ -f "$KEY" ]] || { echo "ERROR: no private key at $KEY (set BISCUIT_OTA_KEY)" >&2; exit 1; }
 
 case "$(basename "$1")" in
-  *biscuit*.zip) PUBLIC="$REPO_ROOT/device/biscuit/ota/release-key.pem" ;;
+  *biscuit*.zip|*donut*.zip) PUBLIC="$REPO_ROOT/common/dot/ota/release-key.pem" ;;
   *athena*.zip|*checkers*.zip|*cronos*.zip|*crown*.zip) PUBLIC="$REPO_ROOT/common/ota/release-key.pem" ;;
   *)
-    echo "ERROR: name the zip with the device's codename (athena, biscuit, checkers, cronos or crown)" >&2
+    echo "ERROR: name the zip with the device's codename (athena, biscuit, checkers, cronos, crown or donut)" >&2
     exit 1
     ;;
 esac

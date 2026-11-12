@@ -1,3 +1,6 @@
+# Audio
+ro.hardware.audio.primary=donut
+
 # Display: the Dot has no screen and no GPU driver. SurfaceFlinger composes
 # with SwiftShader into buffers from ashmem for a display nobody sees.
 ro.hardware.egl=swiftshader

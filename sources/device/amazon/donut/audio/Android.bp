@@ -1,0 +1,14 @@
+//
+// SPDX-FileCopyrightText: 2026 The LineageOS Project
+// SPDX-License-Identifier: Apache-2.0
+//
+
+cc_library_shared {
+    name: "audio.primary.donut",
+    relative_install_path: "hw",
+    vendor: true,
+    srcs: ["audio_hw.c"],
+    header_libs: ["libhardware_headers"],
+    shared_libs: ["libcutils", "libhardware", "liblog", "libtinyalsa"],
+    cflags: ["-Wall", "-Werror"],
+}

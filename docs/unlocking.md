@@ -61,6 +61,25 @@ The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 </details>
 
 <details>
+<summary><h2 id="echo-dot-3rd-gen">Echo Dot (3rd gen)</h2></summary>
+
+Use [R0rt1z2](https://github.com/R0rt1z2)'s unlock for the Echo Dot (3rd gen). R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-dot-3rd-gen-2018-donut.4801400/) has the package, the requirements and every step. It installs TWRP 3.7.0_9-0, which is what the image needs.
+
+> [!WARNING]
+> The Echo Dot (3rd gen) has no USB port. To unlock it, you have to open the Dot and solder a USB cable to test pads on its board. You need a soldering iron and some practice with it.
+
+This page does not repeat the procedure. The thread explains the steps that need care with pictures, so follow the thread itself and ask there if something is unclear.
+
+Leave the cable in place after the unlock. TWRP is only reachable over USB, so installing the image needs it too.
+
+> [!IMPORTANT]
+> Do not set up the Dot in the Alexa app before you unlock it. If it gets on Wi-Fi, Fire OS can update to a build the unlock does not support. Check the thread for the supported builds first.
+
+The unlock lives in the bootloader, the preloader and the partitions that hold TWRP. The image never writes them. Do not write them with other tools either.
+
+</details>
+
+<details>
 <summary><h2 id="echo-show-5-1st-gen">Echo Show 5 (1st gen)</h2></summary>
 
 Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5 (1st gen), linked from R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-5-1st-gen-2019-checkers.4762900/). Its `fastbrick` script unlocks the Show over USB and writes TWRP 3.7.0_9-0, which is what the image needs.
@@ -217,20 +236,6 @@ Follow the steps in the XDA thread. In short:
 saiyaku rewrites the Show's bootloader, so never unplug the Show while it runs. When it ends, the Show restarts into TWRP. After the unlock, hold **Volume Up** while plugging in the power to start TWRP. Hold **Volume Down** to start fastboot.
 
 The unlock lives in the bootloader, the preloader and the recovery partition. The image never writes them. Do not write them with other tools either.
-
-</details>
-
-<details>
-<summary><h2 id="echo-dot-3rd-gen">Echo Dot (3rd gen)</h2></summary>
-
-Use [R0rt1z2](https://github.com/R0rt1z2)'s unlock for the Echo Dot (3rd gen). R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-dot-3rd-gen-2018-donut.4801400/) has the package, the requirements and every step. It installs TWRP 3.7.0_9-0, which is what the image needs.
-
-This page does not repeat the procedure. The unlock opens the Dot and needs care at steps the thread explains with pictures, so follow the thread itself and ask there if something is unclear.
-
-> [!IMPORTANT]
-> Do not set up the Dot in the Alexa app before you unlock it. If it gets on Wi-Fi, Fire OS can update to a build the unlock does not support. Check the thread for the supported builds first.
-
-The unlock lives in the bootloader, the preloader and the partitions that hold TWRP. The image never writes them. Do not write them with other tools either.
 
 </details>
 

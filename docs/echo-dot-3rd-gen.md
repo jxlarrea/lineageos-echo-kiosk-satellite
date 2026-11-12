@@ -2,7 +2,7 @@
 
 A LineageOS 18.1 (Android 11) image for the 3rd generation Echo Dot (`donut`), tuned to run [Kiosk Satellite](https://github.com/jxlarrea/kiosk-satellite) as a voice satellite, intercom and speaker for Home Assistant. The Dot has no screen, so the image leaves out everything that draws one and runs Kiosk Satellite headless.
 
-It is this repository's own port, with its own device tree and a kernel built from Amazon's source release in [android_kernel_amazon_mt8167](https://github.com/jxlarrea/android_kernel_amazon_mt8167).
+It is [jxlarrea](https://github.com/jxlarrea)'s own port, with its own device tree and a kernel built from Amazon's source release in [android_kernel_amazon_mt8167](https://github.com/jxlarrea/android_kernel_amazon_mt8167).
 
 ## What the image does
 

@@ -1,0 +1,4 @@
+# The Dot's buttons: volume down, volume up and the action button.
+key 114   VOLUME_DOWN
+key 115   VOLUME_UP
+key 138   HELP

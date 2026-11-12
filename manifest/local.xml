@@ -26,6 +26,7 @@
 
   <project path="kernel/amazon/mt8163-4.9"    name="android_kernel_amazon_mt8163"        remote="amazon-oss" />
   <project path="kernel/amazon/mt8183"        name="android_kernel_amazon_mt8183"        remote="jxlarrea" />
+  <project path="kernel/amazon/mt8167"        name="android_kernel_amazon_mt8167"        remote="jxlarrea" />
   <project path="kernel/amazon/mt66xx-common" name="android_kernel_amazon_mt66xx-common" remote="amazon-oss" />
   <project path="kernel/amazon/mt66xx-bt"     name="android_kernel_amazon_mt66xx-bt"     remote="amazon-oss" />
   <project path="kernel/amazon/mt66xx-wifi"   name="android_kernel_amazon_mt66xx-wifi"   remote="amazon-oss" />

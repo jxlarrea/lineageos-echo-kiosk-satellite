@@ -1,0 +1,2 @@
+# No setup wizard on a speaker without a screen.
+ro.setupwizard.mode=DISABLED

@@ -1,0 +1,5 @@
+# For the update tools only. TWRP has its own.
+/dev/block/platform/soc/11120000.mmc/by-name/system_a   /system     ext4   ro                      wait
+/dev/block/platform/soc/11120000.mmc/by-name/boot_a     /boot       emmc   defaults                defaults
+/dev/block/platform/soc/11120000.mmc/by-name/userdata   /data       ext4   noatime,nosuid,nodev    wait
+/dev/block/platform/soc/11120000.mmc/by-name/cache      /cache      ext4   noatime,nosuid,nodev    wait

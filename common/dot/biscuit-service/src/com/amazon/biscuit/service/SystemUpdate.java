@@ -245,6 +245,11 @@ final class SystemUpdate {
     void resume() {
         post(new Runnable() {
             public void run() {
+                // On the Echo Dot (3rd gen) twrp-update.sh leaves a script that
+                // reboots, for the second start of TWRP its bootloader makes.
+                // If Android started without that, it must not wait for the
+                // next time someone starts TWRP.
+                ORS.delete();
                 Properties pending = readProperties(PENDING);
                 String step = pending.getProperty("step", "");
                 String version = pending.getProperty("version", "");

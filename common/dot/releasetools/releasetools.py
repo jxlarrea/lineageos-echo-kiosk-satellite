@@ -17,6 +17,8 @@ before they install it: the system image is block based, so its build.prop
 cannot be read from the zip.
 """
 
+import re
+
 import common
 
 # Read by BiscuitService's SystemUpdate.java.
@@ -44,18 +46,26 @@ _SLOT_ASSERTION = (
 
 
 def _device(info):
-    device = info.info_dict["build.prop"].GetProp("ro.product.device")
-    if device not in _NAMES:
-        raise ValueError("%s is not an Echo Dot" % device)
-    return device
+    """The codename the build's own device assertion names, since build.prop
+    has no plain ro.product.device to read."""
+    for line in info.script.script:
+        match = re.match(r'assert\(getprop\("ro\.product\.device"\) == "([^"]+)"', line)
+        if match and match.group(1) in _NAMES:
+            return match.group(1)
+    raise ValueError("the OTA script does not name an Echo Dot")
+
+
+_device_name = None
 
 
 def _replace_device_assertion(info):
     """TWRP's updater environment cannot be relied on for ro.product.device,
     and the slot check is stricter: the partition numbers are the Dots'."""
+    global _device_name
+    _device_name = _device(info)
     for index, line in enumerate(info.script.script):
         if line.startswith('assert(getprop("ro.product.device")'):
-            info.script.script[index] = _SLOT_ASSERTION % _NAMES[_device(info)]
+            info.script.script[index] = _SLOT_ASSERTION % _NAMES[_device_name]
             return
     raise ValueError("no device assertion in the OTA script")
 
@@ -70,7 +80,7 @@ def FullOTA_InstallEnd(info):
         print("No ro.biscuit.release, so the package cannot be a system update")
         return
     common.ZipWriteStr(info.output_zip, _RELEASE_PROP,
-                       "ro.product.device=%s\nro.biscuit.release=%s\n" % (_device(info), release))
+                       "ro.product.device=%s\nro.biscuit.release=%s\n" % (_device_name, release))
 
 
 def IncrementalOTA_Assertions(info):

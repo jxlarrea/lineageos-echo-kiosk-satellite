@@ -30,7 +30,12 @@ TMP=${BISCUIT_OTA_TMP:-/tmp}
 UPDATER=$TMP/biscuit-ota-updater
 HAS_IMAGE=${BISCUIT_OTA_HAS_IMAGE:-has_image}
 GETPROP=${BISCUIT_OTA_GETPROP:-getprop}
+ORS_DIR=${BISCUIT_OTA_ORS_DIR:-/cache/recovery}
 TWRP_VERSION=3.7.0_9-0
+
+# The Dot this is: biscuit unless BiscuitService names another.
+DEVICE=$(cat "$DIR/device" 2>/dev/null)
+DEVICE=${DEVICE:-biscuit}
 
 exec >>"$DIR/twrp.log" 2>&1
 echo "=== $(date) slot $(cat "$DIR/slot" 2>/dev/null)"
@@ -40,6 +45,14 @@ finish() {
     echo "result: $*"
     echo "$*" >"$DIR/result"
     rm -f "$DIR/slot"
+    # The Echo Dot (3rd gen)'s bootloader starts TWRP once more after a stay
+    # in TWRP of more than a few seconds, whatever way TWRP is left, and
+    # only the reboot after that one starts Android. Without a script TWRP
+    # would wait there, so that second start gets one that reboots at once.
+    # TWRP took this run's script away before it started it.
+    if [ "$DEVICE" = donut ]; then
+        mkdir -p "$ORS_DIR" && echo reboot >"$ORS_DIR/openrecoveryscript"
+    fi
     sync
     exit 0
 }
@@ -66,10 +79,6 @@ has_image() {
     umount "$TMP/biscuit-ota-system"
     return $found
 }
-
-# The Dot this is: biscuit unless BiscuitService names another.
-DEVICE=$(cat "$DIR/device" 2>/dev/null)
-DEVICE=${DEVICE:-biscuit}
 
 slot=$(cat "$DIR/slot" 2>/dev/null)
 case "$slot" in

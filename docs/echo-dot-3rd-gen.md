@@ -9,7 +9,7 @@ It is [jxlarrea](https://github.com/jxlarrea)'s own port, with its own device tr
 
 ## What the image does
 
-- **A raw microphone for Kiosk Satellite.** Kiosk Satellite hears one of the four microphones as captured, with nothing removed from it. Its own echo canceller then sees the speaker's echo at a fixed delay. See [Voice](#voice).
+- **A raw microphone for Kiosk Satellite.** Kiosk Satellite hears one of the four microphones as captured, with nothing removed from it. Its own echo canceller then sees the speaker's echo at a fixed delay. See [Voice](#voice) and [Volume](#volume) for the levels that work best.
 - **Its own audio driver layer.** The image drives the speaker, the microphones and the line out jack with an audio HAL written for this Dot. It uses none of Fire OS's audio libraries.
 - **Kiosk Satellite on first boot.** Once the Dot is on Wi-Fi, the latest Kiosk Satellite release is downloaded, installed, given every permission it needs and made the device owner, so its updates install without a confirmation. No adb grants needed.
 - **System updates.** BiscuitService finds, downloads and installs new releases of this image. Kiosk Satellite shows them in its remote admin and as a **Firmware** update in Home Assistant.
@@ -150,6 +150,14 @@ BiscuitService checks for a new release a minute after every boot. Kiosk Satelli
 An update never writes the partitions that hold TWRP or the bootloader. It writes the system and boot partitions of one slot at a time.
 
 ## Settings
+
+### Volume
+
+Keep the Dot's master volume at 80% and Kiosk Satellite's assistant and intercom volumes at 100%, with its media player volume at 85%. Turn music down in Kiosk Satellite or Music Assistant rather than with the Dot's master volume. To set the master volume to 80% from adb:
+
+```sh
+adb shell biscuit_service volume set 12
+```
 
 ### Voice
 

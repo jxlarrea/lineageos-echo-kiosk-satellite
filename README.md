@@ -24,14 +24,14 @@ LineageOS 18.1 (Android 11) images for Amazon Echo devices, tuned to run [Kiosk 
 
 <div align="center">
 
-| Device | Codename | Status | Guide |
-| --- | --- | --- | --- |
-| Echo Dot (2nd gen) | `biscuit` | Ready | [Echo Dot](docs/echo-dot.md) |
-| Echo Dot (3rd gen) | `donut` | Work in progress | [Echo Dot (3rd gen)](docs/echo-dot-3rd-gen.md) |
-| Echo Show 5 (1st gen) | `checkers` | Ready | [Echo Show 5 (1st gen)](docs/echo-show-5-1st-gen.md) |
-| Echo Show 5 (2nd gen) | `cronos` | Ready | [Echo Show 5 (2nd gen)](docs/echo-show-5.md) |
-| Echo Show 8 (1st gen) | `crown` | Ready | [Echo Show 8 (1st gen)](docs/echo-show-8.md) |
-| Echo Show 8 (2nd gen) | `athena` | Ready | [Echo Show 8 (2nd gen)](docs/echo-show-8-2nd-gen.md) |
+| Device | Codename | Model |
+| --- | --- | --- |
+| [Echo Dot (2nd gen)](docs/echo-dot.md) | `biscuit` | RS03QR |
+| [Echo Dot (3rd gen)](docs/echo-dot-3rd-gen.md) | `donut` | D9N29T |
+| [Echo Show 5 (1st gen)](docs/echo-show-5-1st-gen.md) | `checkers` | H23K37 |
+| [Echo Show 5 (2nd gen)](docs/echo-show-5.md) | `cronos` | C76N8S |
+| [Echo Show 8 (1st gen)](docs/echo-show-8.md) | `crown` | C7H6N3 |
+| [Echo Show 8 (2nd gen)](docs/echo-show-8-2nd-gen.md) | `athena` | A8H3N2 |
 
 </div>
 

@@ -4,6 +4,9 @@ A LineageOS 18.1 (Android 11) image for the 3rd generation Echo Dot (`donut`), t
 
 It is [jxlarrea](https://github.com/jxlarrea)'s own port, with its own device tree and a kernel built from Amazon's source release in [android_kernel_amazon_mt8167](https://github.com/jxlarrea/android_kernel_amazon_mt8167).
 
+> [!CAUTION]
+> The image is only for the Echo Dot (3rd gen) released in 2018, model D9N29T, codename `donut`. Amazon also sold a revised Echo Dot (3rd gen) in 2019 and 2020, model C78MP8, codename `crumpet`. It has different hardware and neither the [unlock](unlocking.md#echo-dot-3rd-gen) nor the image works on it. Check the model number on the bottom of the Dot first.
+
 ## What the image does
 
 - **A raw microphone for Kiosk Satellite.** Kiosk Satellite hears one of the four microphones as captured, with nothing removed from it. Its own echo canceller then sees the speaker's echo at a fixed delay. See [Voice](#voice).

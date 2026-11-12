@@ -65,6 +65,9 @@ The update rewrites the Dot's bootloader, so never unplug the Dot while it runs.
 
 Use [R0rt1z2](https://github.com/R0rt1z2)'s unlock for the Echo Dot (3rd gen). R0rt1z2's [XDA thread](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-dot-3rd-gen-2018-donut.4801400/) has the package, the requirements and every step. It installs TWRP 3.7.0_9-0, which is what the image needs.
 
+> [!CAUTION]
+> The unlock and the image are only for the Echo Dot (3rd gen) released in 2018, model D9N29T, codename `donut`. Amazon also sold a revised Echo Dot (3rd gen) in 2019 and 2020, model C78MP8, codename `crumpet`. It has different hardware and neither the unlock nor the image works on it. Check the model number on the bottom of the Dot before you open it.
+
 > [!WARNING]
 > The Echo Dot (3rd gen) has no USB port. To unlock it, you have to open the Dot and solder a USB cable to test pads on its board. You need a soldering iron and some practice with it.
 

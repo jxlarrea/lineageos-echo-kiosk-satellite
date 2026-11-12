@@ -81,6 +81,15 @@ static const struct mixer_setting kMixerSettings[] = {
         {"DAIBT Mux", "MRG", 0},
         {"Left PGA Mux", "OPEN", 0},
         {"Right PGA Mux", "OPEN", 0},
+        /*
+         * 12 dB of analog gain (0.5 dB steps), as Fire OS sets it. Do not
+         * raise it to the Echo Dot (2nd gen)'s 36 dB: at full volume this
+         * Dot's speaker already drives the microphones to full scale with
+         * 12 dB, and a clipped microphone is echo no canceller can remove.
+         * More gain would not make the signal cleaner either. The quiet room
+         * noise rises with it almost 1 to 1 (10.5 dB for 12 dB), so the
+         * microphones and the room set the noise, not the converters.
+         */
         {"ADC_A MICPGA Volume Ctrl", NULL, 24},
         {"ADC_B MICPGA Volume Ctrl", NULL, 24},
         {"ADC_A DIF1_L Input Gain", NULL, 0},

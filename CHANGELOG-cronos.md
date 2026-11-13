@@ -5,6 +5,8 @@ All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented
 ## Unreleased
 
 ### Changed
+- **The nightly storage trim runs.** Android's storage maintenance, which trims `/data` and `/cache`, waited for the device to be idle and charging. An Echo is never idle that way and most report no charging battery, so the trim never ran. It now runs once a day at 3 AM. Regular trims tell the eMMC which blocks are free, which helps it spread wear.
+- **No more error report every 30 minutes.** The kernel has no per-app network statistics, so Android's statistics poll failed every 30 minutes and on every network change and wrote an error report to storage each time. Android now reports empty statistics there. Data usage numbers were already empty on this kernel.
 - **No lock sound.** With the lock screen off, Android still played its lock sound at every boot and each time the screen turned off. A fresh install now has the lock and unlock sounds off, and EchoService turns them off once on a Show that is already set up. Settings > Sound turns them back on.
 - **The microphone dump and read-gap log work with processing off.** `persist.vendor.amznaec.dump` and `persist.vendor.amznaec.log` only worked while the image's echo canceller processed the microphones. With it off, as on a fresh install, the dump now gets the microphones as captured and the log reports the longest gap between the audio HAL's reads every 5 seconds. Neither changes what Kiosk Satellite hears.
 - **The guide links the Echo Show 5 (1st gen).** [docs/echo-show-5.md](docs/echo-show-5.md) now says it is for the Echo Show 5 from 2021 and links the [Echo Show 5 (1st gen) guide](docs/echo-show-5-1st-gen.md).

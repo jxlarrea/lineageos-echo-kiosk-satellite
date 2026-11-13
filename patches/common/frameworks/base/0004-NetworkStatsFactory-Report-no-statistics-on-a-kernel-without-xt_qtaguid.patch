@@ -1,0 +1,65 @@
+NetworkStatsFactory: Report no statistics on a kernel without xt_qtaguid
+
+The Echo Dot (2nd gen) and the MT8163 Echo Shows run a 4.9 kernel with
+neither eBPF nor xt_qtaguid, so /proc/net/xt_qtaguid does not exist.
+NetworkStatsService polls it every 30 minutes and on every network
+change. Reading stats failed, the service logged a wtf ("problem reading
+network stats") and DropBox wrote an entry to flash each time.
+
+When those files are missing, report empty statistics from all three
+readers: per UID (stats), per interface (iface_stat_all) and the xt
+summary (iface_stat_fmt), which returned null and would crash
+NetworkStatsService once the other two stopped failing first. Android's
+data usage numbers were already empty on these kernels.
+
+diff --git a/services/core/java/com/android/server/net/NetworkStatsFactory.java b/services/core/java/com/android/server/net/NetworkStatsFactory.java
+index 86ad0b30..766ef344 100644
+--- a/services/core/java/com/android/server/net/NetworkStatsFactory.java
++++ b/services/core/java/com/android/server/net/NetworkStatsFactory.java
+@@ -201,6 +201,13 @@ public class NetworkStatsFactory {
+         final NetworkStats stats = new NetworkStats(SystemClock.elapsedRealtime(), 6);
+         final NetworkStats.Entry entry = new NetworkStats.Entry();
+ 
++        // A kernel with neither eBPF nor xt_qtaguid has no such file. Report
++        // no interfaces instead of failing every poll.
++        if (!mStatsXtIfaceAll.exists()) {
++            StrictMode.setThreadPolicy(savedPolicy);
++            return stats;
++        }
++
+         ProcFileReader reader = null;
+         try {
+             reader = new ProcFileReader(new FileInputStream(mStatsXtIfaceAll));
+@@ -254,12 +261,16 @@ public class NetworkStatsFactory {
+ 
+         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
+ 
+-        // return null when kernel doesn't support
+-        if (!mStatsXtIfaceFmt.exists()) return null;
+-
+         final NetworkStats stats = new NetworkStats(SystemClock.elapsedRealtime(), 6);
+         final NetworkStats.Entry entry = new NetworkStats.Entry();
+ 
++        // A kernel without xt_qtaguid has no such file. Report no interfaces.
++        // This returned null, which NetworkStatsService does not expect.
++        if (!mStatsXtIfaceFmt.exists()) {
++            StrictMode.setThreadPolicy(savedPolicy);
++            return stats;
++        }
++
+         ProcFileReader reader = null;
+         try {
+             // open and consume header line
+@@ -342,6 +353,12 @@ public class NetworkStatsFactory {
+                     // BPF stats are incremental; fold into mPersistSnapshot.
+                     mPersistSnapshot.setElapsedRealtime(stats.getElapsedRealtime());
+                     mPersistSnapshot.combineAllValues(stats);
++                } else if (!mStatsXtUid.exists()) {
++                    // A kernel with neither eBPF nor xt_qtaguid has no per-UID
++                    // statistics at all. Report none instead of failing every
++                    // poll, which logged a wtf and wrote a dropbox entry to
++                    // flash each time.
++                    mPersistSnapshot = stats;
+                 } else {
+                     if (nativeReadNetworkStatsDetail(stats, mStatsXtUid.getAbsolutePath(), UID_ALL,
+                             INTERFACES_ALL, TAG_ALL, mUseBpfStats) != 0) {

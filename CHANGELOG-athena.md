@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 8 (2nd gen) (`athena`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (1st gen)](CHANGELOG-checkers.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **The nightly storage trim runs.** Android's storage maintenance, which trims `/data` and `/cache`, waited for the device to be idle and charging. An Echo is never idle that way and most report no charging battery, so the trim never ran. It now runs once a day at 3 AM. Regular trims tell the eMMC which blocks are free, which helps it spread wear.
+
 ## 2026.11.2 - 2026-11-11
 
 ### Fixed

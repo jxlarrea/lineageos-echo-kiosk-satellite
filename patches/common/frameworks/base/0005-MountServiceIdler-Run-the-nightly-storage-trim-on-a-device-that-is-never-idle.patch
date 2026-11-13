@@ -1,0 +1,30 @@
+MountServiceIdler: Run the nightly storage trim on a device that is never idle
+
+The storage maintenance job, which has vold trim /data and /cache, waits
+for the device to be idle and charging. An Echo is wall powered with its
+screen on, or has no screen, and most report no charging battery. The job
+never ran: on the Echo Dot (3rd gen) the first manual run trimmed 1.3 GB
+that had never been trimmed.
+
+Drop the idle, charging and battery conditions. The job still runs once a
+day at 3 AM. Regular trims tell the eMMC which blocks are free, which
+lets it spread wear and keeps writes fast.
+
+diff --git a/services/core/java/com/android/server/MountServiceIdler.java b/services/core/java/com/android/server/MountServiceIdler.java
+index 0f4c94bc..cc274e3d 100644
+--- a/services/core/java/com/android/server/MountServiceIdler.java
++++ b/services/core/java/com/android/server/MountServiceIdler.java
+@@ -111,9 +111,10 @@ public class MountServiceIdler extends JobService {
+         }
+ 
+         JobInfo.Builder builder = new JobInfo.Builder(MOUNT_JOB_ID, sIdleService);
+-        builder.setRequiresDeviceIdle(true);
+-        builder.setRequiresBatteryNotLow(true);
+-        builder.setRequiresCharging(true);
++        // An Echo runs from the wall with its screen on or no screen at all.
++        // It is never idle the way a phone is and most report no charging
++        // battery, so with those conditions the nightly trim never ran. The
++        // trim takes a second or two, so run it at 3 AM regardless.
+         builder.setMinimumLatency(nextScheduleTime);
+         tm.schedule(builder.build());
+     }

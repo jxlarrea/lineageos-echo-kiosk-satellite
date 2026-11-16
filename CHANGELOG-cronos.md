@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (1st gen)](CHANGELOG-checkers.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **The unlocking guide no longer says to update Fire OS** ([#53](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/53)). A newer Fire OS build or bootloader can have the exploit patched and Fire OS cannot go back to an older version. The guide now says to keep the Show off Wi-Fi until it is unlocked and to check the XDA thread for the Fire OS versions the package supports.
+
 ## 2026.11.5 - 2026-11-13
 
 ### Changed

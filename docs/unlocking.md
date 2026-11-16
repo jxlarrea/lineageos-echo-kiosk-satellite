@@ -2,6 +2,9 @@
 
 Every image installs from TWRP, which needs an unlocked bootloader. Each Echo has its own way to unlock, with a port of amonet, an exploit of MediaTek's boot chain. This page covers each device this repository has an image for. Once a device is unlocked, [Getting into TWRP](twrp.md) covers starting TWRP. The device's guide covers the installation.
 
+> [!IMPORTANT]
+> Do not update Fire OS before you unlock an Echo. Amazon can patch the exploit in a newer Fire OS build or bootloader and Fire OS cannot go back to an older version. Keep the Echo off Wi-Fi until it is unlocked. Check the device's XDA thread for the versions its unlock supports before you start.
+
 <details>
 <summary><h2 id="echo-dot-2nd-gen">Echo Dot (2nd gen)</h2></summary>
 
@@ -108,7 +111,7 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5
    fastboot reboot
    ```
 
-   `product` must be `AEOCH`. If `lk_build_desc` starts with a 2019 date, such as `cd178e6-20190703`, `fastbrick` cannot unlock it yet. Set the Show up in the Alexa app, let Fire OS install every update it finds and check again. The XDA thread covers the other way, a test point inside the case. A Show on the bootloader from 2024, `44072a3-20240709`, is ready as it is.
+   `product` must be `AEOCH`. A Show on the bootloader from 2024, `44072a3-20240709`, is ready as it is. If `lk_build_desc` starts with a 2019 date, such as `cd178e6-20190703`, `fastbrick` cannot unlock it over USB. Do not update Fire OS to get a newer bootloader, since a newer one can have the exploit patched. Check the XDA thread for the bootloaders `fastbrick` supports. The thread also covers the other way, a test point inside the case.
 
 ### Run fastbrick
 
@@ -144,6 +147,7 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 5
 
 - The Echo Show 5 (2nd gen), its power adapter and a USB cable that carries data.
 - A computer with Linux, macOS or Windows. The package brings its own `fastboot`.
+- The Show off Wi-Fi until it is unlocked, so Fire OS cannot update itself first. Check the XDA thread for the Fire OS versions the package supports.
 
 ### Run fastbrick
 
@@ -179,7 +183,7 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s amonet 2 package for the Echo Show 8
 
 - The Echo Show 8 (1st gen), its power adapter and a USB cable that carries data.
 - A computer with Linux or Windows. The package brings its own `fastboot`. On macOS it does not run as shipped. [This post](https://xdaforums.com/t/unlock-root-twrp-unbrick-amazon-echo-show-8-1st-gen-2019-crown.4766687/post-90798261) on the XDA thread has a workaround.
-- The Show off Wi-Fi until it is unlocked, so Fire OS cannot update itself first. The package is known to work on Fire OS 6.5.7.4 (NS65741).
+- The Show off Wi-Fi until it is unlocked, so Fire OS cannot update itself first. The package is known to work on Fire OS 6.5.7.4 (NS65741). Check the XDA thread for the other versions it supports.
 
 ### Run fastbrick
 
@@ -220,13 +224,13 @@ Use [R0rt1z2](https://github.com/R0rt1z2)'s saiyaku package for the Echo Show 8 
 - A computer with Linux or Windows and Python 3 with `pyserial`. On Windows, also install the USB drivers the XDA thread names.
 - `saiyaku-athena-v1.1.1.zip` from the XDA thread.
 
-### Get the Show on a supported Fire OS
+### Check the Show's Fire OS version
 
 The XDA thread links the [list of supported versions](https://ftvdb.com/echo/firmware/com.amazon.athena.android.os/). The unlock for this guide was run on Fire OS 7575.1 (PS75751/7809).
 
 1. Read the version on the Show under **Settings > Device Options > About**.
-2. If it is older than the listed ones, set the Show up, join Wi-Fi and let Fire OS update. Use **Settings > Device Options > Check for Software Updates** until it finds nothing more. Fire OS cannot go back to an older version.
-3. Take the Show off Wi-Fi once it is on a listed version, so Fire OS cannot update past the list before you unlock it.
+2. If it is a listed version, take the Show off Wi-Fi so Fire OS cannot update past the list before you unlock it.
+3. If it is not listed, do not run saiyaku. Do not let Fire OS update to reach a listed version either. It installs the newest build, which can have the exploit patched. Fire OS cannot go back to an older version. Ask in the XDA thread first.
 
 ### Run saiyaku
 
@@ -234,7 +238,7 @@ Follow the steps in the XDA thread. In short:
 
 1. Extract `saiyaku-athena-v1.1.1.zip` and install its one Python requirement with `pip install -r requirements.txt`.
 2. Run `./meta-step.sh` on Linux or `meta-step.bat` on Windows, then connect the Show as the thread describes.
-3. saiyaku prints the Fire OS version it finds on the Show. If that is not the version the Show's settings showed or not a listed one, stop and let Fire OS finish updating first.
+3. saiyaku prints the Fire OS version it finds on the Show. If that is not the version the Show's settings showed or not a listed one, stop and check the XDA thread before you go on.
 
 saiyaku rewrites the Show's bootloader, so never unplug the Show while it runs. When it ends, the Show restarts into TWRP. After the unlock, hold **Volume Up** while plugging in the power to start TWRP. Hold **Volume Down** to start fastboot.
 

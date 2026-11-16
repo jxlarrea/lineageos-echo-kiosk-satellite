@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 5 (1st gen) (`checkers`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **The unlocking guide no longer says to update Fire OS** ([#53](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/53)). A newer Fire OS build or bootloader can have the exploit patched and Fire OS cannot go back to an older version. The Echo Show 5 (1st gen) section told a Show on the 2019 bootloader to install every update. It now says not to and points at the XDA thread for the bootloaders `fastbrick` supports and the test point inside the case.
+
 ## 2026.11.2 - 2026-11-13
 
 ### Changed

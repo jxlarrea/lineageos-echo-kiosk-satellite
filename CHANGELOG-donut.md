@@ -2,7 +2,7 @@
 
 All notable changes to the Echo Dot (3rd gen) (`donut`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (1st gen)](CHANGELOG-checkers.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md), [Echo Show 8 (1st gen)](CHANGELOG-crown.md) and [Echo Show 8 (2nd gen)](CHANGELOG-athena.md) have their own.
 
-## Unreleased
+## 2026.11.3 - 2026-11-27
 
 ### Changed
 - **The voice capture sources record the raw microphone** ([kiosk-satellite #1622](https://github.com/jxlarrea/kiosk-satellite/discussions/1622)). Android now opens a voice communication or voice recognition capture as a plain microphone capture, the path Kiosk Satellite records on. On the Echo Show 8 (2nd gen), Amazon's processing on those sources broke the wake word and silenced playback after a privacy cycle. Every Echo image gets the same change. Nothing changes for a microphone capture.

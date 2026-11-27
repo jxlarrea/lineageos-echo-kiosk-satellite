@@ -6,6 +6,7 @@ All notable changes to the Echo Show 5 (2nd gen) (`cronos`) image are documented
 
 ### Changed
 - **The unlocking guide no longer says to update Fire OS** ([#53](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/53)). A newer Fire OS build or bootloader can have the exploit patched and Fire OS cannot go back to an older version. The guide now says to keep the Show off Wi-Fi until it is unlocked and to check the XDA thread for the Fire OS versions the package supports.
+- **The voice capture sources record the raw microphone** ([kiosk-satellite #1622](https://github.com/jxlarrea/kiosk-satellite/discussions/1622)). An app that recorded on Android's voice communication or voice recognition source got Amazon's VoIP or ASR pipeline instead of microphone 0. Kiosk Satellite could move to these sources while the privacy button was on and keep them after privacy turned off, so it heard Amazon's processed audio until its capture restarted. Android now opens both sources as a plain microphone capture, the raw microphone 0 that Kiosk Satellite records on.
 
 ## 2026.11.5 - 2026-11-13
 

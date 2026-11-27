@@ -1,0 +1,75 @@
+AudioFlinger: Record the voice sources from the raw microphone
+
+Amazon's audio HALs run their own DSP on VOICE_COMMUNICATION and
+VOICE_RECOGNITION captures. On the Echo Show 8 (2nd gen) a
+VOICE_COMMUNICATION capture builds Amazon's voice pipeline (ASP pipeline
+type 1) and turns on VoIP mode. The capture comes out gated and processed,
+Kiosk Satellite's microphone gain on top of it clips speech, and every
+playback stays silent until the capture closes. On the Echo Shows with
+Amazon's MT8163 HAL both sources go to Amazon's VoIP or ASR pipelines
+instead of microphone 0. Kiosk Satellite fell back to these sources when
+the privacy button fed it zeros, then kept them after privacy turned off
+(kiosk-satellite discussion #1622).
+
+Open both as AUDIO_SOURCE_MIC, the raw path Kiosk Satellite records on.
+The remap happens once in createRecord, so the audio policy, the HAL and
+the record track's metadata all see the same source.
+
+diff --git a/services/audioflinger/AudioFlinger.cpp b/services/audioflinger/AudioFlinger.cpp
+index 764fdc3..356e310 100644
+--- a/services/audioflinger/AudioFlinger.cpp
++++ b/services/audioflinger/AudioFlinger.cpp
+@@ -1976,6 +1976,25 @@ void AudioFlinger::requestLogMerge() {
+ 
+ // ----------------------------------------------------------------------------
+ 
++/*
++ * Amazon's audio HALs run their own DSP on the voice sources. The voice
++ * communication and voice recognition captures go through Amazon's VoIP or
++ * ASR pipelines, which gate, compress and boost the microphones. On the
++ * Echo Show 8 (2nd gen) a voice communication capture also turns on VoIP
++ * mode, which silences every playback until the capture closes. Open both
++ * as a plain microphone capture, the raw path Kiosk Satellite records on.
++ */
++static audio_source_t echoCaptureSource(audio_source_t source)
++{
++    switch (source) {
++        case AUDIO_SOURCE_VOICE_COMMUNICATION:
++        case AUDIO_SOURCE_VOICE_RECOGNITION:
++            return AUDIO_SOURCE_MIC;
++        default:
++            return source;
++    }
++}
++
+ sp<media::IAudioRecord> AudioFlinger::createRecord(const CreateRecordInput& input,
+                                                    CreateRecordOutput& output,
+                                                    status_t *status)
+@@ -1986,6 +2005,9 @@ sp<media::IAudioRecord> AudioFlinger::createRecord(const CreateRecordInput& inpu
+     status_t lStatus;
+     audio_session_t sessionId = input.sessionId;
+     audio_port_handle_t portId = AUDIO_PORT_HANDLE_NONE;
++    // The policy, the HAL and the track's metadata all see the same source.
++    audio_attributes_t attr = input.attr;
++    attr.source = echoCaptureSource(attr.source);
+ 
+     output.cblk.clear();
+     output.buffers.clear();
+@@ -2051,7 +2073,7 @@ sp<media::IAudioRecord> AudioFlinger::createRecord(const CreateRecordInput& inpu
+         output.selectedDeviceId = input.selectedDeviceId;
+         portId = AUDIO_PORT_HANDLE_NONE;
+     }
+-    lStatus = AudioSystem::getInputForAttr(&input.attr, &output.inputId,
++    lStatus = AudioSystem::getInputForAttr(&attr, &output.inputId,
+                                       input.riid,
+                                       sessionId,
+                                     // FIXME compare to AudioTrack
+@@ -2080,7 +2102,7 @@ sp<media::IAudioRecord> AudioFlinger::createRecord(const CreateRecordInput& inpu
+         output.frameCount = input.frameCount;
+         output.notificationFrameCount = input.notificationFrameCount;
+ 
+-        recordTrack = thread->createRecordTrack_l(client, input.attr, &output.sampleRate,
++        recordTrack = thread->createRecordTrack_l(client, attr, &output.sampleRate,
+                                                   input.config.format, input.config.channel_mask,
+                                                   &output.frameCount, sessionId,
+                                                   &output.notificationFrameCount,

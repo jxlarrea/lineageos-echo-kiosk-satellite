@@ -6,6 +6,7 @@ All notable changes to the Echo Show 8 (2nd gen) (`athena`) image are documented
 
 ### Changed
 - **The unlocking guide no longer says to update Fire OS** ([#53](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/53)). A newer Fire OS build or bootloader can have the exploit patched and Fire OS cannot go back to an older version. The Echo Show 8 (2nd gen) section told a Show older than the supported versions to update. It now says not to run saiyaku on a version the XDA thread does not list and to ask in the thread instead of letting Fire OS update.
+- **The voice capture sources record the raw microphone** ([kiosk-satellite #1622](https://github.com/jxlarrea/kiosk-satellite/discussions/1622)). An app that recorded on Android's voice communication or voice recognition source got Amazon's voice pipeline instead of the raw microphone. The pipeline gated and processed the audio. A voice communication capture also put the audio HAL in VoIP mode, which kept every sound from playing until the capture closed. Kiosk Satellite moved to these sources while the privacy button was on and kept them after privacy turned off. The wake word then stopped working and replies played nothing until the microphone was muted and unmuted in Kiosk Satellite. Android now opens both sources as a plain microphone capture, the raw path Kiosk Satellite records on. Intercom calls use it too.
 
 ## 2026.11.3 - 2026-11-13
 

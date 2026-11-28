@@ -218,6 +218,19 @@ Plug a speaker or an amplifier into the Dot's jack and the image plays through i
   adb shell setprop persist.biscuit.wifi_powersave 1
   ```
 
+- **Private DNS.** Android keeps its Private DNS setting on Automatic, as LineageOS 18.1 ships it. In this mode Android sends DNS lookups over TLS to any DNS server on the network that supports it and stops using the others. If your router hands out a public DNS server such as 8.8.8.8 next to your local one, every lookup goes to the public server. A name your local DNS server points to a local address, such as your Home Assistant address, then resolves to its public address instead. If a login page or a proxy sits in front of that public address, Kiosk Satellite cannot reach Home Assistant through it and voice answers do not play ([#63](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/63)). To see which servers Android picked, run:
+
+  ```sh
+  adb shell "dumpsys connectivity | grep -o 'ValidatedPrivateDnsAddresses: [^]]*]'"
+  ```
+
+  If it prints nothing, no server on the network supports Private DNS and Android uses them all as they are. If it lists a public server, turn Private DNS off with the first command. The Dot then uses the DNS servers your router hands out. The second command turns it back on:
+
+  ```sh
+  adb shell settings put global private_dns_mode off
+  adb shell settings put global private_dns_mode opportunistic
+  ```
+
 - **adb works over Wi-Fi** on port 5555 without a password, so a Dot without a screen can always be reached. Anyone on your network can control the Dot this way, so keep it on a network you trust.
 
 ### Kiosk Satellite installer

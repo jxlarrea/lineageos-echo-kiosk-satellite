@@ -283,6 +283,19 @@ Bluetooth stays off across reboots. `bt on` keeps the Dot set up as it was and d
 - **5 GHz.** The image connects to networks on every 5 GHz channel the US allows, the DFS channels 52 to 144 included, since a Dot has no SIM to learn its country from. It uses the 20 MHz primary channel of a wider network.
 - **WPA2/WPA3.** The image connects to a network in WPA2/WPA3 transition mode with WPA2. Its Wi-Fi cannot do WPA3, so it cannot join a network that only offers WPA3. Use WPA2 or WPA2/WPA3 for the Dot's network.
 - **Protected management frames.** The Dot's Wi-Fi cannot do protected management frames (PMF, 802.11w), so it cannot join a network that requires them. Set PMF to optional or off for the Dot's network. Most routers keep it optional in WPA2/WPA3 transition mode.
+- **Private DNS.** Android keeps its Private DNS setting on Automatic, as LineageOS 18.1 ships it. In this mode Android sends DNS lookups over TLS to any DNS server on the network that supports it and stops using the others. If your router hands out a public DNS server such as 8.8.8.8 next to your local one, every lookup goes to the public server. A name your local DNS server points to a local address, such as your Home Assistant address, then resolves to its public address instead. If a login page or a proxy sits in front of that public address, Kiosk Satellite cannot reach Home Assistant through it and voice answers do not play ([#63](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/63)). To see which servers Android picked, run:
+
+  ```sh
+  adb shell "dumpsys connectivity | grep -o 'ValidatedPrivateDnsAddresses: [^]]*]'"
+  ```
+
+  If it prints nothing, no server on the network supports Private DNS and Android uses them all as they are. If it lists a public server, turn Private DNS off with the first command. The Dot then uses the DNS servers your router hands out. The second command turns it back on:
+
+  ```sh
+  adb shell settings put global private_dns_mode off
+  adb shell settings put global private_dns_mode opportunistic
+  ```
+
 - **adb works over Wi-Fi** on port 5555 without a password, so a Dot without a screen can always be reached. Anyone on your network can control the Dot this way, so keep it on a network you trust.
 - **adb root is off,** as LineageOS 18.1 ships it. Nothing in this guide needs it: `biscuit_service` and the other commands run from a normal `adb shell`. To use `adb root`, allow it first. LineageOS keeps this switch in Developer options, which the Dot has no screen for, so `biscuit_service` sets it:
 

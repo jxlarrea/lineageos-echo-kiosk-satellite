@@ -2,6 +2,11 @@
 
 All notable changes to the Echo Show 5 (1st gen) (`checkers`) image are documented here. The [Echo Dot (2nd gen)](CHANGELOG-biscuit.md), [Echo Show 5 (2nd gen)](CHANGELOG-cronos.md) and [Echo Show 8 (1st gen)](CHANGELOG-crown.md) have their own.
 
+## Unreleased
+
+### Changed
+- **The guide explains Android's Private DNS** ([#63](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/63)). Android keeps Private DNS on Automatic. When the router hands out a public DNS server such as 8.8.8.8 next to the local one, Android sends every lookup to the public server. A Home Assistant name that only the local DNS server knows then resolves to its public address, where a login page or a proxy can keep voice answers from playing. The Network section now shows how to check which servers Android picked and how to turn Private DNS off.
+
 ## 2026.11.3 - 2026-11-27
 
 ### Changed

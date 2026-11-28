@@ -250,6 +250,19 @@ Bluetooth stays off across reboots. `bt on` keeps the Show set up as it was and 
 
 - **2.4 GHz after a boot.** Android's first scan after a boot can miss a radio, so Android can join the 2.4 GHz radio of a network that also has 5 GHz. About 30 seconds after the first connection of a boot, EchoService scans once. If the same network has a 5 GHz radio that Android would pick, EchoService reconnects so Android can choose again. Wi-Fi drops for a few seconds when that happens. A network locked to one access point stays where it is.
 - **WPA3.** `echo_service wifi connect` scans for the network first, which can take up to 15 seconds. It saves a network that only offers WPA3 as WPA3 and any other network as WPA2, including a network in WPA2/WPA3 transition mode. It replaces a saved network of the same name that uses the other kind.
+- **Private DNS.** Android keeps its Private DNS setting on Automatic, as LineageOS 18.1 ships it. In this mode Android sends DNS lookups over TLS to any DNS server on the network that supports it and stops using the others. If your router hands out a public DNS server such as 8.8.8.8 next to your local one, every lookup goes to the public server. A name your local DNS server points to a local address, such as your Home Assistant address, then resolves to its public address instead. If a login page or a proxy sits in front of that public address, Kiosk Satellite cannot reach Home Assistant through it and voice answers do not play ([#63](https://github.com/jxlarrea/lineageos-echo-kiosk-satellite/issues/63)). To see which servers Android picked, run:
+
+  ```sh
+  adb shell "dumpsys connectivity | grep -o 'ValidatedPrivateDnsAddresses: [^]]*]'"
+  ```
+
+  If it prints nothing, no server on the network supports Private DNS and Android uses them all as they are. If it lists a public server, turn Private DNS off with the first command. The Show then uses the DNS servers your router hands out. The second command turns it back on:
+
+  ```sh
+  adb shell settings put global private_dns_mode off
+  adb shell settings put global private_dns_mode opportunistic
+  ```
+
 - **adb works over Wi-Fi** on port 5555. A computer still has to be allowed on the Show's screen once before it can connect. To turn it off, run the first command. The second turns it back on:
 
   ```sh
